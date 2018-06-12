@@ -5,6 +5,10 @@ using SimpleRoots
 using Unitful
 using Base.Test
 
+# TODO improve these tests. This was inherited without any testing, 
+# it will take time to develope suitable tests for all the processes.
+
+# Make sure everything constructs with defaults
 BadgerCollatzCompensation()
 BernacchiCompensation()
 JarvisLinearCO2()
@@ -51,6 +55,8 @@ FvCBPhoto()
 p = EnergyBalance()
 v = EmaxVars()
 
+
+# Make sure everything actually runs
 penman_monteith(v.pressure, v.slope, v.lhv, v.rnet, v.vpd, 1.0u"mol*m^-2*s^-1", 1.0u"mol*m^-2*s^-1") # TODO this seems weird
 
 grashof_number(v.tleaf, v.tair, p.boundary_conductance.leafwidth)
@@ -124,23 +130,16 @@ v.gs
 v.cs
 phototranspiration!(v, p)
 
-# photosynthesis!(v, p)
-# phototranspiration!(v, p)
-
 run_phototrans!(EmaxVars(), emaxplant)
 run_phototrans!(TuzetVars(), tuzetplant)
 
-function plotpar(v, p, par)
-    v.par = par
-    photosynthesis!(v, p.photo)
-    v.aleaf
-end
 
+# test against the original FORTRAN routines
 p = emaxplant
 v = EmaxVars()
 v.tleaf = 15u"°C"
 p = emaxplant.photo
-photosynlib = Libdl.dlopen("src/maespa/physiol.so")
+photosynlib = Libdl.dlopen("test/physiol.so")
 
 resp = Libdl.dlsym(photosynlib, :resp_)
 f = p.respiration
