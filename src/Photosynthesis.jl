@@ -3,7 +3,7 @@ module Photosynthesis
 using Unitful
 using Parameters
 using Mixers
-using SimpleRoots
+using Roots
 
 include("constants.jl")
 include("parameters.jl")
@@ -12,6 +12,7 @@ include("soilmoisture.jl")
 include("photosynthesis.jl")
 include("stomatal_conductance.jl")
 include("energy_balance.jl")
+include("utils.jl")
 
 export phototranspiration!,
        run_phototrans!,

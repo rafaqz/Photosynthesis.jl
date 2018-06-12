@@ -15,7 +15,7 @@ function run_phototrans!(v, p, m::TuzetModel)
     bracket = -100.0oneunit(v.psil), zero(v.psil)
     tolz = 1e-03oneunit(v.psil)
 
-    v.psilin = find_zero(x -> leaf_water_potential_finder(x, v, p), bracket, ZBrent(), tolz=tolz)
+    v.psilin = find_zero(x -> leaf_water_potential_finder(x, v, p), bracket, FalsePosition(), atol=tolz)
     nothing
 end
 

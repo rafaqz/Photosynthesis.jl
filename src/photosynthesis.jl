@@ -145,7 +145,7 @@ function rubisco_regeneration(f::RubiscoRegen, v, p)
     a = f.theta
     b = -(f.ajq * v.par + v.jmax)
     c = f.ajq * v.par * v.jmax
-    j = quadm(a, b, c) # Actual e- transport rate, umol m-2 s-1
+    j = quad(Val{:lower}, a, b, c) # Actual e- transport rate, umol m-2 s-1
     return j / 4.0
 end
 

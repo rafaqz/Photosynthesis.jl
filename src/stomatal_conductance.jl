@@ -130,7 +130,7 @@ function rubisco_limited_rate(v, p)
     a = 1.0 / v.gs
     b = (v.rd - v.vcmax) / v.gs - v.cs - v.km
     c = v.vcmax * (v.cs - v.gammastar) - v.rd * (v.cs + v.km)
-    quadm(a, b, c)
+    quad(Val{:lower}, a, b, c)
 end
 
 """ 
@@ -143,7 +143,7 @@ function rubisco_limited_rate(f::AbstractBallBerryModel, v, p)
         v.gsdiva * (v.vcmax * v.gammastar + v.km * v.rd)
     c = -(1.0 - v.cs * v.gsdiva) * (v.vcmax * v.gammastar + v.km * v.rd) -
         f.g0 * v.km * v.cs
-    cic = quadp(a, b, c)
+    cic = quad(Val{:upper}, a, b, c)
 
     if (cic <= zero(cic)) || (cic > v.cs)
         ac = zero(v.vcmax)
@@ -161,7 +161,7 @@ function transport_limited_rate(v, p)
     a = 1.0 / v.gs
     b = (v.rd - v.vj) / v.gs - v.cs - 2v.gammastar
     c = v.vj * (v.cs - v.gammastar) - v.rd * (v.cs + 2v.gammastar)
-    quadm(a, b, c)
+    quad(Val{:lower}, a, b, c)
 end
 """ 
     transport_limited_rate(f::AbstractBallBerryModel, v, p)
@@ -172,7 +172,7 @@ function transport_limited_rate(f::AbstractBallBerryModel, v, p)
     b = (1.0 - v.cs * v.gsdiva) * (v.vj - v.rd) + f.g0 * (2.0v.gammastar - v.cs) - 
         v.gsdiva * (v.vj * v.gammastar + 2.0v.gammastar * v.rd)
     c = -(1.0 - v.cs * v.gsdiva) * v.gammastar * (v.vj + 2.0v.rd) - f.g0 * 2.0v.gammastar * v.cs
-    cij = quadp(a, b, c)
+    cij = quad(Val{:upper}, a, b, c)
     aj = v.vj * (cij - v.gammastar) / (cij + 2.0v.gammastar)
 
 
@@ -184,17 +184,16 @@ function transport_limited_rate(f::AbstractBallBerryModel, v, p)
     aj
 end
 
-# """
-#     gsdiva(::AbstractModelGS, v, p)
-# Formulation-specific component for the Ball-Berry family of stomatal conductance models.
-# """
+"""
+    gsdiva(::AbstractModelGS, v, p)
+Formulation-specific component for the Ball-Berry family of stomatal conductance models.
+"""
+function gsdiva end
 
 """
-    gsdiva(::BallBerryStomatalConductance, v, p) 
-Accepts [`BallBerryStomatalConductance`](@ref) formulation """
-gsdiva(f::BallBerryStomatalConductance, v, p) = begin
+    gsdiva(::BallBerryStomatalConductance, v, p) """
+gsdiva(f::BallBerryStomatalConductance, v, p) = 
     f.g1 * v.rh / (v.cs - f.gamma) * v.fsoil
-end
 """
     gsdiva(::LeuningStomatalConductance, v, p) 
 From R. Leuning, A critical appraisal of a combined stomatal-photosynthesis
