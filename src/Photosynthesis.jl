@@ -1,9 +1,17 @@
 module Photosynthesis
 
-using Unitful
-using Parameters
-using Mixers
-using Roots
+using Unitful, Parameters, DocStringExtensions, Mixers, Roots
+
+@template TYPES =
+    """
+    $(TYPEDEF)
+    $(FIELDS)
+    """
+
+@template (FUNCTIONS, METHODS, MACROS) =
+    """
+    $(SIGNATURES)
+    """
 
 include("constants.jl")
 include("parameters.jl")
@@ -84,4 +92,5 @@ export AbstractCompensation, BadgerCollatzCompensation, BernacchiCompensation,
        TuzetModel, EmaxModel, JarvisModel,
        FvCBPhoto, EnergyBalance,
        PhotoVars, EmaxVars, TuzetVars, BallBerryVars, JarvisVars
+
 end # module

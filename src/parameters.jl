@@ -15,20 +15,18 @@ end
     swmin::W = 0.0
 end
 
-""" Soil water is measured as deficit 
-`@show DeficitSoilData()`
+""" 
+Soil water is measured as deficit 
 """
+
 @Deficit mutable struct DeficitSoilData{} <: AbstractDeficitSoilData end
 """ Soil water is measured as volumetric content 
-`@show ContentSoilData`
 """
 @Content mutable struct ContentSoilData{} <: AbstractContentSoilData end
 """ Simulated soil volumetric content 
-`@show ContentSoilData`
 """
 @Content mutable struct SimulatedSoilData{} <: AbstractContentSoilData end
 """ Soil water is measured as water potential 
-`@show PotentialSoilData`
 """
 @with_kw mutable struct PotentialSoilData{T} <: AbstractSoilData
     swpexp::T = 1.0
@@ -177,21 +175,23 @@ abstract type AbstractStomatalConductance end
     g1::typeof(1.0)                  = 7.0 # Slope parameter 
 end
 
-""" Ball-Berry stomaratl conductance formulation parameters
+""" 
+Ball-Berry stomaratl conductance formulation parameters
 `gamma` in μmol*mol^-1 and `g1`scalar, also used for all Ball-Berry type models.
 (modelgs = 2 in maestra)
 """
 @Gs mutable struct BallBerryStomatalConductance <: AbstractStomatalConductance end
 
-""" Leuning stomatal conductance formulation 
-
+""" 
+Leuning stomatal conductance formulation 
 Has the extra `d0l` paramater in Pa. 
 """
 @Gs mutable struct LeuningStomatalConductance <: AbstractStomatalConductance 
     d0l::typeof(1.0u"Pa")    = 1500.0u"Pa" 
 end
 
-""" Medlyn stomatal conductance formulation parameters 
+""" 
+Medlyn stomatal conductance formulation parameters 
 Has the extra `vpdmin` paramater in Pa. 
 (modelgs = 4 in maestra)
 """

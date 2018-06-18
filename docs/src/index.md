@@ -1,3 +1,4 @@
+
 # Photosynthesis
 
 A Farquhar-von-Cammerer-Berry (FvCB) photosynthesis model.
@@ -26,311 +27,137 @@ blocks as is common in older models. This means that the set of used parameters
 and functions is always known to the compiler, which may allow more automation
 of sensitivity analysis and parameter estimation.
 
-# Main photosynthesis routines
+## Main photosynthesis routines
 
 These are the main functions that run overall photosynthesis processes.
 
 ```@docs
 photosynthesis!
-```
-
-```@docs
 phototranspiration!
-```
-
-```@docs
 run_phototrans!
 ```
 
-# Specific functions
+## Specific functions
 
 Any of these functions can be overridden for a specific parameter types.
 
 ```@docs
 stomatal_conductance!
-```
-
-```@docs
 calc_km
-```
-
-```@docs
 rubisco_compensation
-```
-
-```@docs
 calc_slope
-```
-
-```@docs
 calc_jmax
-```
-
-```@docs
 calc_vcmax
-```
-
-```@docs
 gsdiva
-```
-
-```@docs
 cmolar
-```
-
-```@docs
 respiration
-```
-
-```@docs
 evapotranspiration
-```
-
-```@docs
 penman_monteith
-```
-
-```@docs
 soil_induced_conductance
-```
-
-```@docs
 factor_conductance
-```
-
-```@docs
 radiation_conductance
-```
-
-```@docs
 boundary_conductance_free
-```
-
-```@docs
 boundary_conductance_forced
-```
-
-```@docs
 co2_compensation
-```
-
-```@docs
 rubusico_compenstion
-```
-
-```@docs
 saturated_vapour_pressure
 ```
 
 
-# Type Hierarchy
+## Type Hierarchy
 
-## Main parameters
+### Main parameters
 
 ```@docs
 PhotoParams
-```
-```@docs
 PhotoVars
 ```
 
-## Model selection
+### Model selection
 
 ```@docs
+FvCBPhoto
 AbstractPhotoModel
-```
-```@docs
 AbstractBallBerryModel
-```
-```@docs
 AbstractMaespaModel
-```
-```@docs
 BallBerryModel
-```
-```@docs
 TuzetModel
-```
-```@docs
 EmaxModel
-```
-```@docs
 JarvisModel
 ```
 
-## CO2Compensation
+### CO2 and Rubisco Compensation
 
 ```@docs
-AbstractCO2Compensation
-```
-```@docs
-BadgerCollatzCO2Compensation
-```
-```@docs
-BernacchiCO2Compensation
-```
-```@docs
-AbstractJarvisCO2
-```
-```@docs
-JarvisNoCO2
-```
-```@docs
-JarvisLinearCO2
-```
-```@docs
-JarvisNonlinearCO2
-```
-```@docs
-AbstractJarvisVPD
-```
-```@docs
-JarvisHyperbolicVPD
-```
-```@docs
-JarvisLohammerVPD
-```
-```@docs
-JarvisFractionDeficitVPD
-```
-```@docs
-JarvisLinearDeclineVPD
+AbstractCompensation
+BadgerCollatzCompensation
+BernacchiCompensation
 ```
 
-## Stomatal conductance
+### Stomatal conductance
 
 ```@docs
 AbstractStomatalConductance
-```
-```@docs
 BallBerryStomatalConductance
-```
-```@docs
 LeuningStomatalConductance
-```
-```@docs
 MedlynStomatalConductance
-```
-```@docs
 ThreeParStomatalConductance
-```
-```@docs
 TuzetStomatalConductance
 ```
 
-# Photosynthesis
+### Photosynthesis
 
 ```@docs
 AbstractJmax
-```
-```@docs
 AbstractVcmax
-```
-```@docs
 AbstractVcJmax
-```
-```@docs
 Jmax
-```
-```@docs
 NoOptimumVcmax
-```
-```@docs
 OptimumVcmax
-```
-```@docs
 VcJmax
-```
-```@docs
 DukeVcJmax
-```
-```@docs
 AbstractRubiscoRegen
-```
-```@docs
 RubiscoRegen
-```
-```@docs
 AbstractRespiration
-```
-```@docs
 Respiration
-```
-```@docs
 AbstractRadiationConductance
-```
-```@docs
 YingPingRadiationConductance
-```
-```@docs
 AbstractBoundaryConductance
-```
-```@docs
 BoundaryConductance
 ```
 
-## Other
+### Decoupling
 
 ```@docs
 AbstractDecoupling
-```
-```@docs
 McNaughtonJarvisDecoupling
-```
-```@docs
 NoDecoupling
 ```
 
-## Soil water 
+### Soil water 
 
 ```@docs
 AbstractSoilMethod
-```
-```@docs
 VolumetricSoilMethod
-```
-```@docs
 ConstantSoilMethod
-```
-```@docs
 DeficitSoilMethod
-```
-```@docs
 PotentialSoilMethod
-```
-```@docs
 EmaxSoilMethod
-```
-```@docs
 TuzetSoilMethod
 ```
 
-### Data
+### Soil Data
 
 Kinds of soil water data available.
 
 ```@docs
 AbstractSoilData
-```
-```@docs
 AbstractDeficitSoilData
-```
-```@docs
 AbstractContentSoilData
-```
-```@docs
 DeficitSoilData
-```
-```@docs
 ContentSoilData
-```
-```@docs
 SimulatedSoilData
-```
-```@docs
 PotentialSoilData
-```
-```@docs
 NoSoilData
 ```
 
@@ -341,13 +168,22 @@ Tuzet models with the [`vjmax_water`](@ref) function.
 
 ```@docs
 AbstractPotentialDependence
-```
-```@docs
 LinearPotentialDependence
-```
-```@docs
 ZhouPotentialDependence
-```
-```@docs
 NoPotentialDependence
 ```
+
+### Jarvis Model
+
+```@docs
+AbstractJarvisCO2
+JarvisNoCO2
+JarvisLinearCO2
+JarvisNonlinearCO2
+AbstractJarvisVPD
+JarvisHyperbolicVPD
+JarvisLohammerVPD
+JarvisFractionDeficitVPD
+JarvisLinearDeclineVPD
+```
+
