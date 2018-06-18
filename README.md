@@ -4,8 +4,6 @@
 [![Coverage Status](https://coveralls.io/repos/rafaqz/Photosynthesis.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/rafaqz/Photosynthesis.jl?branch=master)
 [![codecov.io](http://codecov.io/github/rafaqz/Photosynthesis.jl/coverage.svg?branch=master)](http://codecov.io/github/rafaqz/Photosynthesis.jl?branch=master)
 
-A modular set of photosynthesis models.
-
 This package is a rewrite of core photosynthesis model from the Maespa and
 Maestra Fortran libraries of Belinda Medlyn and Remko Duursma, as well as some
 direction from Duursmas' R package YplantQMC. Many thanks go to them and early
@@ -29,13 +27,10 @@ appreciated.
 There is also complete parameter modularity: you only have to set the parameters
 that are actually used by the specific formulations you choose. On top of this,
 all parameters come with default values that can be overridden by passing
-keyword arguments to the constructor:
+keyword arguments to the constructor, shuch as:
 
 ```
-params = PhotoParams(model=TuzetModel(), )
-vars = PhotoVars()
-
-run_phototrans!(vars, params, params.model)
+params = PhotoParams(model=TuzetModel())
 ```
 
 In future this package will be extended to include C4 and CAM photosynthesis and
