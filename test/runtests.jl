@@ -142,7 +142,7 @@ p = emaxplant
 v = EmaxVars()
 v.tleaf = 15u"°C"
 p = emaxplant.photo
-photosynlib = Libdl.dlopen("test/physiol.so")
+photosynlib = Libdl.dlopen(joinpath(ENV["MAESPA"], "physiol.so"))
 
 resp = Libdl.dlsym(photosynlib, :resp_)
 f = p.respiration
