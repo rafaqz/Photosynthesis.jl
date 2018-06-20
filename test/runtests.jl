@@ -1,9 +1,14 @@
-using Revise
 using Photosynthesis
 using Biophysical
 using SimpleRoots
 using Unitful
-using Base.Test
+
+@static if VERSION < v"0.7.0-DEV.2005"
+    using Base.Test
+else
+    using Test
+end
+
 
 # TODO improve these tests. This was inherited without any testing, 
 # it will take time to develope suitable tests for all the processes.
@@ -224,7 +229,7 @@ photosyn = Libdl.dlsym(photosynlib, :photosyn_)
 v = EmaxVars()
 p = EnergyBalance(photo=FvCBPhoto(model=EmaxModel(gsmodel=BallBerryStomatalConductance()),
                                   vcjmax=DukeVcJmax(),
-                                  compensation = BadgerCollatzCO2Compensation(),
+                                  compensation = BadgerCollatzCompensation(),
                                  ))
 ph = p.photo
 mod = p.photo.model
@@ -490,26 +495,31 @@ gs[1]
 @test ci[1] ≈ v.ci.val rtol=1e-6
 
 kmfn = Libdl.dlsym(photosynlib, :kmfn_)
-km_ref = ccall(kmfn, Float32, (Ref{Float32}, Ref{Int32}), tleaf, 0)
-km = rubisco_compensation_point(BernacchiCO2Compensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
+ieco = 0 # Bernacci
+tleaf = v.tleaf.val
+km_ref = ccall(kmfn, Float32, (Ref{Float32}, Ref{Int32}), tleaf, ieco)
+km = rubisco_compensation_point(BernacchiCompensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
 @test km.val ≈ km_ref rtol=1e-4
 
-km_ref = ccall(kmfn, Float32, (Ref{Float32}, Ref{Int32}), tleaf,1)
-km = rubisco_compensation_point(BadgerCollatzCO2Compensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
+ieco = 1 # Badger-Collatz
+tleaf = v.tleaf.val
+km_ref = ccall(kmfn, Float32, (Ref{Float32}, Ref{Int32}), tleaf,ieco)
+km = rubisco_compensation_point(BadgerCollatzCompensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
 @test km.val ≈ km_ref rtol=1e-4
 
 gammafn = Libdl.dlsym(photosynlib, :gammafn_)
 gammastar_ref = ccall(gammafn, Float32, (Ref{Float32}, Ref{Int32}), tleaf, 0)
-gammastar = co2_compensation_point(BernacchiCO2Compensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
+gammastar = co2_compensation_point(BernacchiCompensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
 @test gammastar.val ≈ gammastar_ref rtol=1e-4
 
 gammastar_ref = ccall(gammafn, Float32, (Ref{Float32}, Ref{Int32}), tleaf, 1)
-gammastar = co2_compensation_point(BadgerCollatzCO2Compensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
+gammastar = co2_compensation_point(BadgerCollatzCompensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
 @test gammastar.val ≈ gammastar_ref rtol=1e-7
 
-arrh = Libdl.dlsym(photosynlib, :arrh_)
-arrh = ccall(arrh, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}), 42.75, 37830.0, 30.0, 25.0)
-arrhenius(42.75u"μmol*mol^-1", 37830.0u"J*mol^-1", 30.0u"°C" |> u"K", 25.0u"°C" |> u"K")
+arrhfn = Libdl.dlsym(photosynlib, :arrh_)
+arrh_ref = ccall(arrhfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}), 42.75, 37830.0, 30.0, 25.0)
+arrh = arrhenius(42.75u"μmol*mol^-1", 37830.0u"J*mol^-1", 30.0u"°C" |> u"K", 25.0u"°C" |> u"K")
+@test arrh.val ≈ arrh_ref
 
 f = DukeVcJmax(vcmaxformulation=OptimumVcmax())
 vcmax_ref = ccall(vcmaxtfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
