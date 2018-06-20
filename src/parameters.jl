@@ -81,7 +81,7 @@ abstract type AbstractCompensation end
 
 @with_kw struct BadgerCollatzCompensation <: AbstractCompensation 
     Kc25::typeof(1.0u"μmol*mol^-1") = 404.0u"μmol*mol^-1" # MM coefft of Rubisco for CO2 (umol mol - 1)
-    Ko25::typeof(1.0u"μmol*mol^-1") = 248.0u"mmol*mol^-1" # MM coefft of Rubisco for O2 (umol mol - 1)
+    Ko25::typeof(1.0u"μmol*mol^-1") = 248000.0u"μmol*mol^-1" # MM coefft of Rubisco for O2 (umol mol - 1)
     ΔHa_Kc::typeof(1.0u"kJ*mol^-1") = 59.4u"kJ*mol^-1"  # Temp. response of Kc (J mol-1)
     ΔHa_Ko::typeof(1.0u"kJ*mol^-1") = 36.0u"kJ*mol^-1"  # Temp. response of Ko (J mol-1)
     tref::typeof(1.0u"°C")          = 25.0u"°C"
@@ -93,7 +93,7 @@ Extra deactivation terms may be required above 40°C.
 """
 @with_kw struct BernacchiCompensation <: AbstractCompensation 
     Kc25::typeof(1.0u"μmol*mol^-1") = 404.9u"μmol*mol^-1" # MM coefft of Rubisco for CO2
-    Ko25::typeof(1.0u"μmol*mol^-1") = 278.4u"mmol*mol^-1" # MM coefft of Rubisco for O2
+    Ko25::typeof(1.0u"μmol*mol^-1") = 278400.0u"μmol*mol^-1" # MM coefft of Rubisco for O2
     Γ☆25::typeof(1.0u"μmol*mol^-1") = 42.75u"μmol*mol^-1"
     ΔHa_Kc::typeof(1.0u"kJ*mol^-1") = 79.43u"kJ*mol^-1" # Temp. response of Kc
     ΔHa_Ko::typeof(1.0u"kJ*mol^-1") = 36.38u"kJ*mol^-1" # Temp. response of Ko
