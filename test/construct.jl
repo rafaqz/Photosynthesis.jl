@@ -94,4 +94,33 @@ end
     jarvisplant = EnergyBalance(photo=FvCBPhoto(model=JarvisModel()))
 
     factor_conductance(JarvisModel(), v, jarvisplant)
+    v = BallBerryVars()
+    p = ballberryplant
+    photosynthesis!(v, p.photo)
+    v.aleaf
+    v.tleaf
+    v.gs
+    v.cs
+    phototranspiration!(v, p)
+
+    p = tuzetplant
+    v = TuzetVars()
+    photosynthesis!(v, p.photo)
+    v.aleaf
+    v.tleaf
+    v.gs
+    v.cs
+    phototranspiration!(v, p)
+
+    p = emaxplant
+    v = EmaxVars()
+    photosynthesis!(v, p.photo)
+    v.aleaf
+    v.tleaf
+    v.gs
+    v.cs
+    phototranspiration!(v, p)
+
+    run_phototrans!(EmaxVars(), emaxplant)
+    run_phototrans!(TuzetVars(), tuzetplant)
 end
