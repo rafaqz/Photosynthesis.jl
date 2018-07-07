@@ -1,12 +1,15 @@
+struct Lower end
+struct Upper end
+
 """
-Solves quadratic equations - finds smaller root.
+Solves quadratic equations
 """
 function quad(typ, a, b, c)
-    x = (b * b - 4.0 * a * c) 
+    x = (b * b - 4 * a * c) 
     x < zero(x) && error("imaginary roots in quadratic")
     if a == zero(a) 
         if b == zero(b)
-            q = 0.0
+            q = zero(-c / b)
             c != zero(c) && error("error: cant solve quadratic")
         else
             q = -c / b
@@ -17,5 +20,5 @@ function quad(typ, a, b, c)
     q
 end
 
-@inline side(::Type{Val{:upper}}, x, a, b) = (-b + sqrt(x)) / (2.0 * a)
-@inline side(::Type{Val{:lower}}, x, a, b) = (-b - sqrt(x)) / (2.0 * a)
+@inline side(::Upper, x, a, b) = (-b + sqrt(x)) / 2a
+@inline side(::Lower, x, a, b) = (-b - sqrt(x)) / 2a

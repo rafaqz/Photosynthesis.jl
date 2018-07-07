@@ -16,7 +16,8 @@ function photosynthesis!(v, p::FvCBPhoto)
 
     # soil_water_conductance!(v, p.model.soilmethod, p)
 
-    v.vj = rubisco_regeneration(p.rubisco_regen, v, p)
+    # v.vj = 
+    rubisco_regeneration(p.rubisco_regen, v, p)
     extremes!(v, p) && return nothing
     stomatal_conductance!(v, p.model, p)
 
@@ -145,8 +146,8 @@ function rubisco_regeneration(f::RubiscoRegen, v, p)
     a = f.theta
     b = -(f.ajq * v.par + v.jmax)
     c = f.ajq * v.par * v.jmax
-    j = quad(Val{:lower}, a, b, c) # Actual e- transport rate, umol m-2 s-1
-    return j / 4.0
+    j = quad(Lower(), a, b, c) # Actual e- transport rate, umol m-2 s-1
+    return j / 4
 end
 
 function jmaxN()

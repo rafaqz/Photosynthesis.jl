@@ -61,7 +61,7 @@ function phototranspiration!(v, p)
     # Calculations that do not depend on tleaf
     v.lhv = latent_heat_water_vapour(v.tair)
     v.slope = calc_slope(v.tair)
-    v.gradn = radiation_conductance(p.radiation_conductance, v, p)
+    #v.gradn = radiation_conductance(p.radiation_conductance, v, p)
     v.gbhu = boundary_conductance_forced(p.boundary_conductance, v, p)
 
     converge_tleaf!(v, p) == false && error("leaf temperature convergence failed")
@@ -78,7 +78,7 @@ Run phototranpiration process in a loop to converge on leaf temperature
 function converge_tleaf!(v, p)
     for iter = 1:p.itermax
         photosynthesis!(v, p.photo)
-        v.gbhf = boundary_conductance_free(p.boundary_conductance, v, p)
+        v.gbhf = # boundary_conductance_free(p.boundary_conductance, v, p)
 
         # Total boundary layer conductance for heat
         # See Leuning et al (1995) PCE 18:1183-1200 Eqn E5
@@ -284,7 +284,7 @@ gv conductance to water vapour (stomatalbdry layer components), u"mol*m^-2*s^-1"
 Result in u"mol*m^-2*s^-1"
 """
 penman_monteith(ρa, Δ, lhv, Rn, Da, gh, gv) = begin
-    gv <= zero(gv) && return 0.0u"mol*m^-2*s^-1"
+    #FIXME gv <= zero(gv) && return zero(Rn / lhv)
 
     γ = CPAIR * ρa * AIRMA / lhv
     ET = (Δ * Rn + CPAIR * gh * Da * AIRMA) / (Δ + γ * gh * (1/gv))

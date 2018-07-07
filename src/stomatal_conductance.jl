@@ -130,7 +130,7 @@ function rubisco_limited_rate(v, p)
     a = 1.0 / v.gs
     b = (v.rd - v.vcmax) / v.gs - v.cs - v.km
     c = v.vcmax * (v.cs - v.gammastar) - v.rd * (v.cs + v.km)
-    quad(Val{:lower}, a, b, c)
+    quad(Lower(), a, b, c)
 end
 
 """ 
@@ -143,7 +143,7 @@ function rubisco_limited_rate(f::AbstractBallBerryModel, v, p)
         v.gsdiva * (v.vcmax * v.gammastar + v.km * v.rd)
     c = -(1.0 - v.cs * v.gsdiva) * (v.vcmax * v.gammastar + v.km * v.rd) -
         f.g0 * v.km * v.cs
-    cic = quad(Val{:upper}, a, b, c)
+    cic = quad(Upper(), a, b, c)
 
     if (cic <= zero(cic)) || (cic > v.cs)
         ac = zero(v.vcmax)
@@ -161,7 +161,7 @@ function transport_limited_rate(v, p)
     a = 1.0 / v.gs
     b = (v.rd - v.vj) / v.gs - v.cs - 2v.gammastar
     c = v.vj * (v.cs - v.gammastar) - v.rd * (v.cs + 2v.gammastar)
-    quad(Val{:lower}, a, b, c)
+    quad(Lower(), a, b, c)
 end
 """ 
     transport_limited_rate(f::AbstractBallBerryModel, v, p)
@@ -172,7 +172,7 @@ function transport_limited_rate(f::AbstractBallBerryModel, v, p)
     b = (1.0 - v.cs * v.gsdiva) * (v.vj - v.rd) + f.g0 * (2.0v.gammastar - v.cs) - 
         v.gsdiva * (v.vj * v.gammastar + 2.0v.gammastar * v.rd)
     c = -(1.0 - v.cs * v.gsdiva) * v.gammastar * (v.vj + 2.0v.rd) - f.g0 * 2.0v.gammastar * v.cs
-    cij = quad(Val{:upper}, a, b, c)
+    cij = quad(Upper(), a, b, c)
     aj = v.vj * (cij - v.gammastar) / (cij + 2.0v.gammastar)
 
 
