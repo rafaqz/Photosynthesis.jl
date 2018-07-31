@@ -1,8 +1,20 @@
 module Photosynthesis
 
-using Unitful, Parameters, DocStringExtensions, Mixers, Roots
+using Unitful, Defaults, DocStringExtensions, Mixers, Roots, MetaFields, MetaFieldBase, Distributions
+
+import MetaFieldBase: @prior, @default, @label, @units, prior, default, label, units
+
+Defaults.get_default(t::Type) = begin 
+    d = default(t) 
+    u = units(t)
+    add_units.(d, u)
+end
+
+a(x, v::Module) = typeof(v)
+a(2, Photosynthesis)
 
 @template TYPES =
+
     """
     $(TYPEDEF)
     $(FIELDS)
@@ -92,5 +104,12 @@ export AbstractCompensation, BadgerCollatzCompensation, BernacchiCompensation,
        TuzetModel, EmaxModel, JarvisModel,
        FvCBPhoto, EnergyBalance,
        PhotoVars, EmaxVars, TuzetVars, BallBerryVars, JarvisVars
+
+import Defaults: get_default
+Defaults.get_default(t::Type) = begin 
+    d = default(t) 
+    u = units(t)
+    add_units.(d, u)
+end
 
 end # module

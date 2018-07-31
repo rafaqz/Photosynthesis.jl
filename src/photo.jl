@@ -16,8 +16,7 @@ function photosynthesis!(v, p::FvCBPhoto)
 
     # soil_water_conductance!(v, p.model.soilmethod, p)
 
-    # v.vj = 
-    rubisco_regeneration(p.rubisco_regen, v, p)
+    v.vj = rubisco_regeneration(p.rubisco_regen, v, p)
     extremes!(v, p) && return nothing
     stomatal_conductance!(v, p.model, p)
 
@@ -91,7 +90,7 @@ Calculates the maximum Rubisco activity (Vcmax) at the leaf temperature.
 There is still disagreement as to whether this function has an optimum or not. 
 Both versions are well-behaved for tleaf < 0.0
 """
-function max_rubisco_activity end
+function max_rubisco_activity() end
 
 """ Function allowing Vcmax to be forced linearly to zero at low T.  
 Introduced for Duke data. """
@@ -128,15 +127,15 @@ function respiration(f::Respiration, v, p)
     # See Atkin et al. 1998 (or 2001?). From yplantmc
     resplightfrac = v.par < 100oneunit(v.par) ? oneunit(f.dayresp) : f.dayresp
 
-    f.rd0 * e^(f.q10f * (v.tleaf - f.rtemp)/10) * resplightfrac 
+    f.rd0 * e^(f.q10f * (v.tleaf - f.tref)/10) * resplightfrac 
 end
 
 function respiration(f::AcclimatizedRespiration, v, p)
     v.tleaf < f.tbelow && return zero(f.rd0 * f.dayresp)
     resplightfrac = v.par < 100oneunit(v.par) ? oneunit(f.dayresp) : f.dayresp
 
-    rd0acc = f.rd0 * exp(f.k10f * (f.tmove - f.rtemp))
-    rd0acc * exp(f.q10f * (v.tleaf - f.rtemp)) * resplightfrac 
+    rd0acc = f.rd0 * exp(f.k10f * (f.tmove - f.tref))
+    rd0acc * exp(f.q10f * (v.tleaf - f.tref)) * resplightfrac 
 end 
 
 """ 

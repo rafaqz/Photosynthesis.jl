@@ -4,27 +4,29 @@
 
 abstract type AbstractJarvisLight end
 
-@with_kw mutable struct JarvisLight{T} <: AbstractJarvisLight 
-    i0::T = 1.0u"mol*m^-2*s^-1"
+@chain jcolumns @units @default_kw 
+
+@jcolumns mutable struct JarvisLight{T} <: AbstractJarvisLight 
+    i0::T | 1.0 | u"mol*m^-2*s^-1"
 end
 
 abstract type AbstractJarvisCO2 end
 
 struct JarvisNoCO2 <: AbstractJarvisCO2 end
-@with_kw mutable struct JarvisLinearCO2{T} <: AbstractJarvisCO2 
-    gsja::T = 1.0u"μmol^-1*mol"
+@jcolumns mutable struct JarvisLinearCO2{T} <: AbstractJarvisCO2 
+    gsja::T | 1.0 | u"μmol^-1*mol"
 end
-@with_kw mutable struct JarvisNonlinearCO2{T} <: AbstractJarvisCO2 
-    gsjb::T = 1.0u"μmol*mol^-1"
+@jcolumns mutable struct JarvisNonlinearCO2{T} <: AbstractJarvisCO2 
+    gsjb::T | 1.0 | u"μmol*mol^-1"
 end
 
 
 abstract type AbstractJarvisTemp end
 
-@mix @with_kw struct JarTemp{T}
-    tmax::T = 40.0u"°C"
-    tref::T = 25.0u"°C"
-    t0::T = 0.0u"°C"
+@mix @jcolumns struct JarTemp{T}
+    tmax::T | 40.0 | u"°C" 
+    tref::T | 25.0 | u"°C" 
+    t0::T   | 0.0  | u"°C" 
 end
 
 struct JarvisNoTemp <: AbstractJarvisTemp end
@@ -38,24 +40,24 @@ abstract type AbstractJarvisVPD end
 Hyperbolic response to vapour pressure deficit. 
 Parameters vk1 and vk2 are the dimensionless scalar and exponent.
 """
-@with_kw mutable struct JarvisHyperbolicVPD{T} <: AbstractJarvisVPD 
-    vk1::T = 1.0
-    vk2::T = 1.0
+@jcolumns mutable struct JarvisHyperbolicVPD{T} <: AbstractJarvisVPD 
+    vk1::T | 1.0 | _
+    vk2::T | 1.0 | _
 end
 
 """
 Non-linear Lohammer response to vapour pressure deficit.
 Parameters vpd1 and vpd2 are in Pascals.
 """
-@with_kw mutable struct JarvisLohammerVPD{T} <: AbstractJarvisVPD 
-    vpd1::T = 1.0u"Pa"
-    vpd2::T = 1.0u"Pa"
+@jcolumns mutable struct JarvisLohammerVPD{T} <: AbstractJarvisVPD 
+    vpd1::T  | 1.0 | u"Pa"
+    vpd2::T  | 1.0 | u"Pa"
 end
-@with_kw mutable struct JarvisFractionDeficitVPD{T} <: AbstractJarvisVPD 
-    vmfd0::T = 1.0u"mmol*mol^-1"
+@jcolumns mutable struct JarvisFractionDeficitVPD{T} <: AbstractJarvisVPD 
+    vmfd0::T | 1.0 | u"mmol*mol^-1"
 end
-@with_kw mutable struct JarvisLinearDeclineVPD{T} <: AbstractJarvisVPD 
-    d0::T = 1.0u"Pa"
+@jcolumns mutable struct JarvisLinearDeclineVPD{T} <: AbstractJarvisVPD 
+    d0::T    | 1.0 | u"Pa"
 end
 
 
@@ -81,18 +83,18 @@ Jarvis stomatal conductance model
 Combines factors from soilmethod, co2 method, vpdmethod and tempmethod
 to gain an overall stomatal conductance.
 """
-@with_kw mutable struct JarvisModel{S<:AbstractSoilMethod, C<:AbstractJarvisCO2, 
+@jcolumns mutable struct JarvisModel{S<:AbstractSoilMethod, C<:AbstractJarvisCO2, 
                                     V<:AbstractJarvisVPD, L<:AbstractJarvisLight,
                                     T<:AbstractJarvisTemp, MoMeS, mMoMoS
                                    } <: AbstractPhotoModel
-    soilmethod::S  = DeficitSoilMethod()
-    co2method::C   = JarvisNonlinearCO2()
-    vpdmethod::V   = JarvisLohammerVPD()
-    lightmethod::L = JarvisLight()
-    tempmethod::T  = JarvisTemp2()
-    gsmin::MoMeS   = 1.0u"mol*m^-2*s^-1"
-    gsref::MoMeS   = 1.0u"mol*m^-2*s^-1"
-    vmfd::mMoMoS   = 1.0u"mmol*mol^-1"
+    soilmethod::S  | DeficitSoilMethod()  | _
+    co2method::C   | JarvisNonlinearCO2() | _
+    vpdmethod::V   | JarvisLohammerVPD()  | _
+    lightmethod::L | JarvisLight()        | _
+    tempmethod::T  | JarvisTemp2()        | _
+    gsmin::MoMeS   | 1.0                  | u"mol*m^-2*s^-1"
+    gsref::MoMeS   | 1.0                  | u"mol*m^-2*s^-1"
+    vmfd::mMoMoS   | 1.0                  | u"mmol*mol^-1"
 end
 
 """ Response to incident radiation in umol m^-2 s^-1 """

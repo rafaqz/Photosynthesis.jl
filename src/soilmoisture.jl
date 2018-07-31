@@ -25,7 +25,7 @@ soil_water_conductance!(v, f::VolumetricSoilMethod{<:SimulatedSoilData}, p) =
     v.soilmoist = f.soilroot / f.soildepth # TODO fix this, where is fsoil set??
 
 soil_water_conductance!(v, f::VolumetricSoilMethod{<:AbstractContentSoilData}, p) = begin
-    # TODO: check at compile time f.wc1 > f.wc2 && error("error: wc1 needs to be smaller than wc2.")
+    # TODO: check in constructor f.wc1 > f.wc2 && error("error: wc1 needs to be smaller than wc2.")
     fsoil = -f.wc1 / (f.wc2 - f.wc1) + v.soilmoist / (f.wc2 - f.wc1)
     v.fsoil = max(min(fsoil, 1.0), 0.0)
 end

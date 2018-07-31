@@ -3,223 +3,215 @@ abstract type AbstractSoilData end
 abstract type AbstractDeficitSoilData <: AbstractSoilData end
 abstract type AbstractContentSoilData <: AbstractDeficitSoilData end
 
+@chain columns @label @prior @units @default_kw
+
+###########################################################################################
+# Parameters
+
 " @Deficit mixin macro adds water deficit fields to a struct"
-@mix @with_kw struct Deficit{T} 
-    smd1::T = 1.0
-    smd2::T = 1.0
+@mix @columns struct Deficit{T}
+    smd1::T   | 1.0 | _      | _ | _
+    smd2::T   | 1.0 | _      | _ | _
 end
 
 "@Content mixin macro adds water content fields to a struct"
 @Deficit @mix struct Content{W}
-    swmax::W = 1.0
-    swmin::W = 0.0
+    swmax::W  | 1.0 | _      | _ | _
+    swmin::W  | 0.0 | _      | _ | _
 end
 
-""" 
-Soil water is measured as deficit 
-"""
-
-@Deficit mutable struct DeficitSoilData{} <: AbstractDeficitSoilData end
-""" Soil water is measured as volumetric content 
-"""
-@Content mutable struct ContentSoilData{} <: AbstractContentSoilData end
-""" Simulated soil volumetric content 
-"""
-@Content mutable struct SimulatedSoilData{} <: AbstractContentSoilData end
-""" Soil water is measured as water potential 
-"""
-@with_kw mutable struct PotentialSoilData{T} <: AbstractSoilData
-    swpexp::T = 1.0
+"Soil water is measured as deficit"
+@Deficit struct DeficitSoilData{} <: AbstractDeficitSoilData end
+"Soil water is measured as volumetric content"
+@Content struct ContentSoilData{} <: AbstractContentSoilData end
+"Simulated soil volumetric content"
+@Content struct SimulatedSoilData{} <: AbstractContentSoilData end
+"Soil water is measured as water potential"
+@columns struct PotentialSoilData{T} <: AbstractSoilData
+    swpexp::T | 1.0 | _      | _ | _
 end
-mutable struct NoSoilData <: AbstractSoilData end
+struct NoSoilData <: AbstractSoilData end
 
 
 abstract type AbstractPotentialDependence end
 
 "@Potdep mixin macro adds potential dependence fields to a struct"
-@mix @with_kw struct Potdep
-    vpara::typeof(1.0u"kPa") = 1.0u"kPa"
-    vparb::typeof(1.0u"kPa") = 2.0u"kPa"
+@mix @columns struct Potdep{Pa}
+    vpara::Pa | 1.0 | u"kPa" | Gamma(10, 1/10) | _
+    vparb::Pa | 2.0 | u"kPa" | Gamma(10, 2/10) | _
 end
 
-@Potdep mutable struct LinearPotentialDependence{} <: AbstractPotentialDependence end
-@Potdep mutable struct ZhouPotentialDependence{} <: AbstractPotentialDependence end
+@Potdep struct LinearPotentialDependence{} <: AbstractPotentialDependence end
+@Potdep struct ZhouPotentialDependence{} <: AbstractPotentialDependence end
 type NoPotentialDependence{} <: AbstractPotentialDependence end
 
 
 abstract type AbstractSoilMethod{T} end
 
-@with_kw mutable struct VolumetricSoilMethod{WC,R,D,T<:AbstractContentSoilData
+@columns struct VolumetricSoilMethod{WC,R,D,T<:AbstractContentSoilData
                                             } <: AbstractSoilMethod{T}
-    soildata::T  = ContentSoilData()
-    wc1::WC      = 0.5
-    wc2::WC      = 0.5
-    soilroot::R  = 0.5
-    soildepth::D = 0.5
+    soildata::T  | ContentSoilData() | _ | _ | _
+    wc1::WC      | 0.5               | _ | Beta(2.0, 2.0) | _
+    wc2::WC      | 0.5               | _ | Beta(2.0, 2.0) | _
+    soilroot::R  | 0.5               | _ | _ | _ # Not sure these are parameters
+    soildepth::D | 0.5               | _ | _ | _ # One must be a variable...
 end
 
-@with_kw mutable struct ConstantSoilMethod{T<:NoSoilData} <: AbstractSoilMethod{T}
-    soildata::T = NoSoilData()
+@default_kw struct ConstantSoilMethod{T<:NoSoilData} <: AbstractSoilMethod{T}
+    soildata::T | NoSoilData()
 end
-@with_kw mutable struct DeficitSoilMethod{T<:AbstractDeficitSoilData} <: AbstractSoilMethod{T}
-    soildata::T = ContentSoilData()
+@default_kw struct DeficitSoilMethod{T<:AbstractDeficitSoilData} <: AbstractSoilMethod{T}
+    soildata::T | ContentSoilData()
 end
-@with_kw mutable struct PotentialSoilMethod{T<:PotentialSoilData} <: AbstractSoilMethod{T}
-    soildata::T = PotentialSoilData()
-end
-
-@mix @with_kw struct MaespaSoil{T<:AbstractPotentialDependence}
-    soildata::T = LinearPotentialDependence()
+@default_kw struct PotentialSoilMethod{T<:PotentialSoilData} <: AbstractSoilMethod{T}
+    soildata::T | PotentialSoilData()
 end
 
-@MaespaSoil mutable struct EmaxSoilMethod{} <: AbstractSoilMethod{T} end
-@MaespaSoil mutable struct TuzetSoilMethod{} <: AbstractSoilMethod{T} end
+@mix @default_kw struct MaespaSoil{T<:AbstractPotentialDependence}
+    soildata::T | LinearPotentialDependence()
+end
+
+@MaespaSoil struct EmaxSoilMethod{} <: AbstractSoilMethod{T} end
+@MaespaSoil struct TuzetSoilMethod{} <: AbstractSoilMethod{T} end
 
 
 "Physiological constants for CO2 snd rubisco comprensation points"
 abstract type AbstractCompensation end
 
-@with_kw struct BadgerCollatzCompensation <: AbstractCompensation 
-    Kc25::typeof(1.0u"μmol*mol^-1") = 404.0u"μmol*mol^-1" # MM coefft of Rubisco for CO2 (umol mol - 1)
-    Ko25::typeof(1.0u"μmol*mol^-1") = 248000.0u"μmol*mol^-1" # MM coefft of Rubisco for O2 (umol mol - 1)
-    ΔHa_Kc::typeof(1.0u"kJ*mol^-1") = 59.4u"kJ*mol^-1"  # Temp. response of Kc (J mol-1)
-    ΔHa_Ko::typeof(1.0u"kJ*mol^-1") = 36.0u"kJ*mol^-1"  # Temp. response of Ko (J mol-1)
-    tref::typeof(1.0u"°C")          = 25.0u"°C"
+@columns struct BadgerCollatzCompensation{μMoMo,kJMo,C} <: AbstractCompensation
+    Kc25::μMoMo     | 404.0    | u"μmol*mol^-1"    | Gamma(100, 404/100)    | "MM coefft of Rubisco for CO2"
+    Ko25::μMoMo     | 248000.0 | u"μmol*mol^-1"    | Gamma(100, 248000/100) | "MM coefft of Rubisco for O2"
+    ΔHa_Kc::kJMo    | 59.4     | u"kJ*mol^-1"      | Gamma(100, 59.4/100)   | "Temp. response of Kc"
+    ΔHa_Ko::kJMo    | 36.0     | u"kJ*mol^-1"      | Gamma(100, 36/100)     | "Temp. response of Ko"
+    tref::C         | 25.0     | u"°C"             | _                      | "Temperature reference, usually 25.0° C"
 end
 
 """
 Bernacchi et al 2001 PCE 24: 253 - 260
 Extra deactivation terms may be required above 40°C.
 """
-@with_kw struct BernacchiCompensation <: AbstractCompensation 
-    Kc25::typeof(1.0u"μmol*mol^-1") = 404.9u"μmol*mol^-1" # MM coefft of Rubisco for CO2
-    Ko25::typeof(1.0u"μmol*mol^-1") = 278400.0u"μmol*mol^-1" # MM coefft of Rubisco for O2
-    Γ☆25::typeof(1.0u"μmol*mol^-1") = 42.75u"μmol*mol^-1"
-    ΔHa_Kc::typeof(1.0u"kJ*mol^-1") = 79.43u"kJ*mol^-1" # Temp. response of Kc
-    ΔHa_Ko::typeof(1.0u"kJ*mol^-1") = 36.38u"kJ*mol^-1" # Temp. response of Ko
-    ΔHa_Γ☆::typeof(1.0u"kJ*mol^-1") = 37.83u"kJ*mol^-1"
-    tref::typeof(1.0u"°C")          = 25.0u"°C"
+@columns struct BernacchiCompensation{μMoMo,kJMo,C} <: AbstractCompensation
+    Kc25::μMoMo     | 404.9    | u"μmol*mol^-1"    | Gamma(10, 404.9/10)  | "MM coefft of Rubisco for CO2"
+    Ko25::μMoMo     | 278400.0 | u"μmol*mol^-1"    | Gamma(10, 278400/10) | "MM coefft of Rubisco for O2"
+    Γ☆25::μMoMo     | 42.75    | u"μmol*mol^-1"    | Gamma(10, 42.75/10)  | _
+    ΔHa_Kc::kJMo    | 79.43    | u"kJ*mol^-1"      | Gamma(10, 79.43/10)  | "Temp. response of Kc"
+    ΔHa_Ko::kJMo    | 36.38    | u"kJ*mol^-1"      | Gamma(10, 36.38/10)  | "Temp. response of Ko"
+    ΔHa_Γ☆::kJMo    | 37.83    | u"kJ*mol^-1"      | Gamma(10, 37.83/10)  | _
+    tref::C         | 25.0     | u"°C"             | _                    | _
 end
 
-
-""" Electron flux parameters """
+"Electron flux parameters"
 abstract type AbstractJmax end
-
-@with_kw mutable struct Jmax <: AbstractJmax 
-    jmax25::typeof(1.0u"μmol*m^-2*s^-1") = 184.0u"μmol*m^-2*s^-1"
-    delsj::typeof(1.0u"J*mol^-1*K^-1")   = 640.02u"J*mol^-1*K^-1" # DELTAS in Medlyn et al. (2002)
-    eavj::typeof(1.0u"J*mol^-1")         = 37259.0u"J*mol^-1" # Ha in Medlyn et al. (2002)
-    edvj::typeof(1.0u"J*mol^-1")         = 200000.0u"J*mol^-1" # Hd in Medlyn et al. (2002)
+ 
+@columns struct Jmax{μMoM2S,JMoK,JMo} <: AbstractJmax
+    jmax25::μMoM2S  | 184.0    | u"μmol*m^-2*s^-1" | Gamma(100, 184/100)    | _
+    delsj::JMoK     | 640.02   | u"J*mol^-1*K^-1"  | Gamma(100, 640.02/100) | "DELTAS in Medlyn et al. (2002)"
+    eavj::JMo       | 37259.0  | u"J*mol^-1"       | Gamma(100, 37259/100)  | "Ha     in Medlyn et al. (2002)"
+    edvj::JMo       | 200000.0 | u"J*mol^-1"       | Gamma(100, 200000/100) | "Hd     in Medlyn et al. (2002)"
 end
-
 
 abstract type AbstractVcmax end
 
 "@Vcmax mixin macro adds vcmax fields to a struct"
-@mix @with_kw struct Vcmax
-    vcmax25::typeof(1.0u"μmol*m^-2*s^-1") = 110.0u"μmol*m^-2*s^-1" 
-    eavc::typeof(1.0u"J*mol^-1")          = 47590.0u"J*mol^-1" # Ha in Medlyn et al. (2002)
+@mix @columns struct Vcmax{μMoM2S,JMo}
+    vcmax25::μMoM2S | 110.0    | u"μmol*m^-2*s^-1" | Gamma(100, 114/100)   | _
+    eavc::JMo       | 47590.0  | u"J*mol^-1"       | Gamma(100, 47590/100) | "Ha    in Medlyn et al. (2002)"
 end
 
-@Vcmax mutable struct NoOptimumVcmax <: AbstractVcmax end
-@Vcmax mutable struct OptimumVcmax <: AbstractVcmax
-    edvc::typeof(1.0u"J*mol^-1")       = 1.0u"J*mol^-1" # Hd in Medlyn et al. (2002)
-    delsc::typeof(1.0u"J*mol^-1*K^-1") = 629.26u"J*mol^-1*K^-1" # DELTAS in Medlyn et al. (2002)
+@Vcmax struct NoOptimumVcmax{} <: AbstractVcmax end
+@Vcmax struct OptimumVcmax{JMo,JMoK} <: AbstractVcmax
+    edvc::JMo       | 1.0      | u"J*mol^-1"       | Gamma(10, 1/10)        | "Hd in Medlyn et al. (2002)"
+    delsc::JMoK     | 629.26   | u"J*mol^-1*K^-1"  | Gamma(100, 629.26/100) | "DELTAS in Medlyn et al. (2002)"
 end
 
 
 abstract type AbstractVcJmax end
 
-@with_kw mutable struct VcJmax{J,V} <: AbstractVcJmax where {J<:AbstractVcmax,V<:AbstractJmax}
-    jmaxformulation::J      = Jmax()
-    vcmaxformulation::V     = OptimumVcmax()
+@default_kw struct VcJmax{J,V} <: AbstractVcJmax where {J<:AbstractVcmax,V<:AbstractJmax}
+    jmaxformulation::J  | Jmax()
+    vcmaxformulation::V | NoOptimumVcmax()
 end
-@with_kw mutable struct DukeVcJmax{J,V} <: AbstractVcJmax where {J<:AbstractVcmax,V<:AbstractJmax}
-    jmaxformulation::J      = Jmax()
-    vcmaxformulation::V     = OptimumVcmax()
-    tvjup::typeof(1.0u"°C") = 10.0u"°C"
-    tvjdn::typeof(1.0u"°C") = 0.0u"°C"
+@columns struct DukeVcJmax{J,V,C} <: AbstractVcJmax where {J<:AbstractVcmax,V<:AbstractJmax}
+    jmaxformulation::J  | Jmax()           | _     | _ | _
+    vcmaxformulation::V | NoOptimumVcmax() | _     | _ | _
+    tvjup::C            | 10.0             | u"°C" | _ | _
+    tvjdn::C            | 0.0              | u"°C" | _ | _
 end
 
 
 abstract type AbstractRubiscoRegen end
-
-@with_kw mutable struct RubiscoRegen <: AbstractRubiscoRegen
-    theta::Float64  = 0.4   # Shape parameter of the non-rectangular hyperbola.
-    ajq::Float64    = 0.324 # Quantum yield of electron transport.
+@columns struct RubiscoRegen{} <: AbstractRubiscoRegen
+    theta::Float64  | 0.4    | _                 | Beta(8, 12)  | "Shape parameter of the non-rectangular hyperbola."
+    ajq::Float64    | 0.324  | _                 | Beta(4, 8.3) | "Quantum yield of electron transport."
 end
-
 
 abstract type AbstractRespiration end
-
-@mix @with_kw struct Resp
-    q10f::typeof(1.0u"K^-1")          = 0.67u"K^-1" # logarithm of the Q10 (Equation for respiration)
-    rtemp::typeof(1.0u"°C")           = 25.0u"°C"   # Reference temperature (T at which RD0 was measured)
-    tbelow::typeof(-100.0u"°C")       = -100.0u"°C" # No respiration occurs below this temperature (degC).
-	dayresp::typeof(1.0)              = 1.0         # Respiration in the light as fraction of that in the dark.
-    rd0::typeof(1.0u"μmol*m^-2*s^-1") = 0.9u"μmol*m^-2*s^-1"
+@mix @columns struct Resp{pK,C,F,μMoM2S}
+    q10f::pK        | 0.67   | u"K^-1"           | _                 | "logarithm of the Q10 (Equation for respiration)"
+    dayresp::F      | 1.0    | _                 | Beta(5, 1)        | "Respiration in the light as fraction of that in the dark."
+    rd0::μMoM2S     | 0.9    | u"μmol*m^-2*s^-1" | Gamma(10, 0.9/10) | _
+    tbelow::C       | -100.0 | u"°C"             | _                 | "No respiration occurs below this temperature."
+    tref::C         | 25.0   | u"°C"             | _                 | "Reference temperature (T at which RD0 was measured)"
 end
 
-@Resp mutable struct Respiration <: AbstractRespiration end
-@Resp mutable struct AcclimatizedRespiration <: AbstractRespiration 
-    k10f::typeof(1.0u"K^-1") = 0.0u"K^-1"
-    tmove::typeof(1.0u"K")   = 1.0u"K"
+@Resp struct Respiration{} <: AbstractRespiration end
+@Resp struct AcclimatizedRespiration{pK,K} <: AbstractRespiration
+    k10f::pK        | 0.0    | u"K^-1"           | _             | _
+    tmove::K        | 1.0    | u"K"              | Gamma(2, 1/2) | _
 end
-
 
 abstract type AbstractStomatalConductance end
-
 " @Gs mixin macro adds stomatal conductance fields to a struct"
-@mix @with_kw struct Gs 
-    gamma::typeof(1.0u"μmol*mol^-1") = 0.0u"μmol*mol^-1" # Gamma for all Ball-Berry type models # 	
-    g1::typeof(1.0)                  = 7.0 # Slope parameter 
+@mix @columns struct Gs{μMoMo,F}
+    gamma::μMoMo    | 0.0    | u"μmol*mol^-1"    | Gamma(1, 2)     | "Gamma for all Ball-Berry type models"
+    g1::F           | 7.0    | _                 | Gamma(10, 7/10) | "Slope parameter"
 end
 
-""" 
+"""
 Ball-Berry stomaratl conductance formulation parameters
 `gamma` in μmol*mol^-1 and `g1`scalar, also used for all Ball-Berry type models.
 (modelgs = 2 in maestra)
 """
-@Gs mutable struct BallBerryStomatalConductance <: AbstractStomatalConductance end
+@Gs struct BallBerryStomatalConductance{} <: AbstractStomatalConductance end
 
-""" 
-Leuning stomatal conductance formulation 
-Has the extra `d0l` paramater in Pa. 
 """
-@Gs mutable struct LeuningStomatalConductance <: AbstractStomatalConductance 
-    d0l::typeof(1.0u"Pa")    = 1500.0u"Pa" 
+Leuning stomatal conductance formulation
+Has the extra `d0l` paramater in Pa.
+"""
+@Gs struct LeuningStomatalConductance{Pa} <: AbstractStomatalConductance
+    d0l::Pa    | 1500.0 | u"Pa" | Gamma(10, 1500/10) | _
 end
 
-""" 
-Medlyn stomatal conductance formulation parameters 
-Has the extra `vpdmin` paramater in Pa. 
+"""
+Medlyn stomatal conductance formulation parameters
+Has the extra `vpdmin` paramater in Pa.
 (modelgs = 4 in maestra)
 """
-@Gs mutable struct MedlynStomatalConductance <: AbstractStomatalConductance
-    vpdmin::typeof(1.0u"Pa") = 1500.0u"Pa"
+@Gs struct MedlynStomatalConductance{Pa} <: AbstractStomatalConductance
+    vpdmin::Pa | 1500.0 | u"Pa" | Gamma(10, 1500/10) | _
 end
 
-""" Three parameter Ball-Berry stomatal conductance formulation parameters 
-Has the extra `vpdmin` paramater in Pa and gk scalar parameter. 
+""" Three parameter Ball-Berry stomatal conductance formulation parameters
+Has the extra `vpdmin` paramater in Pa and gk scalar parameter.
 (modelgs = 5 in maestra)
 """
-@Gs mutable struct ThreeParStomatalConductance <: AbstractStomatalConductance
-    gk::typeof(1.0)          = 0.3 # Medlyn et al. 2011 model
-    vpdmin::typeof(1.0u"Pa") = 1500.0u"Pa"
+@Gs struct ThreeParStomatalConductance{F,Pa} <: AbstractStomatalConductance
+    gk::F      | 0.3    | _     | Gamma(2, 0.3/2)    | _
+    vpdmin::Pa | 1500.0 | u"Pa" | Gamma(10, 1500/10) | _
 end
- 
-""" Tuzet stomatal conductance formulation parameters 
+
+""" Tuzet stomatal conductance formulation parameters
 (modelgs = 5 in maestra)
 """
-@Gs mutable struct TuzetStomatalConductance <: AbstractStomatalConductance end
+@Gs struct TuzetStomatalConductance{} <: AbstractStomatalConductance end
 
 
 abstract type AbstractGSShape end
 
-struct HardMinimumGS <: AbstractGSShape end 
+struct HardMinimumGS <: AbstractGSShape end
 
-@with_kw mutable struct HyperbolicMinimumGS <: AbstractGSShape  
-    hmshape::Float64 = 0.5
+@columns struct HyperbolicMinimumGS <: AbstractGSShape
+    hmshape::Float64 | 0.999 | _ | Beta(20, 1.01) | _
 end
 
 
@@ -228,15 +220,15 @@ abstract type AbstractBallBerryModel{GS,SM} <: AbstractPhotoModel end
 abstract type AbstractMaespaModel{GS,SM} <: AbstractBallBerryModel{GS,SM} end
 
 " @BB mixin macro adds base Balll-Berry fields to a struct"
-@mix @with_kw struct BB
-    g0::typeof(1.0u"mol*m^-2*s^-1") = 0.03u"mol*m^-2*s^-1" # Stomatal leakiness (gs when photosynthesis is zero).  
+@mix @columns struct BB{MoM2S}
+    g0::MoM2S | 0.03 | u"mol*m^-2*s^-1" | Gamma(10, 0.03/10) | "Stomatal leakiness (gs when photosynthesis is zero)."
 end
 
 " @Maespa mixin macro adds base maespa fields to a struct"
-@BB @mix struct Maespa{SH}
-    plantk::typeof(1.0u"mmol*m^-2*s^-1*MPa^-1")     = 3.0u"mmol*m^-2*s^-1*MPa^-1" 
-    totsoilres::typeof(1.0u"m^2*s^1*MPa^1*mmol^-1") = 0.5u"m^2*s^1*MPa^1*mmol^-1"
-    gsshape::SH                                     = HardMinimumGS()
+@BB @mix struct Maespa{mMoM2S,M2SMPaMo,SH}
+    plantk::mMoM2S       | 3.0             | u"mmol*m^-2*s^-1*MPa^-1" | _ | _
+    totsoilres::M2SMPaMo | 0.5             | u"m^2*s^1*MPa^1*mmol^-1" | _ | _
+    gsshape::SH          | HardMinimumGS() | _                        | _ | _
 end
 
 """
@@ -245,9 +237,9 @@ General Ball-Berry stomatal conductance model.
 THis model has various submodels and soil water methods defined in gsmodel
 and soilmethod.
 """
-@BB mutable struct BallBerryModel{GS, SM} <: AbstractBallBerryModel{GS,SM}
-    gsmodel::GS    = BallBerryStomatalConductance()
-    soilmethod::SM = PotentialSoilMethod()
+@BB struct BallBerryModel{GS,SM} <: AbstractBallBerryModel{GS,SM}
+    gsmodel::GS    | BallBerryStomatalConductance() | _ | _ | _
+    soilmethod::SM | PotentialSoilMethod()          | _ | _ | _
 end
 
 """
@@ -255,160 +247,159 @@ Tuzet stomatal conductance model.
 
 This model is limited to using `TuzetStomatalConductance` and `TuzetSoilMethods`.
 """
-@Maespa mutable struct TuzetModel{GS<:TuzetStomatalConductance, 
-                                           SM<:TuzetSoilMethod{<:AbstractPotentialDependence}
-                                          } <: AbstractMaespaModel{GS,SM}
-    gsmodel::GS    = TuzetStomatalConductance()
-    soilmethod::SM = TuzetSoilMethod()
+@Maespa struct TuzetModel{GS<:TuzetStomatalConductance,
+                          SM<:TuzetSoilMethod{<:AbstractPotentialDependence}
+                         } <: AbstractMaespaModel{GS,SM}
+    gsmodel::GS    | TuzetStomatalConductance() | _ | _ | _
+    soilmethod::SM | TuzetSoilMethod()          | _ | _ | _
 end
 
 
 """
 Emax stomatal conductance model from maespa.
-Similar options for specialised stomatal conducance, 
+Similar options for specialised stomatal conducance,
 but using emax soil water methods.
 """
-@Maespa mutable struct EmaxModel{GS<:AbstractStomatalConductance, 
-                                          SM<:EmaxSoilMethod{<:AbstractPotentialDependence},
-                                         } <: AbstractMaespaModel{GS,SM}
-    gsmodel::GS    = BallBerryStomatalConductance()
-    soilmethod::SM = EmaxSoilMethod()
+@Maespa struct EmaxModel{GS<:AbstractStomatalConductance,
+                         SM<:EmaxSoilMethod{<:AbstractPotentialDependence},
+                        } <: AbstractMaespaModel{GS,SM}
+    gsmodel::GS    | BallBerryStomatalConductance() | _ | _
+    soilmethod::SM | EmaxSoilMethod()               | _ | _
 end
 
 """
-Fixed parameters for photosynthesis. 
+Fixed parameters for photosynthesis.
 
 THe majority of these are "composed" from submodels that both hold
-the parameters and use their own specific methods during the photosynthesis 
+the parameters and use their own specific methods during the photosynthesis
 routines.
 
 Calling `PhotoParams()` will give the default values for all of these submodels.
 Any parameters and submodels can be overridden with keyword arguments:
 
-`PhotoParams(model=TuzetModel, ca= 450u"μmol*mol^-1")` 
+`PhotoParams(model=TuzetModel, ca= 450 | u"μmol*mol^-1")`
 """
-@with_kw mutable struct FvCBPhoto{F<:AbstractPhotoModel,
-                                  V<:AbstractVcJmax,
-                                  KM<:AbstractCompensation,
-                                  Ru<:AbstractRubiscoRegen,
-                                  Re<:AbstractRespiration}
-    model::F          = BallBerryModel()
-    vcjmax::V         = VcJmax()
-    compensation::KM  = BernacchiCompensation()
-    rubisco_regen::Ru = RubiscoRegen()
-    respiration::Re   = Respiration()
+@default_kw struct FvCBPhoto{F<:AbstractPhotoModel,
+                             V<:AbstractVcJmax,
+                             KM<:AbstractCompensation,
+                             Ru<:AbstractRubiscoRegen,
+                             Re<:AbstractRespiration}
+    model::F          | BallBerryModel()       
+    vcjmax::V         | VcJmax()               
+    compensation::KM  | BernacchiCompensation()
+    rubisco_regen::Ru | RubiscoRegen()         
+    respiration::Re   | Respiration()          
 end
 
 
 abstract type AbstractBoundaryConductance end
 
-@with_kw mutable struct BoundaryConductance{Me} <: AbstractBoundaryConductance
-    leafwidth::Me = 0.05u"m"
+@columns struct BoundaryConductance{Me} <: AbstractBoundaryConductance
+    leafwidth::Me | 0.05 | u"m" | Gamma(2, 0.05/2) | "Mean width of leaves"
 end
 
 
 abstract type AbstractRadiationConductance end
 
-@with_kw mutable struct YingPingRadiationConductance{T} <: AbstractRadiationConductance
-    rdfipt::T = 1.0
-    tuipt::T  = 1.0
-    tdipt::T  = 1.0
+@columns struct YingPingRadiationConductance{T} <: AbstractRadiationConductance
+    rdfipt::T | 1.0 | _ | _ | _
+    tuipt::T  | 1.0 | _ | _ | _
+    tdipt::T  | 1.0 | _ | _ | _
 end
 
 
 abstract type AbstractDecoupling end
 
-mutable struct McNaughtonJarvisDecoupling <: AbstractDecoupling end
+struct McNaughtonJarvisDecoupling <: AbstractDecoupling end
 struct NoDecoupling <: AbstractDecoupling end
 
 
-@with_kw mutable struct EnergyBalance{Ph,
+@default_kw struct EnergyBalance{Ph,
                                     Ra<:AbstractRadiationConductance,
                                     Bo<:AbstractBoundaryConductance,
                                     De<:AbstractDecoupling}
-    radiation_conductance::Ra = YingPingRadiationConductance()
-    boundary_conductance::Bo  = BoundaryConductance()
-    decoupling::De            = McNaughtonJarvisDecoupling()
-    photo::Ph                 = FvCBPhoto()
-    itermax::Int              = 100
+    radiation_conductance::Ra | YingPingRadiationConductance()
+    boundary_conductance::Bo  | BoundaryConductance()
+    decoupling::De            | McNaughtonJarvisDecoupling()
+    photo::Ph                 | FvCBPhoto()
+    itermax::Int              | 100
 end
 
+
+
+###########################################################################################
+# Variables
 
 "@Environment mixin macro"
-
-@mix @with_kw struct Environment
-    tair::typeof(1.0u"°C")                  = 25.0u"°C"
-    windspeed::typeof(1.0u"m*s^-1")         = 1.0u"m*s^-1"
-    par::typeof(1.0*250.0u"μmol*m^-2*s^-1") = 4.575*250.0u"μmol*m^-2*s^-1"
-    rnet::typeof(1.0u"W*m^-2")              = 250.0u"W*m^-2"
-    soilmoist::typeof(1.0)                  = 0.2
-    pressure::typeof(1.0u"kPa")             = 101.25u"kPa"
-    tleaf::typeof(1.0u"°C")                 = 25.0u"°C"
-    swp::typeof(-100.0u"kPa")               = -100.0u"kPa"
-    swpshade::typeof(-100.0u"kPa")          = -100.0u"kPa"
-    vpd::typeof(1.0u"kPa")                  = 0.5u"kPa"
-    ca::typeof(1.0u"μmol*mol^-1")           = 400.0u"μmol*mol^-1"
-    rh::typeof(1.0)                         = 0.5
+@mix @label @units @default_kw struct Environment{C,MS,μMoM2S,WM2,F,kPa,μMoMo}
+    tair::C          | 25.0        | u"°C"                    | _
+    windspeed::MS    | 1.0         | u"m*s^-1"                | _
+    par::μMoM2S      | 4.575*250.0 | u"μmol*m^-2*s^-1"        | _
+    rnet::WM2        | 250.0       | u"W*m^-2"                | _
+    soilmoist::F     | 0.2         | _                        | _
+    pressure::kPa    | 101.25      | u"kPa"                   | _
+    tleaf::C         | 25.0        | u"°C"                    | _
+    swp::kPa         | -100.0      | u"kPa"                   | _
+    swpshade::kPa    | -100.0      | u"kPa"                   | _
+    vpd::kPa         | 0.5         | u"kPa"                   | _
+    ca::μMoMo        | 400.0       | u"μmol*mol^-1"           | _
+    rh::F            | 0.5         | _                        | _
 end
 
-
 "Vars mixin macro"
-@Environment @mix struct Vars
+@Environment @mix struct Vars{μMoMo,kPa,F,WM2,MMoPaJS,μMoM2S,JMo,PaK,MoM2S,MoμMo,μMoMo}
     # shared
-    cs::typeof(1.0u"μmol*mol^-1")          = 400.0u"μmol*mol^-1"
-    vpdleaf::typeof(1.0u"kPa")             = 0.8u"kPa"
-    rhleaf::typeof(1.0)                    = 0.99 # Ball-Berry Stomatal Conductance
+    cs::μMoMo        | 400.0       | u"μmol*mol^-1"           | _
+    vpdleaf::kPa     | 0.8         | u"kPa"                   | _
+    rhleaf::F        | 0.99        | _                        |  "Only in Ball-Berry Stomatal Conductance"
     # energy balance
-    fheat::typeof(1.0u"W*m^-2")            = 1.0u"W*m^-2"
-    gbhu::typeof(1.0u"m*mol*Pa*J^-1*s^-1") = 1.0u"m*mol*Pa*J^-1*s^-1"
-    gbhf::typeof(1.0u"m*mol*Pa*J^-1*s^-1") = 1.0u"m*mol*Pa*J^-1*s^-1"
-    gh::typeof(1.0u"m*mol*Pa*J^-1*s^-1")   = 1.0u"m*mol*Pa*J^-1*s^-1"
-    gradn::typeof(1.0u"mol*m^-2*s^-1")     = 1.0u"mol*m^-2*s^-1"
-    lhv::typeof(1.0u"J*mol^-1")            = 1.0u"J*mol^-1"
-    et::typeof(1.0u"mol*m^-2*s^-1")        = 1.0u"mol*m^-2*s^-1"
-    slope::typeof(1.0u"Pa*K^-1")           = 1.0u"Pa*K^-1"
-    decoup::typeof(1.0)                    = 0.0
+    fheat::WM2       | 1.0         | u"W*m^-2"                | _
+    gbhu::MMoPaJS    | 1.0         | u"m*mol*Pa*J^-1*s^-1"    | _
+    gbhf::MMoPaJS    | 1.0         | u"m*mol*Pa*J^-1*s^-1"    | _
+    gh::MMoPaJS      | 1.0         | u"m*mol*Pa*J^-1*s^-1"    | _
+    gradn::MoM2S     | 1.0         | u"mol*m^-2*s^-1"         | _
+    lhv::JMo         | 1.0         | u"J*mol^-1"              | _
+    et::MoM2S        | 1.0         | u"mol*m^-2*s^-1"         | _
+    slope::PaK       | 1.0         | u"Pa*K^-1"               | _
+    decoup::F        | 0.0         | _                        | _
     # photosynthesis
-    gsdiva::typeof(1.0u"mol*μmol^-1")      = 1.0u"mol*μmol^-1"
-    km::typeof(1.0u"μmol*mol^-1")          = 1.0u"μmol*mol^-1"
-    ci::typeof(1.0u"μmol*mol^-1")          = 1.0u"μmol*mol^-1"
-    gammastar::typeof(1.0u"μmol*mol^-1")   = 1.0u"μmol*mol^-1"
-    gs::typeof(1.0u"mol*m^-2*s^-1")        = 1.0u"mol*m^-2*s^-1"
-    jmax::typeof(1.0u"μmol*m^-2*s^-1")     = 1.0u"μmol*m^-2*s^-1"
-    vcmax::typeof(1.0u"μmol*m^-2*s^-1")    = 1.0u"μmol*m^-2*s^-1"
-    rd::typeof(1.0u"μmol*m^-2*s^-1")       = 1.0u"μmol*m^-2*s^-1"
-    ac::typeof(1.0u"μmol*m^-2*s^-1")       = 1.0u"μmol*m^-2*s^-1"
-    aleaf::typeof(1.0u"μmol*m^-2*s^-1")    = 1.0u"μmol*m^-2*s^-1"
-    vj::typeof(1.0u"μmol*m^-2*s^-1")       = 1.0u"μmol*m^-2*s^-1"
-    aj::typeof(1.0u"μmol*m^-2*s^-1")       = 1.0u"μmol*m^-2*s^-1"
+    gsdiva::MoμMo    | 1.0         | u"mol*μmol^-1"           | _
+    km::μMoMo        | 1.0         | u"μmol*mol^-1"           | _
+    ci::μMoMo        | 1.0         | u"μmol*mol^-1"           | _
+    gammastar::μMoMo | 1.0         | u"μmol*mol^-1"           | _
+    gs::MoM2S        | 1.0         | u"mol*m^-2*s^-1"         | _
+    jmax::μMoM2S     | 1.0         | u"μmol*m^-2*s^-1"        | _
+    vcmax::μMoM2S    | 1.0         | u"μmol*m^-2*s^-1"        | _
+    rd::μMoM2S       | 1.0         | u"μmol*m^-2*s^-1"        | _
+    ac::μMoM2S       | 1.0         | u"μmol*m^-2*s^-1"        | _
+    aleaf::μMoM2S    | 1.0         | u"μmol*m^-2*s^-1"        | _
+    vj::μMoM2S       | 1.0         | u"μmol*m^-2*s^-1"        | _
+    aj::μMoM2S       | 1.0         | u"μmol*m^-2*s^-1"        | _
     # soil
-    fsoil::typeof(1.0)                     = 1.0
+    fsoil::F         | 1.0         | _                        | _
 end
 
 "@MaespaVars mixin macro"
-@Vars @mix struct MaespaVars
-    ktot::typeof(1.0u"mmol*m^-2*s^-1*MPa^-1") = 2.0u"mmol*m^-2*s^-1*MPa^-1" 
-    weightedswp::typeof(1.0u"kPa")            = 0.0u"kPa"
-    psil::typeof(-111.0u"kPa")                = -111.0u"kPa"
+@Vars @mix struct MaespaVars{mMoM2SMPa,kPa}
+    ktot::mMoM2SMPa  | 2.0         | u"mmol*m^-2*s^-1*MPa^-1" | _
+    weightedswp::kPa | 0.0         | u"kPa"                   | _
+    psil::kPa        | -111.0      | u"kPa"                   | _
 end
 
-@MaespaVars @mix struct TuzetVars
-    psilin::typeof(-999.0u"kPa") = -999.0u"kPa"
-  	psiv::typeof(-1.9u"kPa")     = -1.9u"kPa"
-    sf::typeof(1.0u"kPa^-1")     = 3.2u"kPa^-1"
+@MaespaVars struct TuzetVars{kPa}
+    psilin::kPa      | -999.0      | u"kPa"                   | _
+    psiv::kPa        | -1.9        | u"kPa"                   | _
+    sf::kPa          | 3.2         | u"kPa^-1"                | _
 end
 
-@MaespaVars @mix struct EmaxVars
-    minleafwp::typeof(1.0u"kPa")           = 0.1u"kPa"
-    emaxleaf::typeof(1.0u"mmol*m^-2*s^-1") = 400.0u"mmol*m^-2*s^-1"
+@MaespaVars struct EmaxVars{kPa,mMoM2S}
+    minleafwp::kPa   | 0.1         | u"kPa"                   | _
+    emaxleaf::mMoM2S | 400.0       | u"mmol*m^-2*s^-1"        | _
 end
 
-@Vars @mix struct JarvisVars
-    vmleaf::typeof(1.0u"mmol*mol^-1") = 1.0u"mmol*mol^-1"
+@Vars struct JarvisVars{mMoMo}
+    vmleaf::mMoMo    | 1.0         | u"mmol*mol^-1"           | _
 end
 
 @Vars mutable struct PhotoVars{} end
 @Vars mutable struct BallBerryVars{} end
-@EmaxVars mutable struct EmaxVars{} end
-@TuzetVars mutable struct TuzetVars{} end
-@JarvisVars mutable struct JarvisVars{} end

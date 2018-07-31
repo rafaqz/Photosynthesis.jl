@@ -360,6 +360,7 @@ ismaespa = true
     @test_broken aleaf[1] == v.aleaf.val# rtol=1e-6
     @test_broken gs[1] ≈ v.gs.val rtol=1e-7
     @test ci[1] ≈ v.ci.val rtol=1e-6
+
 end
 
 
@@ -389,19 +390,19 @@ end
     arrh_ref = ccall(arrhfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}), 42.75, 37830.0, 30.0, 25.0)
     arrh = arrhenius(42.75u"μmol*mol^-1", 37830.0u"J*mol^-1", 30.0u"°C" |> u"K", 25.0u"°C" |> u"K")
     @test arrh.val ≈ arrh_ref
-    # vcmaxtfn = Libdl.dlsym(photosynlib, :vcmaxtfn_)
-    # f = DukeVcJmax(vcmaxformulation=OptimumVcmax())
-    # vcmax_ref = ccall(vcmaxtfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
-                             # ), vcmax25,tleaf,eavc,edvc,delsc,tvjup,tvjdn)
-    # @test ustrip(max_rubisco_activity(f, v, p)) ≈ vcmax_ref
-    # rtol=1e-4
+    vcmaxtfn = Libdl.dlsym(photosynlib, :vcmaxtfn_)
+    f = DukeVcJmax(vcmaxformulation=OptimumVcmax())
+    vcmax_ref = ccall(vcmaxtfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
+                             ), vcmax25,tleaf,eavc,edvc,delsc,tvjup,tvjdn)
+    @test ustrip(max_rubisco_activity(f, v, p)) ≈ vcmax_ref
 
     quadm_fort = Libdl.dlsym(photosynlib, :quadm_)
     f = p.photo.rubisco_regen
     a = theta[1]
     b = -(ajq[1] * par[1] + v.jmax.val)
     c = ajq[1] * par[1] * v.jmax.val
-    vj1 = ccall(quadm_fort, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Int32}), a, b, c, 1)/4.0
-    quad(Val{:lower}, a,b,c)/4
-    vj2 = rubisco_regeneration(p.photo.rubisco_regen, v, p)
+    quad_ref = ccall(quadm_fort, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Int32}), a, b, c, 1)/4.0
+    quad_test = quad(Val{:lower}, a,b,c)/4
+    @test quad_ref ≈ quad_test atol=1e-5
+
 end
