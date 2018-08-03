@@ -1,8 +1,8 @@
 module Photosynthesis
 
-using Unitful, Defaults, DocStringExtensions, Mixers, Roots, MetaFields, MetaFieldBase, Distributions
+using Unitful, Defaults, DocStringExtensions, Mixers, Roots, MetaFields, Distributions
 
-import MetaFieldBase: @prior, @default, @label, @units, prior, default, label, units
+import MetaFields: @prior, @default, @label, @units, prior, default, label, units
 
 Defaults.get_default(t::Type) = begin 
     d = default(t) 
