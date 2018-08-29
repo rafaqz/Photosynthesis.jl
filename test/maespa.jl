@@ -192,7 +192,7 @@ ismaespa = true
     photosyn = Libdl.dlsym(photosynlib, :photosyn_)
 
     ccall(photosyn,
-        Void,
+        Nothing,
         (
     Ref{Float32},
     Ref{Float32},
