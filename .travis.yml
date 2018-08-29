@@ -35,6 +35,11 @@ script:
   - gfortran -ffree-line-length-200 -shared -O2 metcom.f90 -o metcom.so -fPIC
   - gfortran -shared -O2 physiol.f90 -o physiol.so -fPIC
   - cd ..
+  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/rafaqz/Tags.jl.git")); Pkg.build("Tags")'
+  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/rafaqz/Nested.jl.git")); Pkg.build("Nested")'
+  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/rafaqz/Mixers.jl.git")); Pkg.build("Mixers")'
+  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/rafaqz/Defaults.jl.git")); Pkg.build("Defaults")'
+  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/rafaqz/Flatten.jl.git")); Pkg.build("Flatten")'
   - julia -e 'using Pkg; Pkg.add(PackageSpec(url=pwd())); Pkg.build("Photosynthesis"); Pkg.test("Photosynthesis"; coverage=true)'
 after_success:
   # push coverage results to Coveralls
