@@ -33,10 +33,10 @@ function co2_compensation_point end
 """
 co2_compensation_point(f::BadgerCollatzCompensation, v, p) = begin
     # if tleaf < -1.0  calculate gamma for t = -1 (quadratic not applicable)
-    tleaf1 = max(-1.0u"°C", v.tleaf)
+    tleaf1 = max(-1.0°C, v.tleaf)
     # TODO these numbers should be parameters
-    36.9u"μmol*mol^-1" + 1.88u"μmol*mol^-1*°C^-1" *
-    (tleaf1 - f.tref) + 0.036u"μmol*mol^-1*°C^-2" * (tleaf1 - f.tref)^2
+    36.9μmol*mol^-1 + 1.88μmol*mol^-1*°C^-1 *
+    (tleaf1 - f.tref) + 0.036μmol*mol^-1*°C^-2 * (tleaf1 - f.tref)^2
 end
 
 """ 
@@ -77,11 +77,11 @@ max_electron_transport_rate(f::VcJmax, v, p) = max_electron_transport_rate(f.jma
 Calculates the potential max_electron transport rate (Jmax) at the leaf temperature 
 """
 max_electron_transport_rate(f::Jmax, v, p) = begin
-    tleafK = v.tleaf |> u"K"
-    K25 = 25.0u"°C" |> u"K"
-    f.jmax25 * e^((tleafK - K25) * f.eavj / (u"R" * tleafK * K25)) *
-    (1 + e^((f.delsj * K25 - f.edvj) / (u"R" * K25))) /
-    (1 + e^((f.delsj * tleafK - f.edvj) / (u"R" * tleafK)))
+    tleafK = v.tleaf |> K
+    K25 = 25.0°C |> K
+    f.jmax25 * e^((tleafK - K25) * f.eavj / (R * tleafK * K25)) *
+    (1 + e^((f.delsj * K25 - f.edvj) / (R * K25))) /
+    (1 + e^((f.delsj * tleafK - f.edvj) / (R * tleafK)))
 end
 
 """
@@ -107,17 +107,17 @@ max_rubisco_activity(f::VcJmax, v, p) = max_rubisco_activity(f.vcmaxformulation,
 
 """ Vcmax forulation with no optimum"""
 function max_rubisco_activity(f::NoOptimumVcmax, v, p)
-    tleafK = v.tleaf |> u"K"
-    K25 = 25u"°C" |> u"K"
-    f.vcmax25 * e^((f.eavc * (v.tleaf - 25u"°C")) / (K25 * u"R" * tleafK))
+    tleafK = v.tleaf |> K
+    K25 = 25°C |> K
+    f.vcmax25 * e^((f.eavc * (v.tleaf - 25°C)) / (K25 * R * tleafK))
 end
 """ Vcmax formulation with optimum"""
 function max_rubisco_activity(f::OptimumVcmax, v, p)
-    tleafK = v.tleaf |> u"K"
-    K25 = 25u"°C" |> u"K"
-    f.vcmax25 * e^((v.tleaf - 25u"°C") * f.eavc / (u"R" * tleafK * K25)) *
-    (1.0 + e^((f.delsc * K25 - f.edvc) / (u"R" * K25))) /
-    (1.0 + e^((f.delsc * tleafK - f.edvc) / (u"R" * tleafK)))
+    tleafK = v.tleaf |> K
+    K25 = 25°C |> K
+    f.vcmax25 * e^((v.tleaf - 25°C) * f.eavc / (R * tleafK * K25)) *
+    (1.0 + e^((f.delsc * K25 - f.edvc) / (R * K25))) /
+    (1.0 + e^((f.delsc * tleafK - f.edvc) / (R * tleafK)))
 end
 
 """ Calculates respiration from temperature using a Q10 (exponential) formulation """

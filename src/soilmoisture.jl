@@ -49,7 +49,6 @@ end
     soil_water_conductance(soil::PotentialSoilData, soilmoist, v, p)
 Negative exponential function of soil water potential. 
 """
-
 soil_water_conductance(soil::PotentialSoilData, soilmoist, v, p) = begin
     # Exponential relationship with potential: parameter = SWPEXP
     # TODO: default value for effect? 

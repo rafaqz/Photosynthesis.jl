@@ -7,26 +7,26 @@ abstract type AbstractJarvisLight end
 @chain jcolumns @units @default_kw 
 
 @jcolumns mutable struct JarvisLight{T} <: AbstractJarvisLight 
-    i0::T | 1.0 | u"mol*m^-2*s^-1"
+    i0::T | 1.0 | mol*m^-2*s^-1
 end
 
 abstract type AbstractJarvisCO2 end
 
 struct JarvisNoCO2 <: AbstractJarvisCO2 end
 @jcolumns mutable struct JarvisLinearCO2{T} <: AbstractJarvisCO2 
-    gsja::T | 1.0 | u"μmol^-1*mol"
+    gsja::T | 1.0 | μmol^-1*mol
 end
 @jcolumns mutable struct JarvisNonlinearCO2{T} <: AbstractJarvisCO2 
-    gsjb::T | 1.0 | u"μmol*mol^-1"
+    gsjb::T | 1.0 | μmol*mol^-1
 end
 
 
 abstract type AbstractJarvisTemp end
 
 @mix @jcolumns struct JarTemp{T}
-    tmax::T | 40.0 | u"°C" 
-    tref::T | 25.0 | u"°C" 
-    t0::T   | 0.0  | u"°C" 
+    tmax::T | 40.0 | °C 
+    tref::T | 25.0 | °C 
+    t0::T   | 0.0  | °C 
 end
 
 struct JarvisNoTemp <: AbstractJarvisTemp end
@@ -50,14 +50,14 @@ Non-linear Lohammer response to vapour pressure deficit.
 Parameters vpd1 and vpd2 are in Pascals.
 """
 @jcolumns mutable struct JarvisLohammerVPD{T} <: AbstractJarvisVPD 
-    vpd1::T  | 1.0 | u"Pa"
-    vpd2::T  | 1.0 | u"Pa"
+    vpd1::T  | 1.0 | Pa
+    vpd2::T  | 1.0 | Pa
 end
 @jcolumns mutable struct JarvisFractionDeficitVPD{T} <: AbstractJarvisVPD 
-    vmfd0::T | 1.0 | u"mmol*mol^-1"
+    vmfd0::T | 1.0 | mmol*mol^-1
 end
 @jcolumns mutable struct JarvisLinearDeclineVPD{T} <: AbstractJarvisVPD 
-    d0::T    | 1.0 | u"Pa"
+    d0::T    | 1.0 | Pa
 end
 
 
@@ -92,9 +92,9 @@ to gain an overall stomatal conductance.
     vpdmethod::V   | JarvisLohammerVPD()  | _
     lightmethod::L | JarvisLight()        | _
     tempmethod::T  | JarvisTemp2()        | _
-    gsmin::MoMeS   | 1.0                  | u"mol*m^-2*s^-1"
-    gsref::MoMeS   | 1.0                  | u"mol*m^-2*s^-1"
-    vmfd::mMoMoS   | 1.0                  | u"mmol*mol^-1"
+    gsmin::MoMeS   | 1.0                  | mol*m^-2*s^-1
+    gsref::MoMeS   | 1.0                  | mol*m^-2*s^-1
+    vmfd::mMoMoS   | 1.0                  | mmol*mol^-1
 end
 
 """ Response to incident radiation in umol m^-2 s^-1 """

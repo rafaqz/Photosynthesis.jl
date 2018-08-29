@@ -205,12 +205,12 @@ gsdiva(f::LeuningStomatalConductance, v, p) =
 """
     gsdiva(::MedlynStomatalConductance, v, p) """
 gsdiva(f::MedlynStomatalConductance, v, p) =
-    (1.0 + (f.g1 * v.fsoil) / sqrt(max(f.vpdmin, v.vpdleaf)u"Pa^-1")) / v.cs
+    (1.0 + (f.g1 * v.fsoil) / sqrt(max(f.vpdmin, v.vpdleaf)Pa^-1)) / v.cs
 
 """
     gsdiva(::ThreeParStomatalConductance, v, p) """
 gsdiva(f::ThreeParStomatalConductance, v, p) =
-    f.g1 / (v.cs - f.gamma) / (max(f.vpdmin, v.vpdleaf)u"Pa^-1")^f.gk
+    f.g1 / (v.cs - f.gamma) / (max(f.vpdmin, v.vpdleaf)Pa^-1)^f.gk
 
 """
     gsdiva(::TuzetStomatalConductance, v, p) """

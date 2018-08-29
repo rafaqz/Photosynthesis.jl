@@ -102,7 +102,7 @@ function converge_tleaf!(v, p)
         v.cs = v.ca - v.aleaf / gbc # TODO this value is way too low
         tleaf1 = leaftemp(v, p)
         v.vpdleaf = v.et * v.pressure / gv # TODO and this seems too high?
-        uconvert(u"kPa", v.vpdleaf)
+        uconvert(kPa, v.vpdleaf)
 
         model_update!(v, p.photo.model, p, tleaf1) # Model-specific var updates
 
@@ -190,10 +190,10 @@ Returns the "radiation conductance" at given temperature.
 Formula from Ying-Ping"s version of Maestro.
 See also Jones (1992) p. 108.0
 
-Return u"mol*m^-2*s^-1"
+Return mol*m^-2*s^-1
 """
 yingping_radiation_conductance(tair, rdfipt, tuipt, tdipt) =
-    4.0 * u"σ" * ((tair |> u"K")^3.0) * rdfipt / tdipt * EMLEAF * 
+    4.0 * σ * ((tair |> K)^3.0) * rdfipt / tdipt * EMLEAF * 
     (tdipt + tuipt) / (CPAIR * AIRMA)
 
 
@@ -208,7 +208,7 @@ w is leaf width
 See Leuning et al (1995) PCE 18:1183-1200 Eqn E1
 """
 forced_boundary_conductance(wind, width) = 
-    0.003u"m*s^-1" * sqrt(ustrip(wind / width))
+    0.003m*s^-1 * sqrt(ustrip(wind / width))
 
 """
     boundary_conductance_free(α, Tl, Ta, w)
@@ -235,7 +235,7 @@ return: dimensionless
 
 See Leuning et al (1995) PCE 18:1183-1200 Eqn E4
 """
-grashof_number(Tl, Ta, w) = 1.6e8u"m^-3*°C^-1" * w^3.0 * abs(Tl - Ta)
+grashof_number(Tl, Ta, w) = 1.6e8m^-3*°C^-1 * w^3.0 * abs(Tl - Ta)
 
 
 """
@@ -243,7 +243,7 @@ grashof_number(Tl, Ta, w) = 1.6e8u"m^-3*°C^-1" * w^3.0 * abs(Tl - Ta)
 
 Caculates the late hear of water vapour from the air temperature.
 """
-latent_heat_water_vapour(Ta) = (H2OLV0 - 2.365e3u"J*kg^-1*°C^-1" * Ta) * H2OMW
+latent_heat_water_vapour(Ta) = (H2OLV0 - 2.365e3J*kg^-1*°C^-1 * Ta) * H2OMW
 
 
 """
@@ -254,17 +254,17 @@ Ea the activation energy (j mol - 1) and
 T the temp (deg #).
 Standard form and temperature difference form.
 """
-arrhenius(A, Ea, T::typeof(1.0u"°C")) = arrhenius(A, Ea, T |> u"K")
-arrhenius(A, Ea, T) = A * e^(Ea / (u"R" * T))
-arrhenius(kref, Ea, T::typeof(1.0u"°C"), Tref::typeof(1.0u"°C")) = arrhenius(kref, Ea, T |> u"K", Tref |> u"K")
-arrhenius(kref, Ea, T::typeof(1.0u"K"), Tref::typeof(1.0u"K")) = kref * e^(Ea * (T - Tref) / (u"R" * T * Tref))
+arrhenius(A, Ea, T::typeof(1.0°C)) = arrhenius(A, Ea, T |> K)
+arrhenius(A, Ea, T) = A * e^(Ea / (R * T))
+arrhenius(kref, Ea, T::typeof(1.0°C), Tref::typeof(1.0°C)) = arrhenius(kref, Ea, T |> K, Tref |> K)
+arrhenius(kref, Ea, T::typeof(1.0K), Tref::typeof(1.0K)) = kref * e^(Ea * (T - Tref) / (R * T * Tref))
 
 
 """
 # Calculate saturated water vapour pressure (Pa) at temperature Ta (Celsius)
 # from Jones 1992 p 110 (note error in a - wrong units)
 """
-saturated_vapour_pressure(Ta) = 613.75u"Pa" * exp(17.502 * Ta / (240.97u"°C" + Ta))
+saturated_vapour_pressure(Ta) = 613.75Pa * exp(17.502 * Ta / (240.97°C + Ta))
 
 
 """
@@ -279,9 +279,9 @@ lhv latent heat of water at air T, J mol-1
 Rn net radiation, J m-2 s-1
 Da vapour pressure deficit of air, Pa
 gh boundary layer conductance to heat (freeforcedradiative components), mol m-2 s-1
-gv conductance to water vapour (stomatalbdry layer components), u"mol*m^-2*s^-1"
+gv conductance to water vapour (stomatalbdry layer components), mol*m^-2*s^-1
 
-Result in u"mol*m^-2*s^-1"
+Result in mol*m^-2*s^-1
 """
 penman_monteith(ρa, Δ, lhv, Rn, Da, gh, gv) = begin
     #FIXME gv <= zero(gv) && return zero(Rn / lhv)
@@ -295,6 +295,6 @@ end
 
 """
     cmolar(ρ, Ta)
-Convert from "m*s^-1" to "mol*m^-2*s^-1"
+Convert from m*s^-1 to mol*m^-2*s^-1
 """
-cmolar(pressure, tair) = pressure / (u"R" * (tair |> u"K"))
+cmolar(pressure, tair) = pressure / (R * (tair |> K))

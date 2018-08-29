@@ -1,38 +1,19 @@
 module Photosynthesis
 
-using Unitful, Defaults, DocStringExtensions, Mixers, Roots, MetaFields, Distributions
+using Unitful, 
+      Defaults, 
+      DocStringExtensions, 
+      Mixers, 
+      Roots, 
+      Tags, 
+      Distributions, 
+      Flatten
 
-import MetaFields: @prior, @default, @label, @units, prior, default, label, units
+using Unitful: R, °C, K, Pa, kPa, MPa, J, W, kJ, kg, g, m, s, mol, mmol, μmol
 
-Defaults.get_default(t::Type) = begin 
-    d = default(t) 
-    u = units(t)
-    add_units.(d, u)
-end
-
-a(x, v::Module) = typeof(v)
-a(2, Photosynthesis)
-
-@template TYPES =
-
-    """
-    $(TYPEDEF)
-    $(FIELDS)
-    """
-
-@template (FUNCTIONS, METHODS, MACROS) =
-    """
-    $(SIGNATURES)
-    """
-
-include("constants.jl")
-include("parameters.jl")
-include("jarvis.jl")
-include("soilmoisture.jl")
-include("photo.jl")
-include("stomatal_conductance.jl")
-include("energy_balance.jl")
-include("utils.jl")
+import Tags: @prior, @default, @description, @units, prior, default, description, units
+import Flatten: @flattenable, flattenable
+import Defaults: get_default
 
 export phototranspiration!,
        run_phototrans!,
@@ -105,11 +86,36 @@ export AbstractCompensation, BadgerCollatzCompensation, BernacchiCompensation,
        FvCBPhoto, EnergyBalance,
        PhotoVars, EmaxVars, TuzetVars, BallBerryVars, JarvisVars
 
-import Defaults: get_default
+@template TYPES =
+    """
+    $(TYPEDEF)
+    $(FIELDS)
+    """
+
+@template (FUNCTIONS, METHODS, MACROS) =
+    """
+    $(SIGNATURES)
+    """
+
+
+add_units(::Nothing, u) = nothing
+add_units(x, ::Nothing) = x
+add_units(::Nothing, ::Nothing) = nothing
+add_units(x::Number, u::Unitful.Units) = x * u
+add_units(x::AbstractArray, u::Unitful.Units) = x .* u
 Defaults.get_default(t::Type) = begin 
     d = default(t) 
     u = units(t)
     add_units.(d, u)
 end
+
+include("constants.jl")
+include("parameters.jl")
+include("jarvis.jl")
+include("soilmoisture.jl")
+include("photo.jl")
+include("stomatal_conductance.jl")
+include("energy_balance.jl")
+include("utils.jl")
 
 end # module
