@@ -28,10 +28,10 @@ addons:
 
 ## uncomment the following lines to override the default test script
 script:
-  - git clone https://bitbucket.org/remkoduursma/maespa.git
+  - git clone https://github.com/rafaqz/maespa.git
   - cd maespa
   - export MAESPA=$(pwd)
-  - gfortran -ffree-line-length-200 -shared -O2 maestcom.f90 -o maestcom.so -fPIC
+  - gfortran -ffree-line-length-200 -shared -o2 maestcom.f90 -o maestcom.so -fpic
   - gfortran -ffree-line-length-200 -shared -O2 metcom.f90 -o metcom.so -fPIC
   - gfortran -shared -O2 physiol.f90 -o physiol.so -fPIC
   - cd ..
