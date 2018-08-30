@@ -51,8 +51,8 @@
 end
 
 @testset "it all actuall runs" begin
-    p = EnergyBalance()
-    v = EmaxVars()
+    global p = EnergyBalance()
+    global v = EmaxVars()
 
     penman_monteith(v.pressure, v.slope, v.lhv, v.rnet, v.vpd, 1.0u"mol*m^-2*s^-1", 1.0u"mol*m^-2*s^-1") # TODO this seems weird
 
@@ -73,7 +73,6 @@ end
     max_electron_transport_rate(DukeVcJmax(), v, p)
     max_rubisco_activity(VcJmax(),v, p)
     max_rubisco_activity(DukeVcJmax(),v, p)
-    v.cs
     respiration(Respiration(), v, p)
 
     gsdiva(BallBerryStomatalConductance(), BallBerryVars(), p.photo)
@@ -93,14 +92,14 @@ end
     stomatal_conductance!(JarvisVars(), JarvisModel(), FvCBPhoto())
     stomatal_conductance!(TuzetVars(), TuzetModel(), FvCBPhoto())
 
-    ballberryplant = EnergyBalance(photo=FvCBPhoto(model=BallBerryModel()))
-    tuzetplant = EnergyBalance(photo=FvCBPhoto(model=TuzetModel()))
-    emaxplant = EnergyBalance(photo=FvCBPhoto(model=EmaxModel()))
-    jarvisplant = EnergyBalance(photo=FvCBPhoto(model=JarvisModel()))
+    global ballberryplant = EnergyBalance(photo=FvCBPhoto(model=BallBerryModel()))
+    global tuzetplant = EnergyBalance(photo=FvCBPhoto(model=TuzetModel()))
+    global emaxplant = EnergyBalance(photo=FvCBPhoto(model=EmaxModel()))
+    global jarvisplant = EnergyBalance(photo=FvCBPhoto(model=JarvisModel()))
 
     factor_conductance(JarvisModel(), v, jarvisplant)
-    v = BallBerryVars()
-    p = ballberryplant
+    global v = BallBerryVars()
+    global p = ballberryplant
     photosynthesis!(v, p.photo)
     v.aleaf
     v.tleaf
@@ -108,8 +107,8 @@ end
     v.cs
     phototranspiration!(v, p)
 
-    p = tuzetplant
-    v = TuzetVars()
+    global p = tuzetplant
+    global v = TuzetVars()
     photosynthesis!(v, p.photo)
     v.aleaf
     v.tleaf
@@ -117,8 +116,8 @@ end
     v.cs
     phototranspiration!(v, p)
 
-    p = emaxplant
-    v = EmaxVars()
+    global p = emaxplant
+    global v = EmaxVars()
     photosynthesis!(v, p.photo)
     v.aleaf
     v.tleaf
@@ -129,3 +128,5 @@ end
     run_phototrans!(EmaxVars(), emaxplant)
     run_phototrans!(TuzetVars(), tuzetplant)
 end
+
+nothing

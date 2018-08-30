@@ -1,198 +1,198 @@
+using Libdl
 using Photosynthesis: quad
 
 # test against the original FORTRAN routines
-emaxplant = EnergyBalance(photo=FvCBPhoto(model=EmaxModel()))
-p = emaxplant.photo
-v = EmaxVars()
-v.tleaf = 15u"°C"
-# ENV["MAESPA"] = "/home/raf/julia/Photosynthesis/other/maespa/"
-photosynlib = Libdl.dlopen(joinpath(ENV["MAESPA"], "physiol.so"))
+global emaxplant = EnergyBalance(photo=FvCBPhoto(model=EmaxModel()))
+global p = emaxplant.photo
+global v = EmaxVars()
+global v.tleaf = 15u"°C"
+global photosynlib = dlopen(joinpath(ENV["MAESPA"], "physiol.so"))
 
 @testset "funcs" begin
 
-    resp = Libdl.dlsym(photosynlib, :resp_)
-    f = p.respiration
-    rd0 = ustrip(f.rd0)
-    rdacc = 1.0
-    tleaf = v.tleaf.val
-    q10f = f.q10f.val
-    tref = f.tref.val
-    dayresp = f.dayresp
-    tbelow = f.tbelow.val
-    resp_ref = ccall(resp, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
+    global resp = Libdl.dlsym(photosynlib, :resp_)
+    global f = p.respiration
+    global rd0 = ustrip(f.rd0)
+    global rdacc = 1.0
+    global tleaf = v.tleaf.val
+    global q10f = f.q10f.val
+    global tref = f.tref.val
+    global dayresp = f.dayresp
+    global tbelow = f.tbelow.val
+    global resp_ref = ccall(resp, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
                              ), rd0, rdacc, tleaf, q10f, tref, dayresp, tbelow)
     v.rd = respiration(f, v, p)
     # @test v.rd.val == resp_ref
 
-    vcmaxtfn = Libdl.dlsym(photosynlib, :vcmaxtfn_)
-    v = EmaxVars()
-    p = emaxplant.photo
+    global vcmaxtfn = Libdl.dlsym(photosynlib, :vcmaxtfn_)
+    global v = EmaxVars()
+    global p = emaxplant.photo
     v.tleaf = 15.0u"°C"
-    tleaf = v.tleaf.val
-    f = VcJmax(vcmaxformulation=NoOptimumVcmax())
-    vc = f.vcmaxformulation
-    vcmax25 = vc.vcmax25.val
-    eavc = vc.eavc.val
-    edvc = 0.0
-    delsc = 0.0
-    tvjup = -100.0
-    tvjdn = -100.0
-    vcmax_ref = ccall(vcmaxtfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
+    global tleaf = v.tleaf.val
+    global f = VcJmax(vcmaxformulation=NoOptimumVcmax())
+    global vc = f.vcmaxformulation
+    global vcmax25 = vc.vcmax25.val
+    global eavc = vc.eavc.val
+    global edvc = 0.0
+    global delsc = 0.0
+    global tvjup = -100.0
+    global tvjdn = -100.0
+    global vcmax_ref = ccall(vcmaxtfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
                      ), vcmax25,tleaf,eavc,edvc,delsc,tvjup,tvjdn)
     @test ustrip( max_rubisco_activity(f, v, p)) ≈ vcmax_ref rtol=1e-4
 
 
-    v = EmaxVars()
-    p = emaxplant.photo
+    global v = EmaxVars()
+    global p = emaxplant.photo
     v.tleaf = 15.0u"°C"
-    tleaf = v.tleaf.val
-    f = VcJmax(vcmaxformulation=OptimumVcmax())
-    vc = f.vcmaxformulation
-    eavc = vc.eavc.val
-    edvc = vc.edvc.val
-    delsc = vc.delsc.val
-    tvjup = -100.0
-    tvjdn = -100.0
-    vcmax_ref = ccall(vcmaxtfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
+    global tleaf = v.tleaf.val
+    global f = VcJmax(vcmaxformulation=OptimumVcmax())
+    global vc = f.vcmaxformulation
+    global eavc = vc.eavc.val
+    global edvc = vc.edvc.val
+    global delsc = vc.delsc.val
+    global tvjup = -100.0
+    global tvjdn = -100.0
+    global vcmax_ref = ccall(vcmaxtfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
                              ), vcmax25,tleaf,eavc,edvc,delsc,tvjup,tvjdn)
     @test ustrip(max_rubisco_activity(f, v, p)) ≈ vcmax_ref rtol=1e-4
 
-    v = EmaxVars()
-    p = emaxplant.photo
+    global v = EmaxVars()
+    global p = emaxplant.photo
     v.tleaf = 15.0u"°C"
-    tleaf = v.tleaf.val
-    f = DukeVcJmax(vcmaxformulation=OptimumVcmax())
-    vc = f.vcmaxformulation
-    vcmax25 = vc.vcmax25.val
-    eavc = vc.eavc.val
-    edvc = vc.edvc.val
-    delsc = vc.delsc.val
-    tvjup = f.tvjup.val
-    tvjdn = f.tvjdn.val
-    vcmax_ref = ccall(vcmaxtfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
+    global tleaf = v.tleaf.val
+    global f = DukeVcJmax(vcmaxformulation=OptimumVcmax())
+    global vc = f.vcmaxformulation
+    global vcmax25 = vc.vcmax25.val
+    global eavc = vc.eavc.val
+    global edvc = vc.edvc.val
+    global delsc = vc.delsc.val
+    global tvjup = f.tvjup.val
+    global tvjdn = f.tvjdn.val
+    global vcmax_ref = ccall(vcmaxtfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
                              ), vcmax25,tleaf,eavc,edvc,delsc,tvjup,tvjdn)
     @test ustrip(max_rubisco_activity(f, v, p)) ≈ vcmax_ref rtol=1e-4
 
 
-    jmaxtfn = Libdl.dlsym(photosynlib, :jmaxtfn_)
-    f = Jmax()
+    global jmaxtfn = Libdl.dlsym(photosynlib, :jmaxtfn_)
+    global f = Jmax()
     v.tleaf = 15.0u"°C"
-    tleaf = v.tleaf.val
-    jmax25 = f.jmax25.val
-    eavj = f.eavj.val
-    edvj = f.edvj.val
-    delsj = f.delsj.val
-    tvjup = -100.0
-    tvjdn = -100.0
-    jmax_ref = ccall(jmaxtfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
+    global tleaf = v.tleaf.val
+    global jmax25 = f.jmax25.val
+    global eavj = f.eavj.val
+    global edvj = f.edvj.val
+    global delsj = f.delsj.val
+    global tvjup = -100.0
+    global tvjdn = -100.0
+    global jmax_ref = ccall(jmaxtfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
                              ), jmax25,tleaf,eavj,edvj,delsj,tvjup,tvjdn)
     @test ustrip( max_electron_transport_rate(f, v, p)) ≈ jmax_ref rtol=1e-4
 
 end
 
-v = EmaxVars()
-p = EnergyBalance(photo=FvCBPhoto(model=EmaxModel(gsmodel=BallBerryStomatalConductance()),
+global v = EmaxVars()
+global p = EnergyBalance(photo=FvCBPhoto(model=EmaxModel(gsmodel=BallBerryStomatalConductance()),
                                   vcjmax=DukeVcJmax(),
                                   compensation = BadgerCollatzCompensation(),
                                  ))
-ph = p.photo
-mod = p.photo.model
-vcj = ph.vcjmax
-vc = vcj.vcmaxformulation
-j = vcj.jmaxformulation
-mgs = 2
-wsm = 1
-iec = 1
-soild = 1
-gk = 0.0
-ismaespa = true
+global ph = p.photo
+global mod = p.photo.model
+global vcj = ph.vcjmax
+global vc = vcj.vcmaxformulation
+global j = vcj.jmaxformulation
+global mgs = 2
+global wsm = 1
+global iec = 1
+global soild = 1
+global gk = 0.0
+global ismaespa = true
 v.rhleaf = v.rh
-tzv = TuzetVars()
-d0l = 0.0
+global tzv = TuzetVars()
+global d0l = 0.0
 typeof(ph.model.gsmodel) <: LeuningStomatalConductance && (d0l = ph.model.gsmodel.d0l.val)
 phototranspiration!(v, p)
 photosynthesis!(v, ph)
 
-par =      v.par.val
-tleaf =    v.tleaf.val
-tmove =    AcclimatizedRespiration().tmove.val
-cs =       v.cs.val
-rh =       v.rh
-vpd =      v.vpd.val
-vmfd =     JarvisModel().vmfd.val
-jmax25 =   vcj.jmaxformulation.jmax25.val
-ieco =     iec 
-eavj =     j.eavj.val
-edvj =     j.edvj.val
-delsj =    j.delsj.val
-vcmax25 =  vc.vcmax25.val
-eavc =     vc.eavc.val
-edvc = 0.0
-delsc = 0.0
+global par =      v.par.val
+global tleaf =    v.tleaf.val
+global tmove =    AcclimatizedRespiration().tmove.val
+global cs =       v.cs.val
+global rh =       v.rh
+global vpd =      v.vpd.val
+global vmfd =     JarvisModel().vmfd.val
+global jmax25 =   vcj.jmaxformulation.jmax25.val
+global ieco =     iec 
+global eavj =     j.eavj.val
+global edvj =     j.edvj.val
+global delsj =    j.delsj.val
+global vcmax25 =  vc.vcmax25.val
+global eavc =     vc.eavc.val
+global edvc = 0.0
+global delsc = 0.0
 # edvc =     vc.edvc.val
 # delsc =    vc.delsc.val
-tvjup =    vcj.tvjup.val
-tvjdn =    vcj.tvjdn.val
-theta =    ph.rubisco_regen.theta
-ajq =      ph.rubisco_regen.ajq
-rd0 =      ph.respiration.rd0.val
-q10f =     ph.respiration.q10f.val
-k10f =     AcclimatizedRespiration().k10f.val
-tref =    ph.respiration.tref.val
-dayresp =  ph.respiration.dayresp
-tbelow =   ph.respiration.tbelow.val
-modelgs =  mgs
-gsref =    JarvisModel().gsref.val
-gsmin =    JarvisModel().gsmin.val
-i0 =       JarvisLight().i0.val
-d0 =       JarvisLinearDeclineVPD().d0.val
-vk1 =      JarvisHyperbolicVPD().vk1
-vk2 =      JarvisHyperbolicVPD().vk2
-vpd1 =     JarvisLohammerVPD().vpd1.val
-vpd2 =     JarvisLohammerVPD().vpd2.val
-vmfd0 =    JarvisFractionDeficitVPD().vmfd0.val
-gsja =     JarvisLinearCO2().gsja.val
-gsjb =     JarvisNonlinearCO2().gsjb.val
-t0 =       JarvisTemp1().t0.val
-tref =     JarvisTemp1().tref.val
-tmax =     JarvisTemp1().tmax.val
-wsoilmethod = wsm
-soilmoisture = v.soilmoist
-emaxleaf = v.emaxleaf.val
-smd1 =     DeficitSoilData().smd1
-smd2 =     DeficitSoilData().smd2
-wc1 =      VolumetricSoilMethod().wc1
-wc2 =      VolumetricSoilMethod().wc2
-soildata = soild
-swpexp =   PotentialSoilData().swpexp
-fsoil =    Float32[v.fsoil]
-g0 =       mod.g0.val
-d0l =      LeuningStomatalConductance().d0l.val
-γ =        mod.gsmodel.gamma.val
-vpdmin =   MedlynStomatalConductance().vpdmin.val
-g1 =       mod.gsmodel.g1
-gk =       ThreeParStomatalConductance().gk
-gs =       Float32[v.gs.val]
-aleaf =    Float32[v.aleaf.val]
-rd =       v.rd.val
-minleafwp = v.minleafwp.val
-ktot =     v.ktot.val
-weightedswp = v.weightedswp.val
-vpara =    LinearPotentialDependence().vpara.val
-vparb =    LinearPotentialDependence().vparb.val
-vparc =    0.0 # unused
-vfun =     1
-sf =       TuzetVars().sf.val
-psiv =     TuzetVars().psiv.val
-hmshape =  HyperbolicMinimumGS().hmshape
-psilin =   TuzetVars().psilin.val
-psil =     Float32[v.psil.val]
-ci =       Float32[v.ci.val]
-ismaespa = true
+global tvjup =    vcj.tvjup.val
+global tvjdn =    vcj.tvjdn.val
+global theta =    ph.rubisco_regen.theta
+global ajq =      ph.rubisco_regen.ajq
+global rd0 =      ph.respiration.rd0.val
+global q10f =     ph.respiration.q10f.val
+global k10f =     AcclimatizedRespiration().k10f.val
+global tref =    ph.respiration.tref.val
+global dayresp =  ph.respiration.dayresp
+global tbelow =   ph.respiration.tbelow.val
+global modelgs =  mgs
+global gsref =    JarvisModel().gsref.val
+global gsmin =    JarvisModel().gsmin.val
+global i0 =       JarvisLight().i0.val
+global d0 =       JarvisLinearDeclineVPD().d0.val
+global vk1 =      JarvisHyperbolicVPD().vk1
+global vk2 =      JarvisHyperbolicVPD().vk2
+global vpd1 =     JarvisLohammerVPD().vpd1.val
+global vpd2 =     JarvisLohammerVPD().vpd2.val
+global vmfd0 =    JarvisFractionDeficitVPD().vmfd0.val
+global gsja =     JarvisLinearCO2().gsja.val
+global gsjb =     JarvisNonlinearCO2().gsjb.val
+global t0 =       JarvisTemp1().t0.val
+global tref =     JarvisTemp1().tref.val
+global tmax =     JarvisTemp1().tmax.val
+global wsoilmethod = wsm
+global soilmoisture = v.soilmoist
+global emaxleaf = v.emaxleaf.val
+global smd1 =     DeficitSoilData().smd1
+global smd2 =     DeficitSoilData().smd2
+global wc1 =      VolumetricSoilMethod().wc1
+global wc2 =      VolumetricSoilMethod().wc2
+global soildata = soild
+global swpexp =   PotentialSoilData().swpexp
+global fsoil =    Float32[v.fsoil]
+global g0 =       mod.g0.val
+global d0l =      LeuningStomatalConductance().d0l.val
+global γ =        mod.gsmodel.gamma.val
+global vpdmin =   MedlynStomatalConductance().vpdmin.val
+global g1 =       mod.gsmodel.g1
+global gk =       ThreeParStomatalConductance().gk
+global gs =       Float32[v.gs.val]
+global aleaf =    Float32[v.aleaf.val]
+global rd =       v.rd.val
+global minleafwp = v.minleafwp.val
+global ktot =     v.ktot.val
+global weightedswp = v.weightedswp.val
+global vpara =    LinearPotentialDependence().vpara.val
+global vparb =    LinearPotentialDependence().vparb.val
+global vparc =    0.0 # unused
+global vfun =     1
+global sf =       TuzetVars().sf.val
+global psiv =     TuzetVars().psiv.val
+global hmshape =  HyperbolicMinimumGS().hmshape
+global psilin =   TuzetVars().psilin.val
+global psil =     Float32[v.psil.val]
+global ci =       Float32[v.ci.val]
+global ismaespa = true
 
 @testset "photosynthesis" begin
 
-    photosyn = Libdl.dlsym(photosynlib, :photosyn_)
+    global photosyn = Libdl.dlsym(photosynlib, :photosyn_)
     ccall(photosyn,
         Nothing,
         (
@@ -368,43 +368,45 @@ end
 
 @testset "other funcs" begin
 
-    kmfn = Libdl.dlsym(photosynlib, :kmfn_)
-    ieco = 0 # Bernacci
-    tleaf = v.tleaf.val
-    km_ref = ccall(kmfn, Float32, (Ref{Float32}, Ref{Int32}), tleaf, ieco)
-    km = rubisco_compensation_point(BernacchiCompensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
+    global kmfn = Libdl.dlsym(photosynlib, :kmfn_)
+    global ieco = 0 # Bernacci
+    global tleaf = v.tleaf.val
+    global km_ref = ccall(kmfn, Float32, (Ref{Float32}, Ref{Int32}), tleaf, ieco)
+    global km = rubisco_compensation_point(BernacchiCompensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
     @test km.val ≈ km_ref rtol=1e-4
-    ieco = 1 # Badger-Collatz
-    tleaf = v.tleaf.val
-    km_ref = ccall(kmfn, Float32, (Ref{Float32}, Ref{Int32}), tleaf,ieco)
-    km = rubisco_compensation_point(BadgerCollatzCompensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
+    global ieco = 1 # Badger-Collatz
+    global tleaf = v.tleaf.val
+    global km_ref = ccall(kmfn, Float32, (Ref{Float32}, Ref{Int32}), tleaf,ieco)
+    global km = rubisco_compensation_point(BadgerCollatzCompensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
     @test km.val ≈ km_ref rtol=1e-4
 
-    gammafn = Libdl.dlsym(photosynlib, :gammafn_)
-    gammastar_ref = ccall(gammafn, Float32, (Ref{Float32}, Ref{Int32}), tleaf, 0)
-    gammastar = co2_compensation_point(BernacchiCompensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
+    global gammafn = Libdl.dlsym(photosynlib, :gammafn_)
+    global gammastar_ref = ccall(gammafn, Float32, (Ref{Float32}, Ref{Int32}), tleaf, 0)
+    global gammastar = co2_compensation_point(BernacchiCompensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
     @test gammastar.val ≈ gammastar_ref rtol=1e-4
-    gammastar_ref = ccall(gammafn, Float32, (Ref{Float32}, Ref{Int32}), tleaf, 1)
-    gammastar = co2_compensation_point(BadgerCollatzCompensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
+    global gammastar_ref = ccall(gammafn, Float32, (Ref{Float32}, Ref{Int32}), tleaf, 1)
+    global gammastar = co2_compensation_point(BadgerCollatzCompensation(), v, p) # Michaelis-Menten for Rubisco, umol mol-1
     @test gammastar.val ≈ gammastar_ref rtol=1e-7
 
-    arrhfn = Libdl.dlsym(photosynlib, :arrh_)
-    arrh_ref = ccall(arrhfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}), 42.75, 37830.0, 30.0, 25.0)
-    arrh = arrhenius(42.75u"μmol*mol^-1", 37830.0u"J*mol^-1", 30.0u"°C" |> u"K", 25.0u"°C" |> u"K")
+    global arrhfn = Libdl.dlsym(photosynlib, :arrh_)
+    global arrh_ref = ccall(arrhfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}), 42.75, 37830.0, 30.0, 25.0)
+    global arrh = arrhenius(42.75u"μmol*mol^-1", 37830.0u"J*mol^-1", 30.0u"°C" |> u"K", 25.0u"°C" |> u"K")
     @test arrh.val ≈ arrh_ref
-    vcmaxtfn = Libdl.dlsym(photosynlib, :vcmaxtfn_)
-    f = DukeVcJmax(vcmaxformulation=OptimumVcmax())
-    vcmax_ref = ccall(vcmaxtfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
+    global vcmaxtfn = Libdl.dlsym(photosynlib, :vcmaxtfn_)
+    global f = DukeVcJmax(vcmaxformulation=OptimumVcmax())
+    global vcmax_ref = ccall(vcmaxtfn, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
                              ), vcmax25,tleaf,eavc,edvc,delsc,tvjup,tvjdn)
     @test ustrip(max_rubisco_activity(f, v, p)) ≈ vcmax_ref
 
-    quadm_fort = Libdl.dlsym(photosynlib, :quadm_)
-    f = p.photo.rubisco_regen
-    a = theta[1]
-    b = -(ajq[1] * par[1] + v.jmax.val)
-    c = ajq[1] * par[1] * v.jmax.val
-    quad_ref = ccall(quadm_fort, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Int32}), a, b, c, 1)/4.0
-    quad_test = quad(Photosynthesis.Lower(), a,b,c)/4
+    global quadm_fort = Libdl.dlsym(photosynlib, :quadm_)
+    global f = p.photo.rubisco_regen
+    global a = theta[1]
+    global b = -(ajq[1] * par[1] + v.jmax.val)
+    global c = ajq[1] * par[1] * v.jmax.val
+    global quad_ref = ccall(quadm_fort, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Int32}), a, b, c, 1)/4.0
+    global quad_test = quad(Photosynthesis.Lower(), a,b,c)/4
     @test quad_ref ≈ quad_test atol=1e-5
 
 end
+
+nothing
