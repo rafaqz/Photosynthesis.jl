@@ -268,8 +268,8 @@ but using emax soil water methods.
 @Maespa struct EmaxModel{GS<:AbstractStomatalConductance,
                          SM<:EmaxSoilMethod{<:AbstractPotentialDependence},
                         } <: AbstractMaespaModel{GS,SM}
-    gsmodel::GS    | BallBerryStomatalConductance() | _ | _
-    soilmethod::SM | EmaxSoilMethod()               | _ | _
+    gsmodel::GS    | BallBerryStomatalConductance() | _ | _ | _
+    soilmethod::SM | EmaxSoilMethod()               | _ | _ | _
 end
 
 """
@@ -391,18 +391,18 @@ end
     psil::kPa        | -111.0      | kPa                   | _
 end
 
-@MaespaVars struct TuzetVars{kPa}
+@MaespaVars mutable struct TuzetVars{kPa,pkPa}
     psilin::kPa      | -999.0      | kPa                   | _
     psiv::kPa        | -1.9        | kPa                   | _
-    sf::kPa          | 3.2         | kPa^-1                | _
+    sf::pkPa         | 3.2         | kPa^-1                | _
 end
 
-@MaespaVars struct EmaxVars{kPa,mMoM2S}
+@MaespaVars mutable struct EmaxVars{kPa,mMoM2S}
     minleafwp::kPa   | 0.1         | kPa                   | _
     emaxleaf::mMoM2S | 400.0       | mmol*m^-2*s^-1        | _
 end
 
-@Vars struct JarvisVars{mMoMo}
+@Vars mutable struct JarvisVars{mMoMo}
     vmleaf::mMoMo    | 1.0         | mmol*mol^-1           | _
 end
 

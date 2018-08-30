@@ -255,9 +255,9 @@ T the temp (deg #).
 Standard form and temperature difference form.
 """
 arrhenius(A, Ea, T::typeof(1.0°C)) = arrhenius(A, Ea, T |> K)
-arrhenius(A, Ea, T) = A * e^(Ea / (R * T))
+arrhenius(A, Ea, T) = A * exp(Ea / (R * T))
 arrhenius(kref, Ea, T::typeof(1.0°C), Tref::typeof(1.0°C)) = arrhenius(kref, Ea, T |> K, Tref |> K)
-arrhenius(kref, Ea, T::typeof(1.0K), Tref::typeof(1.0K)) = kref * e^(Ea * (T - Tref) / (R * T * Tref))
+arrhenius(kref, Ea, T::typeof(1.0K), Tref::typeof(1.0K)) = kref * exp(Ea * (T - Tref) / (R * T * Tref))
 
 
 """

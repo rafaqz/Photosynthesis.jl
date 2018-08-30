@@ -79,9 +79,9 @@ Calculates the potential max_electron transport rate (Jmax) at the leaf temperat
 max_electron_transport_rate(f::Jmax, v, p) = begin
     tleafK = v.tleaf |> K
     K25 = 25.0°C |> K
-    f.jmax25 * e^((tleafK - K25) * f.eavj / (R * tleafK * K25)) *
-    (1 + e^((f.delsj * K25 - f.edvj) / (R * K25))) /
-    (1 + e^((f.delsj * tleafK - f.edvj) / (R * tleafK)))
+    f.jmax25 * exp((tleafK - K25) * f.eavj / (R * tleafK * K25)) *
+    (1 + exp((f.delsj * K25 - f.edvj) / (R * K25))) /
+    (1 + exp((f.delsj * tleafK - f.edvj) / (R * tleafK)))
 end
 
 """
@@ -109,15 +109,15 @@ max_rubisco_activity(f::VcJmax, v, p) = max_rubisco_activity(f.vcmaxformulation,
 function max_rubisco_activity(f::NoOptimumVcmax, v, p)
     tleafK = v.tleaf |> K
     K25 = 25°C |> K
-    f.vcmax25 * e^((f.eavc * (v.tleaf - 25°C)) / (K25 * R * tleafK))
+    f.vcmax25 * exp((f.eavc * (v.tleaf - 25°C)) / (K25 * R * tleafK))
 end
 """ Vcmax formulation with optimum"""
 function max_rubisco_activity(f::OptimumVcmax, v, p)
     tleafK = v.tleaf |> K
     K25 = 25°C |> K
-    f.vcmax25 * e^((v.tleaf - 25°C) * f.eavc / (R * tleafK * K25)) *
-    (1.0 + e^((f.delsc * K25 - f.edvc) / (R * K25))) /
-    (1.0 + e^((f.delsc * tleafK - f.edvc) / (R * tleafK)))
+    f.vcmax25 * exp((v.tleaf - 25°C) * f.eavc / (R * tleafK * K25)) *
+    (1.0 + exp((f.delsc * K25 - f.edvc) / (R * K25))) /
+    (1.0 + exp((f.delsc * tleafK - f.edvc) / (R * tleafK)))
 end
 
 """ Calculates respiration from temperature using a Q10 (exponential) formulation """
@@ -127,7 +127,7 @@ function respiration(f::Respiration, v, p)
     # See Atkin et al. 1998 (or 2001?). From yplantmc
     resplightfrac = v.par < 100oneunit(v.par) ? oneunit(f.dayresp) : f.dayresp
 
-    f.rd0 * e^(f.q10f * (v.tleaf - f.tref)/10) * resplightfrac 
+    f.rd0 * exp(f.q10f * (v.tleaf - f.tref)/10) * resplightfrac 
 end
 
 function respiration(f::AcclimatizedRespiration, v, p)

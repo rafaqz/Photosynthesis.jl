@@ -31,7 +31,7 @@ soil_water_conductance!(v, f::VolumetricSoilMethod{<:AbstractContentSoilData}, p
 end
 
 soil_water_conductance!(v, f::TuzetSoilMethod, p) = begin
-    # What is this from? v.psif = (1 + e^(v.sf * v.psiv)) / (1 + e^(v.sf * (v.psiv - v.psil)))
+    # What is this from? v.psif = (1 + exp(v.sf * v.psiv)) / (1 + exp(v.sf * (v.psiv - v.psil)))
     vjmod = vjmax_water(f.soildata, v, p)
     v.vcmax *= vjmod
     v.jmax *= vjmod
@@ -53,7 +53,7 @@ soil_water_conductance(soil::PotentialSoilData, soilmoist, v, p) = begin
     # Exponential relationship with potential: parameter = SWPEXP
     # TODO: default value for effect? 
     if soil.swpexp > zero(soil.swpexp)
-        effect = e^((soil.swpexp/oneunit(soil.swpexp) * soilmoist/oneunit(soilmoist)))
+        effect = exp((soil.swpexp/oneunit(soil.swpexp) * soilmoist/oneunit(soilmoist)))
     end
     return max(effect, zero(effect))
 end
@@ -67,7 +67,7 @@ soil_water_conductance(soil::AbstractDeficitSoilData, soilmoist, v, p) = begin
 
     # Exponential relationship with deficit: params SMD1, SMD2
     if soil.smd1 > zero(soil.smd1)
-        effect = 1.0 - soil.smd1 / oneunit(soil.smd1) * e^(soil.smd2 * soilmoist / oneunit(soilmoist)^2)
+        effect = 1.0 - soil.smd1 / oneunit(soil.smd1) * exp(soil.smd2 * soilmoist / oneunit(soilmoist)^2)
     # Linear decline with increasing deficit: pUT SMD1 < 0, param SMD2
     elseif soil.smd2 > zero(soil.smd2)
         if oneunit(soilmoist) - soilmoist < soil.smd2
@@ -108,6 +108,6 @@ vjmax_water(f::LinearPotentialDependence, v, p) =
     vjmaxw(f::ZhouPotentialDependence, v, p)
 Zhou, et al. Agricultural and Forest Meteorology. 2013.0
 """
-vjmax_water(f::ZhouPotentialDependence, v, p) = (1 + e^(f.vpara * f.vparb)) /
-    (1 + e^(f.vpara * (f.vparb - v.weightedswp)))
+vjmax_water(f::ZhouPotentialDependence, v, p) = (1 + exp(f.vpara * f.vparb)) /
+    (1 + exp(f.vpara * (f.vparb - v.weightedswp)))
 

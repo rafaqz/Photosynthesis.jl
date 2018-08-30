@@ -5,7 +5,7 @@ emaxplant = EnergyBalance(photo=FvCBPhoto(model=EmaxModel()))
 p = emaxplant.photo
 v = EmaxVars()
 v.tleaf = 15u"°C"
-ENV["MAESPA"] = "/home/raf/julia/Photosynthesis/other/maespa/"
+# ENV["MAESPA"] = "/home/raf/julia/Photosynthesis/other/maespa/"
 photosynlib = Libdl.dlopen(joinpath(ENV["MAESPA"], "physiol.so"))
 
 @testset "funcs" begin
