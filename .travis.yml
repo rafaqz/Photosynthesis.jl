@@ -31,9 +31,20 @@ script:
   - git clone https://github.com/rafaqz/maespa.git
   - cd maespa
   - export MAESPA=$(pwd)
-  - gfortran -ffree-line-length-200 -shared -o2 maestcom.f90 -o maestcom.so -fpic
-  - gfortran -ffree-line-length-200 -shared -O2 metcom.f90 -o metcom.so -fPIC
-  - gfortran -shared -O2 physiol.f90 -o physiol.so -fPIC
+  - |
+    if [ $TRAVIS_OS_NAME = linux ]; 
+        gfortran -ffree-line-length-200 -shared -o2 maestcom.f90 -o maestcom.so -fpic; 
+        gfortran -ffree-line-length-200 -shared -O2 metcom.f90 -o metcom.so -fPIC;
+        gfortran -shared -O2 physiol.f90 -o physiol.so -fPIC;
+
+    fi
+  - |
+    if [ $TRAVIS_OS_NAME = osx ]; 
+        gfortran -ffree-line-length-200 -shared -o2 maestcom.f90 -o maestcom.dylib -fpic; 
+        gfortran -ffree-line-length-200 -shared -O2 metcom.f90 -o metcom.dylib -fPIC;
+        gfortran -shared -O2 physiol.f90 -o physiol.dylib -fPIC;
+
+    fi
   - cd ..
   - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/rafaqz/Tags.jl.git")); Pkg.build("Tags")'
   - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/rafaqz/Nested.jl.git")); Pkg.build("Nested")'

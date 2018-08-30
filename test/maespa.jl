@@ -6,7 +6,7 @@ global emaxplant = EnergyBalance(photo=FvCBPhoto(model=EmaxModel()))
 global p = emaxplant.photo
 global v = EmaxVars()
 global v.tleaf = 15u"°C"
-global photosynlib = dlopen(joinpath(ENV["MAESPA"], "physiol.so"))
+global photosynlib = dlopen(joinpath(ENV["MAESPA"], "physiol"))
 
 @testset "funcs" begin
 
