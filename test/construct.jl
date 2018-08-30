@@ -43,6 +43,11 @@
     EmaxModel()
     JarvisModel()
     FvCBPhoto()
+    PhotoVars()
+    EmaxVars()
+    TuzetVars()
+    BallBerryVars()
+    JarvisVars()
 end
 
 @testset "it all actuall runs" begin

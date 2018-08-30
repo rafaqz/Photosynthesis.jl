@@ -5,6 +5,7 @@ emaxplant = EnergyBalance(photo=FvCBPhoto(model=EmaxModel()))
 p = emaxplant.photo
 v = EmaxVars()
 v.tleaf = 15u"°C"
+ENV["MAESPA"] = "/home/raf/julia/Photosynthesis/other/maespa/"
 photosynlib = Libdl.dlopen(joinpath(ENV["MAESPA"], "physiol.so"))
 
 @testset "funcs" begin
@@ -15,11 +16,11 @@ photosynlib = Libdl.dlopen(joinpath(ENV["MAESPA"], "physiol.so"))
     rdacc = 1.0
     tleaf = v.tleaf.val
     q10f = f.q10f.val
-    rtemp = f.rtemp.val
+    tref = f.tref.val
     dayresp = f.dayresp
     tbelow = f.tbelow.val
     resp_ref = ccall(resp, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
-                             ), rd0, rdacc, tleaf, q10f, rtemp, dayresp, tbelow)
+                             ), rd0, rdacc, tleaf, q10f, tref, dayresp, tbelow)
     v.rd = respiration(f, v, p)
     # @test v.rd.val == resp_ref
 
@@ -126,8 +127,10 @@ edvj =     j.edvj.val
 delsj =    j.delsj.val
 vcmax25 =  vc.vcmax25.val
 eavc =     vc.eavc.val
-edvc =     vc.edvc.val
-delsc =    vc.delsc.val
+edvc = 0.0
+delsc = 0.0
+# edvc =     vc.edvc.val
+# delsc =    vc.delsc.val
 tvjup =    vcj.tvjup.val
 tvjdn =    vcj.tvjdn.val
 theta =    ph.rubisco_regen.theta
@@ -135,7 +138,7 @@ ajq =      ph.rubisco_regen.ajq
 rd0 =      ph.respiration.rd0.val
 q10f =     ph.respiration.q10f.val
 k10f =     AcclimatizedRespiration().k10f.val
-rtemp =    ph.respiration.rtemp.val
+tref =    ph.respiration.tref.val
 dayresp =  ph.respiration.dayresp
 tbelow =   ph.respiration.tbelow.val
 modelgs =  mgs
@@ -165,7 +168,7 @@ swpexp =   PotentialSoilData().swpexp
 fsoil =    Float32[v.fsoil]
 g0 =       mod.g0.val
 d0l =      LeuningStomatalConductance().d0l.val
-gamma =    mod.gsmodel.gamma.val
+γ =        mod.gsmodel.gamma.val
 vpdmin =   MedlynStomatalConductance().vpdmin.val
 g1 =       mod.gsmodel.g1
 gk =       ThreeParStomatalConductance().gk
@@ -190,7 +193,6 @@ ismaespa = true
 @testset "photosynthesis" begin
 
     photosyn = Libdl.dlsym(photosynlib, :photosyn_)
-
     ccall(photosyn,
         Nothing,
         (
@@ -291,7 +293,7 @@ ismaespa = true
     rd0,
     q10f,
     k10f,
-    rtemp,
+    tref,
     dayresp,
     tbelow,
     modelgs,
@@ -321,7 +323,7 @@ ismaespa = true
     fsoil,
     g0,
     d0l,
-    gamma,
+    γ,
     vpdmin,
     g1,
     gk,
@@ -402,7 +404,7 @@ end
     b = -(ajq[1] * par[1] + v.jmax.val)
     c = ajq[1] * par[1] * v.jmax.val
     quad_ref = ccall(quadm_fort, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Int32}), a, b, c, 1)/4.0
-    quad_test = quad(Val{:lower}, a,b,c)/4
+    quad_test = quad(Photosynthesis.Lower(), a,b,c)/4
     @test quad_ref ≈ quad_test atol=1e-5
 
 end
