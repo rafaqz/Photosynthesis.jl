@@ -5,13 +5,13 @@ using Unitful,
       DocStringExtensions, 
       Mixers, 
       Roots, 
-      Tags, 
+      FieldMetadata, 
       Distributions, 
       Flatten
 
 using Unitful: R, °C, K, Pa, kPa, MPa, J, W, kJ, kg, g, m, s, mol, mmol, μmol, σ
 
-import Tags: @prior, @default, @description, @units, prior, default, description, units
+import FieldMetadata: @prior, @default, @description, @units, prior, default, description, units
 import Flatten: @flattenable, flattenable
 import Defaults: get_default
 
