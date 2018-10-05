@@ -46,10 +46,7 @@ script:
 
     fi
   - cd ..
-  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/rafaqz/FieldMetadata.jl.git")); Pkg.build("FieldMetadata")'
-  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/rafaqz/Mixers.jl.git")); Pkg.build("Mixers")'
   - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/rafaqz/Defaults.jl.git")); Pkg.build("Defaults")'
-  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/rafaqz/Flatten.jl.git")); Pkg.build("Flatten")'
   - julia -e 'using Pkg; Pkg.add(PackageSpec(url=pwd())); Pkg.build("Photosynthesis"); Pkg.test("Photosynthesis"; coverage=true)'
 after_success:
   # push coverage results to Coveralls
