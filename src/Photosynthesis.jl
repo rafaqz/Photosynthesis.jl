@@ -1,19 +1,19 @@
 module Photosynthesis
 
 using Unitful, 
-      Defaults, 
+      FieldDefaults, 
       DocStringExtensions, 
       Mixers, 
       Roots, 
       FieldMetadata, 
       Distributions, 
-      Flatten
+      UnitlessFlatten
 
 using Unitful: R, °C, K, Pa, kPa, MPa, J, W, kJ, kg, g, m, s, mol, mmol, μmol, σ
 
 import FieldMetadata: @prior, @default, @description, @units, prior, default, description, units
-import Flatten: @flattenable, flattenable
-import Defaults: get_default
+import UnitlessFlatten: @flattenable, flattenable
+import FieldDefaults: get_default
 
 export phototranspiration!,
        run_phototrans!,
@@ -103,7 +103,7 @@ add_units(x, ::Nothing) = x
 add_units(::Nothing, ::Nothing) = nothing
 add_units(x::Number, u::Unitful.Units) = x * u
 add_units(x::AbstractArray, u::Unitful.Units) = x .* u
-Defaults.get_default(t::Type) = begin 
+FieldDefaults.get_default(t::Type) = begin 
     d = default(t) 
     u = units(t)
     add_units.(d, u)
