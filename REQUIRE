@@ -2,8 +2,8 @@ julia 0.6
 Unitful
 DocStringExtensions
 FieldMetadata
+FieldDefaults
 Mixers
-Defaults
 Roots
 Distributions
-Flatten
+UnitlessFlatten
