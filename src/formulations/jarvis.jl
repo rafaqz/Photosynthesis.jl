@@ -2,16 +2,14 @@
 # to simplify the rest of the module.
 # There are a lot of them, and they may not be used regularly.
 
-abstract type AbstractJarvisLight end
-
 @chain jcolumns @units @default_kw 
 
+abstract type AbstractJarvisLight end
 @jcolumns mutable struct JarvisLight{T} <: AbstractJarvisLight 
-    i0::T | 1.0 | mol*m^-2*s^-1
-end
+    i0::T | 1.0 | mol*m^-2*s^-1 
+end 
 
-abstract type AbstractJarvisCO2 end
-
+abstract type AbstractJarvisCO2 end 
 struct JarvisNoCO2 <: AbstractJarvisCO2 end
 @jcolumns mutable struct JarvisLinearCO2{T} <: AbstractJarvisCO2 
     gsja::T | 1.0 | μmol^-1*mol
@@ -61,6 +59,73 @@ end
 end
 
 
+abstract type AbstractJarvisModel <: AbstractPhotoModel end
+"""
+Jarvis stomatal conductance model
+
+Combines factors from soilmethod, co2 method, vpdmethod and tempmethod
+to gain an overall stomatal conductance.
+"""
+@jcolumns mutable struct JarvisModel{S<:AbstractSoilMethod, C<:AbstractJarvisCO2, 
+                                    V<:AbstractJarvisVPD, L<:AbstractJarvisLight,
+                                    T<:AbstractJarvisTemp, MoMeS, mMoMoS
+                                   } <: AbstractJarvisModel
+    soilmethod::S  | DeficitSoilMethod()  | _
+    co2method::C   | JarvisNonlinearCO2() | _
+    vpdmethod::V   | JarvisLohammerVPD()  | _
+    lightmethod::L | JarvisLight()        | _
+    tempmethod::T  | JarvisTemp2()        | _
+    gsmin::MoMeS   | 1.0                  | mol*m^-2*s^-1
+    gsref::MoMeS   | 1.0                  | mol*m^-2*s^-1
+    vmfd::mMoMoS   | 1.0                  | mmol*mol^-1
+end
+
+@Vars mutable struct JarvisVars{mMoMo}
+    vmleaf::mMoMo    | 1.0         | mmol*mol^-1           | _
+end
+
+
+photo_init!(::JarvisModel, v) = v.vmleaf = f.vmfd
+photo_update!(::JarvisModel, v, tleaf1) = v.vmleaf = v.vpdleaf / v.pressure
+
+extremes!(f::JarvisModel, v) = begin
+    v.aleaf = -v.rd
+    v.gs = f.gsmin
+end
+
+
+""" 
+    rubisco_limited_rate(v, p)
+Solution when Rubisco activity is limiting for the Jarvis model """
+function rubisco_limited_rate(f::AbstractJarvisModel, v, p)
+    a = 1.0 / v.gs
+    b = (v.rd - v.vcmax) / v.gs - v.cs - v.km
+    c = v.vcmax * (v.cs - v.gammastar) - v.rd * (v.cs + v.km)
+    quad(Lower(), a, b, c)
+end
+
+""" 
+    transport_limited_rate(f::JarvisModel, v, p)
+Solution when electron transport rate is limiting for the Jarvis model
+"""
+function transport_limited_rate(f::JarvisModel, v, p)
+    a = 1.0 / v.gs
+    b = (v.rd - v.vj) / v.gs - v.cs - 2v.gammastar
+    c = v.vj * (v.cs - v.gammastar) - v.rd * (v.cs + 2v.gammastar)
+    quad(Lower(), a, b, c)
+end
+
+
+"""
+    stomatal_conductance!(f::JarvisModel, v, p)
+Stomatal conductance and for the Jarvis model
+"""
+function stomatal_conductance!(f::JarvisModel, v, p)
+    v.gs = factor_conductance(f, v, p)
+    assimilation!(v, p)
+    nothing
+end
+
 """
 Calculate stomatal conductance gs according to the Jarvis model.
 
@@ -74,27 +139,6 @@ function factor_conductance(f, v, p)
     ftemp = min(max(calc_ftemp(f.tempmethod, v, p), 1.0), 0.0)
 
     return (f.gsref - f.gsmin) * flight * fvpd * fco2 * ftemp * v.fsoil + f.gsmin
-end
-
-
-"""
-Jarvis stomatal conductance model
-
-Combines factors from soilmethod, co2 method, vpdmethod and tempmethod
-to gain an overall stomatal conductance.
-"""
-@jcolumns mutable struct JarvisModel{S<:AbstractSoilMethod, C<:AbstractJarvisCO2, 
-                                    V<:AbstractJarvisVPD, L<:AbstractJarvisLight,
-                                    T<:AbstractJarvisTemp, MoMeS, mMoMoS
-                                   } <: AbstractPhotoModel
-    soilmethod::S  | DeficitSoilMethod()  | _
-    co2method::C   | JarvisNonlinearCO2() | _
-    vpdmethod::V   | JarvisLohammerVPD()  | _
-    lightmethod::L | JarvisLight()        | _
-    tempmethod::T  | JarvisTemp2()        | _
-    gsmin::MoMeS   | 1.0                  | mol*m^-2*s^-1
-    gsref::MoMeS   | 1.0                  | mol*m^-2*s^-1
-    vmfd::mMoMoS   | 1.0                  | mmol*mol^-1
 end
 
 """ Response to incident radiation in umol m^-2 s^-1 """

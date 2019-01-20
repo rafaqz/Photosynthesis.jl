@@ -11,7 +11,7 @@ using Unitful,
 
 using Unitful: R, °C, K, Pa, kPa, MPa, J, W, kJ, kg, g, m, s, mol, mmol, μmol, σ
 
-import FieldMetadata: @prior, @default, @description, @units, prior, default, description, units
+import FieldMetadata: @prior, @limits, @default, @description, @units, limits, prior, default, description, units
 import UnitlessFlatten: @flattenable, flattenable
 import FieldDefaults: get_default
 
@@ -83,7 +83,8 @@ export AbstractCompensation, BadgerCollatzCompensation, BernacchiCompensation,
        DeficitSoilMethod, PotentialSoilMethod, EmaxSoilMethod, TuzetSoilMethod,
        AbstractPhotoModel, AbstractBallBerryModel, AbstractMaespaModel, BallBerryModel, 
        TuzetModel, EmaxModel, JarvisModel,
-       FvCBPhoto, EnergyBalance,
+       AbstractFvCBPhoto, FvCBPhoto, 
+       AbstractyFvCBEnergyBalance, FvCBEnergyBalance,
        PhotoVars, EmaxVars, TuzetVars, BallBerryVars, JarvisVars
 
 @template TYPES =
@@ -109,13 +110,28 @@ FieldDefaults.get_default(t::Type) = begin
     add_units.(d, u)
 end
 
-include("constants.jl")
-include("parameters.jl")
-include("jarvis.jl")
-include("soilmoisture.jl")
-include("photo.jl")
-include("stomatal_conductance.jl")
-include("energy_balance.jl")
+@chain columns @description @limits @prior @units @default_kw
+
 include("utils.jl")
+include("constants.jl")
+include("vars.jl")
+
+include("core/compensation.jl")
+include("core/flux.jl")
+include("core/respiration.jl")
+include("core/rubisco_regen.jl")
+include("core/soilmoisture.jl")
+include("core/stomatal_conductance.jl")
+include("core/photosynthesis.jl")
+include("core/energy_balance.jl")
+
+include("formulations/ballberry.jl")
+include("formulations/jarvis.jl")
+include("formulations/maespa.jl")
+include("formulations/emax.jl")
+include("formulations/tuzet.jl")
+include("formulations/medlyn.jl")
+include("formulations/leuning.jl")
+include("formulations/threepar.jl")
 
 end # module
