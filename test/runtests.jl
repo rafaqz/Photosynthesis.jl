@@ -1,6 +1,4 @@
-using Photosynthesis,
-      Unitful, 
-      Test
+using SafeTestsets
 
-include("construct.jl")
-include("maespa.jl")
+@time @safetestset "test all constructors work" begin include("construct.jl") end
+@time @safetestset "test against maespa fortran" begin include("maespa_fortran.jl") end
