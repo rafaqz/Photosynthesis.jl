@@ -15,8 +15,8 @@ import FieldMetadata: @prior, @limits, @default, @description, @units, limits, p
 import UnitlessFlatten: @flattenable, flattenable
 import FieldDefaults: get_default
 
-export phototranspiration!,
-       run_phototrans!,
+export enbal!,
+       run_enbal!,
        photosynthesis!,
        stomatal_conductance!,
        soil_water_conductance!,
@@ -83,7 +83,7 @@ export AbstractCompensation, BadgerCollatzCompensation, BernacchiCompensation,
        DeficitSoilMethod, PotentialSoilMethod, EmaxSoilMethod, TuzetSoilMethod,
        AbstractPhotoModel, AbstractBallBerryModel, AbstractMaespaModel, BallBerryModel, 
        TuzetModel, EmaxModel, JarvisModel,
-       AbstractFvCBPhoto, FvCBPhoto, 
+       AbstractPhotosynthesis,
        AbstractyFvCBEnergyBalance, FvCBEnergyBalance,
        PhotoVars, EmaxVars, TuzetVars, BallBerryVars, JarvisVars
 
@@ -133,5 +133,6 @@ include("formulations/tuzet.jl")
 include("formulations/medlyn.jl")
 include("formulations/leuning.jl")
 include("formulations/threepar.jl")
+include("formulations/fvcb.jl")
 
 end # module

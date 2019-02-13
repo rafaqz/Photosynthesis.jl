@@ -28,9 +28,9 @@ non-photorespiratory respiration """
 function co2_compensation_point end
 
 """ 
-    co2_compensation_point(::BadgerCollatzCompensation, v, p) 
+    co2_compensation_point(::BadgerCollatzCompensation, v) 
 """
-co2_compensation_point(f::BadgerCollatzCompensation, v, p) = begin
+co2_compensation_point(f::BadgerCollatzCompensation, v) = begin
     # if tleaf < -1.0  calculate gamma for t = -1 (quadratic not applicable)
     tleaf = max(K(-1.0°C), v.tleaf)
     # TODO these numbers should be parameters?
@@ -39,17 +39,17 @@ co2_compensation_point(f::BadgerCollatzCompensation, v, p) = begin
 end
 
 """ 
-    co2_compensation_point(::BernacchiCompensation, v, p)
+    co2_compensation_point(::BernacchiCompensation, v)
 Bernacchi et al 2001 PCE 24: 253-260 
 """
-co2_compensation_point(f::BernacchiCompensation, v, p) =
+co2_compensation_point(f::BernacchiCompensation, v) =
     arrhenius(f.Γ☆25, f.ΔHa_Γ☆, v.tleaf, f.tref)
 
 """ 
-    rubisco_compensation(::BadgerCollatzCompensation, v, p)
+    rubisco_compensation(::BadgerCollatzCompensation, v)
 Calculates Km, or the effective Michaelis-Menten coefficient of Rubisco activity.
 """
-rubisco_compensation_point(f::AbstractCompensation, v, p) = begin
+rubisco_compensation_point(f::AbstractCompensation, v) = begin
     Kc = arrhenius(f.Kc25, f.ΔHa_Kc, v.tleaf, f.tref)
     Ko = arrhenius(f.Ko25, f.ΔHa_Ko, v.tleaf, f.tref)
     Kc * (1 + OI / Ko)

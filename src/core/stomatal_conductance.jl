@@ -6,15 +6,6 @@ abstract type AbstractStomatalConductance end
     g1::F           | 7.0    | _              | Gamma(10, 7/10) | (0.0, 10.0) | "Slope parameter"
 end
 
-"""
-    stomatal_conductance!(v, ::AbstractPhotoModel, p)
-Stomatal conductance and intercellular CO2 partial pressure calculations.
-
-v.aleaf is NET leaf photosynthesis.
-"""
-function stomatal_conductance!(f, v, p) end
-
-
 abstract type AbstractGSShape end
 
 struct HardMinimumGS <: AbstractGSShape end
@@ -38,12 +29,13 @@ function shape_gs(f::HyperbolicMinimumGS, v, p)
     p.g0 + v.gsdiva * aleafhypmin
 end
 
+"""
+    stomatal_conductance!(v, ::AbstractPhotoModel, p)
+Stomatal conductance and intercellular CO2 partial pressure calculations.
 
-function assimilation!(v, p)
-    v.ac = rubisco_limited_rate(p.model, v, p)
-    v.aj = transport_limited_rate(p.model, v, p)
-    v.aleaf = min(v.ac, v.aj) - v.rd
-end
+v.aleaf is NET leaf photosynthesis.
+"""
+function stomatal_conductance! end
 
 function rubisco_limited_rate end
 
@@ -54,4 +46,3 @@ function transport_limited_rate end
 Formulation-specific component for the Ball-Berry family of stomatal conductance models.
 """
 function gsdiva end
-

@@ -5,9 +5,9 @@ abstract type AbstractRubiscoRegen end
 end
 
 """ 
-    rubisco_regeneration(f::RubiscoRegen, v, p)
+    rubisco_regeneration(f::RubiscoRegen, v)
 RuBP-regen rate, in umol m-2 s-1 """
-function rubisco_regeneration(f::RubiscoRegen, v, p)
+function rubisco_regeneration(f::RubiscoRegen, v)
     a = f.theta
     b = -(f.ajq * v.par + v.jmax)
     c = f.ajq * v.par * v.jmax

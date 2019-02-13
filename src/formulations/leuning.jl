@@ -7,9 +7,9 @@ Has the extra `d0l` paramater in Pa.
 end
 
 """
-    gsdiva(::LeuningStomatalConductance, v, p) 
+    gsdiva(::LeuningStomatalConductance, v) 
 From R. Leuning, A critical appraisal of a combined stomatal-photosynthesis
 model for C3 plants. Plant, Celt and Environment (1995) 18, 339-355
 """
-gsdiva(f::LeuningStomatalConductance, v, p) =
+gsdiva(f::LeuningStomatalConductance, v) =
     f.g1 / ( v.cs - f.gamma) / (1.0 + v.vpdleaf / f.d0l) * v.fsoil

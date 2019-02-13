@@ -6,8 +6,8 @@ Similar options for specialised stomatal conducance,
 but using emax soil water methods.
 """
 @Maespa struct EmaxModel{GS<:AbstractStomatalConductance,
-                         SM<:EmaxSoilMethod{<:AbstractPotentialDependence},
-                        } <: AbstractMaespaModel{GS,SM}
+                         SM<:EmaxSoilMethod{<:AbstractPotentialDependence}
+                        } <: AbstractMaespaModel
     gsmodel::GS    | BallBerryStomatalConductance() | _ | _ | _ | _
     soilmethod::SM | EmaxSoilMethod()               | _ | _ | _ | _
 end
@@ -17,10 +17,9 @@ end
     emaxleaf::mMoM2S | 400.0       | mmol*m^-2*s^-1        | _
 end
 
-soilmoisture_conductance!(v, f::EmaxSoilMethod, p) = begin
-    vjmod = vjmax_water(f.soildata, v)
-    v.vcmax *= vjmod
-    v.jmax *= vjmod
+soilmoisture_conductance!(f::EmaxSoilMethod, v) = begin
+    pd = potential_dependence(f.soildata, v.weightedswp)
+    v.vcmax *= pd
+    v.jmax *= pd
     v.fsoil = oneunit(v.fsoil)
 end
-

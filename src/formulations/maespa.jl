@@ -1,4 +1,6 @@
-abstract type AbstractMaespaModel{GS,SM} <: AbstractBallBerryModel{GS,SM} end
+# Abstract Maespa model. Tuzet and Emax models inherit from this
+
+abstract type AbstractMaespaModel <: AbstractBallBerryModel end
 
 " @Maespa mixin macro adds base maespa fields to a struct"
 @BB @mix struct Maespa{mMoM2S,M2SMPaMo,SH}
@@ -21,18 +23,18 @@ end
 photo_init!(f::AbstractMaespaModel, v) = v.ktot = 10 / (f.totsoilres + 1.0 / f.plantk)
 
 
-function psil_gs!(f, v, p) end
+function psil_gs!(f, v) end
 
 """
     stomatal_conductance!(f::TuzetModel, v, p)
 Stomatal conductance calculations for the Jarvis model
 """
-function stomatal_conductance!(f::AbstractMaespaModel, v, p)
-    v.gsdiva = gsdiva(p.model.gsmodel, v, p)
-    assimilation!(v, p)
+function stomatal_conductance!(f::AbstractMaespaModel, v)
+    v.gsdiva = gsdiva(f.gsmodel, v)
+    assimilation!(v, f)
 
     v.gs = shape_gs(f.gsshape, v, f)
-    psil_gs!(f, v, p)
+    psil_gs!(f, v)
 
     if v.gs > zero(v.gs) && v.aleaf > zero(v.aleaf)
         v.ci = v.cs - v.aleaf / v.gs
@@ -42,37 +44,3 @@ function stomatal_conductance!(f::AbstractMaespaModel, v, p)
 
     nothing
 end
-
-
-"""
-Dependance of assimilation on soil water potential (SWP).
-Modifier function (return value between 0.0 and 1.0) 
-"""
-function vjmax_water end
-
-"""
-    vjmax_water(f::NoPotentialDependence, v)
-Returns 1.0
-"""
-vjmax_water(f::NoPotentialDependence, v) = 1.0
-
-"""
-    vjmax_water(f::LinearPotentialDependence, v, p)
-Simple linear dependance.
-vpara is swp where vcmax is zero, vparb is swp where vcmax is one.
-"""
-vjmax_water(f::LinearPotentialDependence, v) =
-    if v.weightedswp < f.vpara 
-        0.0
-    elseif v.weightedswp > f.vparb 
-        1.0
-    else 
-        (v.weightedswp - f.vpara) / (f.vparb - f.vpara)
-    end
-
-"""
-    vjmaxw(f::ZhouPotentialDependence, v, p)
-Zhou, et al. Agricultural and Forest Meteorology. 2013.0
-"""
-vjmax_water(f::ZhouPotentialDependence, v) = 
-    (1 + exp(f.vpara * f.vparb)) / (1 + exp(f.vpara * (f.vparb - v.weightedswp)))

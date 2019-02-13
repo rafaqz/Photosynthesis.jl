@@ -9,6 +9,6 @@ Has the extra `vpdmin` paramater in Pa and gk scalar parameter.
 end
 
 """
-    gsdiva(::ThreeParStomatalConductance, v, p) """
-gsdiva(f::ThreeParStomatalConductance, v, p) =
+    gsdiva(::ThreeParStomatalConductance, v) """
+gsdiva(f::ThreeParStomatalConductance, v) =
     f.g1 / (v.cs - f.gamma) / (max(f.vpdmin, v.vpdleaf)Pa^-1)^f.gk

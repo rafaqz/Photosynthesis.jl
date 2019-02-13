@@ -8,14 +8,14 @@ abstract type AbstractFvCBEnergyBalance <: AbstractEnergyBalance end
     radiation_conductance::Ra | YingPingRadiationConductance() | true
     boundary_conductance::Bo  | BoundaryConductance()          | true
     decoupling::De            | McNaughtonJarvisDecoupling()   | true
-    photo::Ph                 | FvCBPhoto()                    | true
+    photo::Ph                 | BallBerryModel()               | true
     itermax::Int              | 100                            | false
 end
 
-run_enbal!(v, p::AbstractFvCBEnergyBalance) = run_enbal!(p, v)
+run_enbal!(p::AbstractFvCBEnergyBalance, v) = enbal!(p, v)
 
 """
-    enbal!(v, p)
+    enbal!(p, v)
 This subroutine calculates leaf photosynthesis and transpiration.
 
 These may be calculated by:
@@ -35,10 +35,10 @@ function enbal!(p::AbstractFvCBEnergyBalance, v)
     # Calculations that do not depend on tleaf
     v.lhv = latent_heat_water_vapour(v.tair)
     v.slope = calc_slope(v.tair)
-    v.gradn = radiation_conductance(p.radiation_conductance, v, p)
-    v.gbhu = boundary_conductance_forced(p.boundary_conductance, v, p)
+    v.gradn = radiation_conductance(p.radiation_conductance, v)
+    v.gbhu = boundary_conductance_forced(p.boundary_conductance, v)
 
-    converge_tleaf!(f, v, p) == false && error("leaf temperature convergence failed")
+    converge_tleaf!(p, v) == false && error("leaf temperature convergence failed")
 
     v.fheat = v.rnet - v.lhv * v.et
 
@@ -46,43 +46,30 @@ function enbal!(p::AbstractFvCBEnergyBalance, v)
 end
 
 """
-    converge_tleaf!(v, p)
+    converge_tleaf!(p, v)
 Run energy balance process in a loop to converge on leaf temperature
 """
 function converge_tleaf!(p::AbstractFvCBEnergyBalance, v)
     for iter = 1:p.itermax
         photosynthesis!(p.photo, v)
-        v.gbhf = boundary_conductance_free(p.boundary_conductance, v, p)
-
-        # Total boundary layer conductance for heat
-        # See Leuning et al (1995) PCE 18:1183-1200 Eqn E5
-        gbh = v.gbhu + v.gbhf
-        # Total conductance for heat - two-sided
-        v.gh = 2.0(gbh + v.gradn)
-
-        # Total conductance for water vapour
-        gbv = GBVGBH * gbh
-        gsv = GSVGSC * v.gs # TODO check this is right?? was: * p.gsc
-        # gv = nsides * (gbv * gsv) / (gbv + gsv) # already one-sided value
-        gv = (gbv * gsv) / (gbv + gsv)
+        vapour_conductance!(p, v)
 
         v.et = penman_monteith(v.pressure, v.slope, v.lhv, v.rnet, v.vpd, v.gh, gv)
-        v.decoup = calc_decoupling(p.decoupling, v, p, gbv, gsv)
+        v.decoup = calc_decoupling(p.decoupling, v, gbv, gsv)
 
         # End of subroutine if no iterations wanted.
         p.itermax == 0 || v.aleaf <= zero(v.aleaf) && return true
 
-        gbc = gbh / GBHGBC
-        v.cs = v.ca - v.aleaf / gbc # TODO this value is way too low
-        tleaf1 = leaftemp(v, p)
-        v.vpdleaf = v.et * v.pressure / gv # TODO and this seems too high?
-        uconvert(kPa, v.vpdleaf)
+        v.gbc = gbh / GBHGBC
+        v.cs = v.ca - v.aleaf / v.gbc # TODO this value is way too low
+        tleaf = leaftemp(p, v)
+        v.vpdleaf = v.et * v.pressure / v.gv # TODO and this seems too high?
 
-        model_update!(v, f, p, tleaf1) # Model-specific var updates
+        enbal_update!(p, v, tleaf) # Model-specific var updates
 
         # Check to see whether convergence achieved or failed
-        if abs(v.tleaf - tleaf1) < TOL
-            v.tleaf = tleaf1
+        if abs(v.tleaf - tleaf) < TOL
+            v.tleaf = tleaf
             return true
         end
 
@@ -91,61 +78,61 @@ function converge_tleaf!(p::AbstractFvCBEnergyBalance, v)
     false
 end
 
-leaftemp(v, p) = v.tair + (v.rnet - v.et * v.lhv) / (CPAIR * AIRMA * v.gh)
+@inline vapour_conductance(p, v) = begin
+    v.gbhf = boundary_conductance_free(p, v)
 
-enbal_init!(f::AbstractFvCBEnergyBalance, v, p) = photo_init!(f.photo, v, p) 
-enbal_update!(f::AbstractFvCBEnergyBalance, v, p, tleaf) = photo_update!(f.photo, v, p, tleaf)
+    # Total boundary layer conductance for heat
+    # See Leuning et al (1995) PCE 18:1183-1200 Eqn E5
+    v.gbh = v.gbhu + v.gbhf
+    # Total conductance for heat - two-sided
+    v.gh = 2.0(gbh + v.gradn)
 
-photo_init!(f::AbstractFvCBPhoto, v, p) = photo_init!(f.photo.model, v, p) 
-photo_update!(f::AbstractFvCBPhoto, v, p, tleaf) = photo_update!(f.photo.model, v, p, tleaf)
+    # Total conductance for water vapour
+    gbv = GBVGBH * v.gbh
+    gsv = GSVGSC * p.gsc
+    # gv = nsides * (gbv * gsv) / (gbv + gsv) # already one-sided value
+    v.gv = (gbv * gsv) / (gbv + gsv)
+end
 
-"""
-Fixed parameters for photosynthesis.
+leaftemp(p, v) = v.tair + (v.rnet - v.et * v.lhv) / (CPAIR * AIRMA * v.gh)
 
-THe majority of these are "composed" from submodels that both hold
-the parameters and use their own specific methods during the photosynthesis
-routines.
+enbal_init!(f::AbstractFvCBEnergyBalance, v) = photo_init!(f.photo, v)
+enbal_update!(f::AbstractFvCBEnergyBalance, v, tleaf) = photo_update!(f.photo, v, tleaf)
 
-Calling `PhotoParams()` will give the default values for all of these submodels.
-Any parameters and submodels can be overridden with keyword arguments:
+abstract type AbstractFvCBPhotosynthesis <: AbstractPhotosynthesis end
 
-`PhotoParams(model=TuzetModel, ca= 450 | μmol*mol^-1)`
-"""
-@default_kw struct FvCBPhoto{F<:AbstractPhotoModel,
-                             V<:AbstractVcJmax,
-                             KM<:AbstractCompensation,
-                             Ru<:AbstractRubiscoRegen,
-                             Re<:Union{Nothing,AbstractRespiration}}
-    model::F          | BallBerryModel()       
-    vcjmax::V         | VcJmax()               
-    compensation::KM  | BernacchiCompensation()
-    rubisco_regen::Ru | RubiscoRegen()         
-    respiration::Re   | nothing          
+check_extremes!(p, v) = begin
+    if v.jmax <= zero(v.jmax) || v.vcmax <= zero(v.vcmax)
+        println("extreme")
+        update_extremes!(p, v)
+        return true
+    end
+    false
 end
 
 """
-    photosynthesis!(v, p)
+    photosynthesis!(p, v)
 Calculates photosynthesis according to the ECOCRAFT
 agreed formulation of the Farquharvon Caemmerer (1982) equations.
 
-Farquhar, G.D., S. Caemmerer and J.A. Berry. 1980. 
-A biochemical model of photosynthetic CO2 assimilation in leaves of C3 species. 
-Planta. 149:78-90. 
+Farquhar, G.D., S. Caemmerer and J.A. Berry. 1980.
+A biochemical model of photosynthetic CO2 assimilation in leaves of C3 species.
+Planta. 149:78-90.
 """
-function photosynthesis!(p::AbstractFvCBPhoto, v)
-    v.gammastar = co2_compensation_point(p.compensation, v, p) # CO2 compensation point, umol mol-1
-    v.km = rubisco_compensation_point(p.compensation, v, p) # Michaelis-Menten for Rubisco, umol mol-1
-    v.jmax = max_electron_transport_rate(p.vcjmax, v, p) # Potential electron transport rate, umol m-2 s-1
-    v.vcmax = max_rubisco_activity(p.vcjmax, v, p) # Maximum Rubisco activity, umol m-2 s-1
+function photosynthesis!(p, v)
+    v.gammastar = co2_compensation_point(p.compensation, v) # CO2 compensation point, umol mol-1
+    v.km = rubisco_compensation_point(p.compensation, v) # Michaelis-Menten for Rubisco, umol mol-1
+    v.jmax = max_electron_transport_rate(p.vcjmax, v) # Potential electron transport rate, umol m-2 s-1
+    v.vcmax = max_rubisco_activity(p.vcjmax, v) # Maximum Rubisco activity, umol m-2 s-1
 
-    v.rd = respiration(p.respiration, v, p, v.rd) # Day leaf respiration, umol m-2 s-1
+    v.rd = respiration(p.respiration, v) # Day leaf respiration, umol m-2 s-1
 
-    soilmoisture_conductance!(p.model.soilmethod, v, p)
+    soilmoisture_conductance!(p.soilmethod, v)
 
-    v.vj = rubisco_regeneration(p.rubisco_regen, v, p)
+    v.vj = rubisco_regeneration(p.rubisco_regen, v)
 
-    extremes!(v, p) && return nothing
-    stomatal_conductance!(p.model, v, p)
+    check_extremes!(p, v) && return nothing
+    stomatal_conductance!(p, v)
 
     nothing
 end

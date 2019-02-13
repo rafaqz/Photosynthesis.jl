@@ -9,6 +9,6 @@ Has the extra `vpdmin` paramater in Pa.
 end
 
 """
-    gsdiva(::MedlynStomatalConductance, v, p) """
-gsdiva(f::MedlynStomatalConductance, v, p) =
+    gsdiva(::MedlynStomatalConductance, v) """
+gsdiva(f::MedlynStomatalConductance, v) =
     (1.0 + (f.g1 * v.fsoil) / sqrt(max(f.vpdmin, v.vpdleaf)Pa^-1)) / v.cs

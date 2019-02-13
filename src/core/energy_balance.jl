@@ -1,8 +1,10 @@
+abstract type AbstractEnergyBalance end
 
 abstract type AbstractBoundaryConductance end
 
-@columns struct BoundaryConductance{Me} <: AbstractBoundaryConductance
-    leafwidth::Me | 0.05 | m | Gamma(2, 0.05/2) | (0.0, 1.0) | "Mean width of leaves"
+@columns struct BoundaryConductance{M,MolMS} <: AbstractBoundaryConductance
+    leafwidth::M | 0.05 | m             | Gamma(2, 0.05/2) | (0.0, 1.0) | "Mean width of leaves"
+    gsc::MolMS   | 1.0  | mol*m^-2*s^-1 | Gamma(2, 2)      | (0.0, 1.0) | "??"
 end
 
 
@@ -20,41 +22,41 @@ struct McNaughtonJarvisDecoupling <: AbstractDecoupling end
 struct NoDecoupling <: AbstractDecoupling end
 
 
-abstract type AbstractEnergyBalance end
-
 """
 run_enbal!(p, v)
 Potosynthesis model runner for all formulations.
 """
-run_enbal!(p, v) = nothing
+function run_enbal! end
+
+function enbal! end
 
 """
-    model_init!(v, f, p)
+    model_init!(v, f)
 Runs any model initialisation that needs to happen at the start of energy balance
 """
-enbal_init!(f, v) = nothing
+function enbal_init!(f, v) end
 
 """
-    model_update!(v, model, p, tleaf1)
+    model_update!(v, model, tleaf1)
 Runs any model specific variable updates that need to happen at the end of
 the leaf temperature convergene loop
 """
-enbal_update!(f, v, tleaf) = nothing
+function enbal_update!(f, v, tleaf) end
 
 """
-    calc_decoupling(f::McNaughtonJarvisDecoupling, v, p, gbv, gsv)
+    calc_decoupling(f::McNaughtonJarvisDecoupling, v, gbv, gsv)
 Calculate decoupling coefficient (McNaughton and Jarvis 1986)
 """
-calc_decoupling(f::McNaughtonJarvisDecoupling, v, p, gbv, gsv) = begin
+calc_decoupling(f::McNaughtonJarvisDecoupling, v, gbv, gsv) = begin
     γc = CPAIR * AIRMA * v.pressure / v.lhv
     epsilon = ustrip(v.slope / γc) # TODO why is ustrip needed here?
     (1.0 + epsilon) / (1.0 + epsilon + gbv / gsv)
 end
 """
-    calc_decoupling(f::NoDecoupling, v, p, gbv, gsv)
+    calc_decoupling(f::NoDecoupling, v, gbv, gsv)
 Don't calculate decoupling
 """
-calc_decoupling(f::NoDecoupling, v, p, gbv, gsv) = 0.0
+calc_decoupling(f::NoDecoupling, v, gbv, gsv) = 0.0
 
 """ Calculate vapour pressure change with temperature -
 Slope `s` for Penman-Monteith equation, in Pa K^-1
@@ -65,7 +67,7 @@ calc_slope(tair) = (saturated_vapour_pressure(tair + 0.1oneunit(tair)) -
 """
 Boundary layer conductance for heat - single sided, free convection
 """
-function boundary_conductance_free(f::AbstractBoundaryConductance, v, p)
+function boundary_conductance_free(f::AbstractBoundaryConductance, v)
     gb = free_boundary_conductance(DHEAT, v.tleaf, v.tair, f.leafwidth)
     # Convert from m s-1 to mol m-2 s-1
     gb * cmolar(v.pressure, v.tair)
@@ -74,13 +76,13 @@ end
 """
 Boundary layer conductance for heat - single sided, forced convection
 """
-function boundary_conductance_forced(f::AbstractBoundaryConductance, v, p)
+function boundary_conductance_forced(f::AbstractBoundaryConductance, v)
     gb = forced_boundary_conductance(v.windspeed, f.leafwidth)
     # Convert from m s-1 to mol m-2 s-1
     gb * cmolar(v.pressure, v.tair)
 end
 
-radiation_conductance(f::YingPingRadiationConductance, v, p) =
+radiation_conductance(f::YingPingRadiationConductance, v) =
     yingping_radiation_conductance(v.tair, f.rdfipt, f.tuipt, f.tdipt)
 
 

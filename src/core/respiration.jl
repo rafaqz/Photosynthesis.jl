@@ -14,10 +14,10 @@ end
 end
 
 """ Calculates respiration from temperature using a Q10 (exponential) formulation """
-respiration!(f::Nothing, v, p, rd) = zero(rd) 
+respiration!(f::Nothing, v, rd) = zero(rd) 
 
-function respiration(f::Respiration, v, p, rd)
-    v.tleaf < f.tbelow && return zero(rd)
+function respiration(f::Respiration, v)
+    v.tleaf < f.tbelow && return zero(v.rd)
     # Make sure light suppression of dark respiration only occurs when it is light.
     # See Atkin et al. 1998 (or 2001?). From yplantmc
     resplightfrac = v.par < 100oneunit(v.par) ? oneunit(f.dayresp) : f.dayresp
@@ -25,8 +25,8 @@ function respiration(f::Respiration, v, p, rd)
     f.rd0 * exp(f.q10f * (v.tleaf - f.tref)/10) * resplightfrac 
 end
 
-function respiration(f::AcclimatizedRespiration, v, p, rd)
-    v.tleaf < f.tbelow && return zero(rd)
+function respiration(f::AcclimatizedRespiration, v)
+    v.tleaf < f.tbelow && return zero(v.rd)
     resplightfrac = v.par < 100oneunit(v.par) ? oneunit(f.dayresp) : f.dayresp
 
     rd0acc = f.rd0 * exp(f.k10f * (f.tmove - f.tref))

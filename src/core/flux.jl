@@ -37,26 +37,27 @@ end
 
 
 """ 
-    max_electron_transport_rate(f::DukeVcJmax, v, p)
+    max_electron_transport_rate(f::DukeVcJmax, v)
 Wrapper to `max_electron_transport_rate()` allowing Vcmax to be forced linearly to zero at low T """
-max_electron_transport_rate(f::DukeVcJmax, v, p) = begin
-    v.tleaf < f.tvjdn && return zero(f.jmax25)
-    jmax = max_electron_transport_rate(f.jmaxformulation, v, p)
+max_electron_transport_rate(f::DukeVcJmax, v) = begin
+    v.tleaf < f.tvjdn && return zero(f.jmaxformulation.jmax25)
+    jmax = max_electron_transport_rate(f.jmaxformulation, v)
+    # TODO this isn't assigning to anyhthing
     v.tleaf < f.tvjup && (v.tleaf - f.tvjdn) / (f.tvjup - f.tvjdn) * jmax
     jmax
 end
 
 """ 
-    max_electron_transport_rate(f::VcJmax, v, p)
+    max_electron_transport_rate(f::VcJmax, v)
 Wrapper for `max_electron_transport_rate() that simply runs `max_electron_transport_rate` for `jmaxformulation`
 """
-max_electron_transport_rate(f::VcJmax, v, p) = max_electron_transport_rate(f.jmaxformulation, v, p)
+max_electron_transport_rate(f::VcJmax, v) = max_electron_transport_rate(f.jmaxformulation, v)
 
 """ 
-    max_electron_transport_rate(f::Jmax, v, p)
+    max_electron_transport_rate(f::Jmax, v)
 Calculates the potential max_electron transport rate (Jmax) at the leaf temperature 
 """
-max_electron_transport_rate(f::Jmax, v, p) = begin
+max_electron_transport_rate(f::Jmax, v) = begin
     tleafK = v.tleaf |> K
     K25 = 25.0°C |> K
     f.jmax25 * exp((tleafK - K25) * f.eavj / (R * tleafK * K25)) *
@@ -74,25 +75,26 @@ function max_rubisco_activity() end
 
 """ Function allowing Vcmax to be forced linearly to zero at low T.  
 Introduced for Duke data. """
-function max_rubisco_activity(f::DukeVcJmax, v, p)
-    v.tleaf < f.tvjdn && return zero(f.vcmax25)
-    vcmax = max_rubisco_activity(f.vcmaxformulation, v, p)
+function max_rubisco_activity(f::DukeVcJmax, v)
+    v.tleaf < f.tvjdn && return zero(f.vcmaxformulation.vcmax25)
+    vcmax = max_rubisco_activity(f.vcmaxformulation, v)
+    # TODO this isn't assigning to anyhthing
     v.tleaf < f.tvjup && (v.tleaf - f.tvjdn) / (f.tvjup - f.tvjdn) * vcmax
     vcmax
 end
 
 """ Wrapper with no alterations to vcmax
 Runs max_rubisco_activity for `vcmaxformlation`"""
-max_rubisco_activity(f::VcJmax, v, p) = max_rubisco_activity(f.vcmaxformulation, v, p)
+max_rubisco_activity(f::VcJmax, v) = max_rubisco_activity(f.vcmaxformulation, v)
 
 """ Vcmax forulation with no optimum"""
-function max_rubisco_activity(f::NoOptimumVcmax, v, p)
+function max_rubisco_activity(f::NoOptimumVcmax, v)
     tleafK = v.tleaf |> K
     K25 = K(25°C)
     f.vcmax25 * exp((f.eavc * (v.tleaf - K25)) / (K25 * R * tleafK))
 end
 """ Vcmax formulation with optimum"""
-function max_rubisco_activity(f::OptimumVcmax, v, p)
+function max_rubisco_activity(f::OptimumVcmax, v)
     tleafK = v.tleaf |> K
     K25 = K(25°C)
     f.vcmax25 * exp((v.tleaf - K25) * f.eavc / (R * tleafK * K25)) *

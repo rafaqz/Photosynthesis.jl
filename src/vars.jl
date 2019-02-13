@@ -3,13 +3,13 @@
 
 "@Environment mixin macro"
 @mix @description @units @default_kw struct Environment{K,MS,μMoM2S,WM2,F,kPa,μMoMo}
-    tair::K          | 25.0        | K                     | _
+    tair::K          | (273.15 + 25.0) | K                 | _
     windspeed::MS    | 1.0         | m*s^-1                | _
     par::μMoM2S      | 4.575*250.0 | μmol*m^-2*s^-1        | _
     rnet::WM2        | 250.0       | W*m^-2                | _
     soilmoist::F     | 0.2         | _                     | _
     pressure::kPa    | 101.25      | kPa                   | _
-    tleaf::K         | 25.0        | K                     | _
+    tleaf::K         | (273.15 + 25.0) | K                 | _
     swp::kPa         | -100.0      | kPa                   | _
     swpshade::kPa    | -100.0      | kPa                   | _
     vpd::kPa         | 0.5         | kPa                   | _
@@ -28,6 +28,8 @@ end
     gbhu::MMoPaJS    | 1.0         | m*mol*Pa*J^-1*s^-1    | _
     gbhf::MMoPaJS    | 1.0         | m*mol*Pa*J^-1*s^-1    | _
     gh::MMoPaJS      | 1.0         | m*mol*Pa*J^-1*s^-1    | _
+    gbh::MMoPaJS     | 1.0         | m*mol*Pa*J^-1*s^-1    | _
+    gv::MMoPaJS      | 1.0         | m*mol*Pa*J^-1*s^-1    | _
     gradn::MoM2S     | 1.0         | mol*m^-2*s^-1         | _
     lhv::JMo         | 1.0         | J*mol^-1              | _
     et::MoM2S        | 1.0         | mol*m^-2*s^-1         | _
