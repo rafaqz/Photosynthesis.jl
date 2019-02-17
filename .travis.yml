@@ -48,6 +48,7 @@ script:
   - cd ..
   - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/rafaqz/Defaults.jl.git")); Pkg.build("Defaults")'
   - julia -e 'using Pkg; Pkg.add(PackageSpec(url=pwd())); Pkg.build("Photosynthesis"); Pkg.test("Photosynthesis"; coverage=true)'
+
 after_success:
   # push coverage results to Coveralls
   - julia -e 'cd(Pkg.dir("Photosynthesis")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'

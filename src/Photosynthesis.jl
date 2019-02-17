@@ -6,14 +6,12 @@ using Unitful,
       Mixers, 
       Roots, 
       FieldMetadata, 
-      Distributions, 
-      UnitlessFlatten
+      Distributions
 
 using Unitful: R, °C, K, Pa, kPa, MPa, J, W, kJ, kg, g, m, s, mol, mmol, μmol, σ
 
-import FieldMetadata: @prior, @limits, @default, @description, @units, limits, prior, default, description, units
-import UnitlessFlatten: @flattenable, flattenable
-import FieldDefaults: get_default
+import FieldMetadata: @flattenable, @prior, @limits, @default, @description, @units, 
+                      flattenable, prior, limits, default, description, units
 
 export enbal!,
        run_enbal!,
@@ -98,19 +96,7 @@ export AbstractCompensation, BadgerCollatzCompensation, BernacchiCompensation,
     $(SIGNATURES)
     """
 
-
-add_units(::Nothing, u) = nothing
-add_units(x, ::Nothing) = x
-add_units(::Nothing, ::Nothing) = nothing
-add_units(x::Number, u::Unitful.Units) = x * u
-add_units(x::AbstractArray, u::Unitful.Units) = x .* u
-FieldDefaults.get_default(t::Type) = begin 
-    d = default(t) 
-    u = units(t)
-    add_units.(d, u)
-end
-
-@chain columns @description @limits @prior @units @default_kw
+@chain columns @description @limits @prior @units @udefault_kw
 
 include("utils.jl")
 include("constants.jl")
