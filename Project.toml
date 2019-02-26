@@ -1,0 +1,20 @@
+name = "Photosynthesis"
+uuid = "5e10c064-2706-53a3-a67d-d473e313a663"
+authors = ["Rafael Schouten <rafaelschouten@gmail.com>"]
+version = "0.0.0"
+
+[deps]
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+FieldDefaults = "49426c49-986f-5969-8844-d5cc96441cfc"
+FieldMetadata = "bf96fef3-21d2-5d20-8afa-0e7d4c32a885"
+Mixers = "2a8e4939-dab8-5edc-8f64-72a8776f13de"
+Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+
+[targets]
+test = ["Test", "SafeTestsets"]
