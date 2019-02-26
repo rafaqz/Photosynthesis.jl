@@ -24,7 +24,7 @@ end
 
 abstract type AbstractVcJmax end
 
-@default_kw struct VcJmax{J,V} <: AbstractVcJmax where {J<:AbstractVcmax,V<:AbstractJmax}
+@udefault_kw struct VcJmax{J,V} <: AbstractVcJmax where {J<:AbstractVcmax,V<:AbstractJmax}
     jmaxformulation::J  | Jmax()
     vcmaxformulation::V | NoOptimumVcmax()
 end

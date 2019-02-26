@@ -9,7 +9,7 @@ abstract type AbstractMaespaModel <: AbstractBallBerryModel end
     gsshape::SH          | HardMinimumGS() | _                     | _ | _ | _
 end
 
-@mix @default_kw struct MaespaSoil{T<:AbstractPotentialDependence}
+@mix @udefault_kw struct MaespaSoil{T<:AbstractPotentialDependence}
     soildata::T | LinearPotentialDependence()
 end
 

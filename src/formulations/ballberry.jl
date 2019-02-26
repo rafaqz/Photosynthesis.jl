@@ -43,14 +43,14 @@ end
 
 
 """
-    stomatal_conductance!(f::AbstractBallBerryModel, v, p)
+    stomatal_conductance!(f::AbstractBallBerryModel, v)
 Stomatal conductance calculations for the Jarvis model
 """
 function stomatal_conductance!(f::AbstractBallBerryModel, v)
     v.gsdiva = gsdiva(f.gsmodel, v)
 
-    v.ac = rubisco_limited_rate(p, v)
-    v.aj = transport_limited_rate(p, v)
+    v.ac = rubisco_limited_rate(f, v)
+    v.aj = transport_limited_rate(f, v)
     v.aleaf = min(v.ac, v.aj) - v.rd
 
     v.gs = max(f.g0 + v.gsdiva * v.aleaf, f.g0)
@@ -58,7 +58,7 @@ function stomatal_conductance!(f::AbstractBallBerryModel, v)
 end
 
 """ 
-    rubisco_limited_rate(f::AbstractBallBerryModel, v, p)
+    rubisco_limited_rate(f::AbstractBallBerryModel, v)
 Solution when Rubisco activity is limiting for all Ball-Berry models
 """
 function rubisco_limited_rate(f::AbstractBallBerryModel, v)
@@ -79,7 +79,7 @@ end
 
 
 """ 
-    transport_limited_rate(f::AbstractBallBerryModel, v, p)
+    transport_limited_rate(f::AbstractBallBerryModel, v)
 Solution for when electron transport rate is limiting for all Ball-Berry type models
 """
 function transport_limited_rate(f::AbstractBallBerryModel, v)
@@ -100,6 +100,6 @@ function transport_limited_rate(f::AbstractBallBerryModel, v)
 end
 
 """
-    gsdiva(::BallBerryStomatalConductance, v, p) """
+    gsdiva(::BallBerryStomatalConductance, v) """
 gsdiva(f::BallBerryStomatalConductance, v) = 
     f.g1 * v.rh / (v.cs - f.gamma) * v.fsoil

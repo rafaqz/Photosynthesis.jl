@@ -47,16 +47,16 @@ function enbal_update!(f, v, tleaf) end
     calc_decoupling(f::McNaughtonJarvisDecoupling, v, gbv, gsv)
 Calculate decoupling coefficient (McNaughton and Jarvis 1986)
 """
-calc_decoupling(f::McNaughtonJarvisDecoupling, v, gbv, gsv) = begin
+calc_decoupling(f::McNaughtonJarvisDecoupling, v) = begin
     γc = CPAIR * AIRMA * v.pressure / v.lhv
     epsilon = ustrip(v.slope / γc) # TODO why is ustrip needed here?
-    (1.0 + epsilon) / (1.0 + epsilon + gbv / gsv)
+    (1.0 + epsilon) / (1.0 + epsilon + v.gbv / v.gsv)
 end
 """
     calc_decoupling(f::NoDecoupling, v, gbv, gsv)
 Don't calculate decoupling
 """
-calc_decoupling(f::NoDecoupling, v, gbv, gsv) = 0.0
+calc_decoupling(f::NoDecoupling, v) = 0.0
 
 """ Calculate vapour pressure change with temperature -
 Slope `s` for Penman-Monteith equation, in Pa K^-1

@@ -52,16 +52,16 @@ Run energy balance process in a loop to converge on leaf temperature
 function converge_tleaf!(p::AbstractFvCBEnergyBalance, v)
     for iter = 1:p.itermax
         photosynthesis!(p.photo, v)
-        vapour_conductance!(p, v)
+        vapour_conductance!(p.boundary_conductance, v)
 
-        v.et = penman_monteith(v.pressure, v.slope, v.lhv, v.rnet, v.vpd, v.gh, gv)
-        v.decoup = calc_decoupling(p.decoupling, v, gbv, gsv)
+        v.et = penman_monteith(v.pressure, v.slope, v.lhv, v.rnet, v.vpd, v.gh, v.gv)
+        v.decoup = calc_decoupling(p.decoupling, v)
 
         # End of subroutine if no iterations wanted.
         p.itermax == 0 || v.aleaf <= zero(v.aleaf) && return true
 
-        v.gbc = gbh / GBHGBC
-        v.cs = v.ca - v.aleaf / v.gbc # TODO this value is way too low
+        gbc = v.gbh / GBHGBC
+        v.cs = v.ca - v.aleaf / gbc # TODO this value is way too low
         tleaf = leaftemp(p, v)
         v.vpdleaf = v.et * v.pressure / v.gv # TODO and this seems too high?
 
@@ -73,25 +73,25 @@ function converge_tleaf!(p::AbstractFvCBEnergyBalance, v)
             return true
         end
 
-        v.tleaf = tleaf1 # Update temperature for another iteration
+        v.tleaf = tleaf # Update temperature for another iteration
     end
     false
 end
 
-@inline vapour_conductance(p, v) = begin
-    v.gbhf = boundary_conductance_free(p, v)
+@inline vapour_conductance!(f, v) = begin
+    v.gbhf = boundary_conductance_free(f, v)
 
     # Total boundary layer conductance for heat
     # See Leuning et al (1995) PCE 18:1183-1200 Eqn E5
     v.gbh = v.gbhu + v.gbhf
     # Total conductance for heat - two-sided
-    v.gh = 2.0(gbh + v.gradn)
+    v.gh = 2.0(v.gbh + v.gradn)
 
     # Total conductance for water vapour
-    gbv = GBVGBH * v.gbh
-    gsv = GSVGSC * p.gsc
+    v.gbv = GBVGBH * v.gbh
+    v.gsv = GSVGSC * f.gsc
     # gv = nsides * (gbv * gsv) / (gbv + gsv) # already one-sided value
-    v.gv = (gbv * gsv) / (gbv + gsv)
+    v.gv = (v.gbv * v.gsv) / (v.gbv + v.gsv)
 end
 
 leaftemp(p, v) = v.tair + (v.rnet - v.et * v.lhv) / (CPAIR * AIRMA * v.gh)

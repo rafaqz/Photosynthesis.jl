@@ -2,7 +2,7 @@
 # Variables
 
 "@Environment mixin macro"
-@mix @description @units @default_kw struct Environment{K,MS,μMoM2S,WM2,F,kPa,μMoMo}
+@mix @description @units @udefault_kw struct Environment{K,MS,μMoM2S,WM2,F,kPa,μMoMo}
     tair::K          | (273.15 + 25.0) | K                 | _
     windspeed::MS    | 1.0         | m*s^-1                | _
     par::μMoM2S      | 4.575*250.0 | μmol*m^-2*s^-1        | _
@@ -41,6 +41,8 @@ end
     ci::μMoMo        | 1.0         | μmol*mol^-1           | _
     gammastar::μMoMo | 1.0         | μmol*mol^-1           | _
     gs::MoM2S        | 1.0         | mol*m^-2*s^-1         | _
+    gsv::MoM2S       | 1.0         | mol*m^-2*s^-1         | _
+    gbv::MoM2S       | 1.0         | mol*m^-2*s^-1         | _
     jmax::μMoM2S     | 1.0         | μmol*m^-2*s^-1        | _
     vcmax::μMoM2S    | 1.0         | μmol*m^-2*s^-1        | _
     rd::μMoM2S       | 1.0         | μmol*m^-2*s^-1        | _

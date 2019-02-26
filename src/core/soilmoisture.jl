@@ -38,13 +38,13 @@ abstract type AbstractSoilMethod{T} end
     soildepth::D | 0.5               | _ | _ | _ | _ # One must be a variable...
 end
 
-@default_kw struct ConstantSoilMethod{T<:NoSoilData} <: AbstractSoilMethod{T}
+@udefault_kw struct ConstantSoilMethod{T<:NoSoilData} <: AbstractSoilMethod{T}
     soildata::T | NoSoilData()
 end
-@default_kw struct DeficitSoilMethod{T<:AbstractDeficitSoilData} <: AbstractSoilMethod{T}
+@udefault_kw struct DeficitSoilMethod{T<:AbstractDeficitSoilData} <: AbstractSoilMethod{T}
     soildata::T | ContentSoilData()
 end
-@default_kw struct PotentialSoilMethod{T<:PotentialSoilData} <: AbstractSoilMethod{T}
+@udefault_kw struct PotentialSoilMethod{T<:PotentialSoilData} <: AbstractSoilMethod{T}
     soildata::T | PotentialSoilData()
 end
 
