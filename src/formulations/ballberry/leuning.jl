@@ -2,7 +2,7 @@
 Leuning stomatal conductance formulation
 Has the extra `d0l` paramater in Pa.
 """
-@Gs struct LeuningStomatalConductance{Pa} <: AbstractStomatalConductance
+@MixinBallBerryGs struct LeuningStomatalConductance{Pa} <: AbstractStomatalConductance
     d0l::Pa    | 1500.0 | Pa | Gamma(10, 1500/10) | (0.0, 2000.0) | _
 end
 

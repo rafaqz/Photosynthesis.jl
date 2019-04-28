@@ -9,26 +9,35 @@ end
 
 @Resp struct Respiration{} <: AbstractRespiration end
 @Resp struct AcclimatizedRespiration{pK,K} <: AbstractRespiration
-    k10f::pK        | 0.0    | K^-1           | _             | (0.0, 10.0) | _
-    tmove::K        | 1.0    | K              | Gamma(2, 1/2) | (0.0, 10.0) | _
+    k10f::pK        | 10.0   | K^-1           | _             | (0.0, 10.0) | _
+    tmove::K        | 10.0   | K              | Gamma(2, 1/2) | (0.0, 10.0) | _
+end
+
+struct FractionalRespiration{R} <: AbstractRespiration 
+    formulation::R
 end
 
 """ Calculates respiration from temperature using a Q10 (exponential) formulation """
 respiration!(f::Nothing, v, rd) = zero(rd) 
 
-function respiration(f::Respiration, v)
-    v.tleaf < f.tbelow && return zero(v.rd)
-    # Make sure light suppression of dark respiration only occurs when it is light.
-    # See Atkin et al. 1998 (or 2001?). From yplantmc
-    resplightfrac = v.par < 100oneunit(v.par) ? oneunit(f.dayresp) : f.dayresp
+# What is this 10 number???
+function respiration(f::Respiration, tleaf)
+    tleaf < f.tbelow && return zero(v.rd)
 
-    f.rd0 * exp(f.q10f * (v.tleaf - f.tref)/10) * resplightfrac 
+    f.rd0 * exp(f.q10f * (tleaf - f.tref)) * f.dayresp
 end
 
-function respiration(f::AcclimatizedRespiration, v)
-    v.tleaf < f.tbelow && return zero(v.rd)
-    resplightfrac = v.par < 100oneunit(v.par) ? oneunit(f.dayresp) : f.dayresp
+function respiration(f::AcclimatizedRespiration, tleaf)
+    tleaf < f.tbelow && return zero(v.rd)
 
     rd0acc = f.rd0 * exp(f.k10f * (f.tmove - f.tref))
-    rd0acc * exp(f.q10f * (v.tleaf - f.tref)) * resplightfrac 
+    rd0acc * exp(f.q10f * (tleaf - f.tref)) * f.dayresp 
 end 
+
+# dayresp(f) = f.dayresp
+
+# Make sure light suppression of dark respiration only occurs when it is light.
+# See Atkin et al. 1998 (or 2001?). From yplantmc
+# TODO: The cutoff should be a parameter
+# lightfrac = v.par < 100oneunit(v.par) ? oneunit(dayresp(f.formulation)) : dayresp(f.formulation)
+# respiration(f.formulation, v) * lightfrac 

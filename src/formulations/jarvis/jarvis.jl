@@ -1,4 +1,5 @@
 # Jarvis model
+# Uses factor combination to detaermine stomatal conductance.
 
 abstract type AbstractJarvisLight end
 @columns mutable struct JarvisLight{T} <: AbstractJarvisLight
@@ -55,7 +56,7 @@ end
 end
 
 
-abstract type AbstractJarvisModel <: AbstractPhotoModel end
+abstract type AbstractJarvisPhotosynthesis <: AbstractFvCBPhotosynthesis end
 
 """
 Jarvis stomatal conductance model
@@ -63,11 +64,10 @@ Jarvis stomatal conductance model
 Combines factors from soilmethod, co2 method, vpdmethod and tempmethod
 to gain an overall stomatal conductance.
 """
-@PhotoModel struct JarvisModel{JSM<:AbstractSoilMethod, JC<:AbstractJarvisCO2,
+@MixinFvCBPhoto struct JarvisPhotosynthesis{JC<:AbstractJarvisCO2,
                                JV<:AbstractJarvisVPD, JL<:AbstractJarvisLight,
                                JT<:AbstractJarvisTemp, MoMeS, mMoMoS
-                              } <: AbstractJarvisModel
-    soilmethod::JSM | DeficitSoilMethod()  | _             | _ | _ | _
+                              } <: AbstractJarvisPhotosynthesis
     co2method::JC   | JarvisNonlinearCO2() | _             | _ | _ | _
     vpdmethod::JV   | JarvisLohammerVPD()  | _             | _ | _ | _
     lightmethod::JL | JarvisLight()        | _             | _ | _ | _
@@ -77,15 +77,15 @@ to gain an overall stomatal conductance.
     vmfd::mMoMoS    | 1.0                  | mmol*mol^-1   | _ | _ | _
 end
 
-@Vars mutable struct JarvisVars{mMoMo}
+@MixinFvCBVars mutable struct JarvisVars{mMoMo}
     vmleaf::mMoMo  | 1.0 | mmol*mol^-1 | _
 end
 
 
-photo_init!(f::JarvisModel, v) = v.vmleaf = f.vmfd
-photo_update!(::JarvisModel, v, tleaf1) = v.vmleaf = v.vpdleaf / v.pressure
+photo_init!(f::AbstractJarvisPhotosynthesis, v) = v.vmleaf = f.vmfd
+photo_update!(::AbstractJarvisPhotosynthesis, v, tleaf1) = v.vmleaf = v.vpdleaf / v.pressure
 
-update_extremes!(f::JarvisModel, v) = begin
+update_extremes!(f::AbstractJarvisPhotosynthesis, v) = begin
     v.aleaf = -v.rd
     v.gs = f.gsmin
 end
@@ -94,7 +94,7 @@ end
 """
     rubisco_limited_rate(v, p)
 Solution when Rubisco activity is limiting for the Jarvis model """
-function rubisco_limited_rate(f::AbstractJarvisModel, v)
+@inline function rubisco_limited_rate(f::AbstractJarvisPhotosynthesis, v)
     a = 1.0 / v.gs
     b = (v.rd - v.vcmax) / v.gs - v.cs - v.km
     c = v.vcmax * (v.cs - v.gammastar) - v.rd * (v.cs + v.km)
@@ -102,10 +102,10 @@ function rubisco_limited_rate(f::AbstractJarvisModel, v)
 end
 
 """
-    transport_limited_rate(f::JarvisModel, v, p)
+    transport_limited_rate(f::AbstractJarvisPhotosynthesis, v, p)
 Solution when electron transport rate is limiting for the Jarvis model
 """
-function transport_limited_rate(f::JarvisModel, v)
+@inline function transport_limited_rate(f::AbstractJarvisPhotosynthesis, v)
     a = 1.0 / v.gs
     b = (v.rd - v.vj) / v.gs - v.cs - 2v.gammastar
     c = v.vj * (v.cs - v.gammastar) - v.rd * (v.cs + 2v.gammastar)
@@ -114,13 +114,13 @@ end
 
 
 """
-    stomatal_conductance!(f::JarvisModel, v, p)
+    stomatal_conductance!(f::AbstractJarvisPhotosynthesis, v, p)
 Stomatal conductance and for the Jarvis model
 """
-function stomatal_conductance!(f::JarvisModel, v)
+function stomatal_conductance!(f::AbstractJarvisPhotosynthesis, v)
     v.gs = factor_conductance(f, v)
-    v.ac = rubisco_limited_rate(p, v)
-    v.aj = transport_limited_rate(p, v)
+    v.ac = rubisco_limited_rate(f, v)
+    v.aj = transport_limited_rate(f, v)
     v.aleaf = min(v.ac, v.aj) - v.rd
     nothing
 end
@@ -143,6 +143,7 @@ end
 """ Response to incident radiation in umol m^-2 s^-1 """
 calc_flight(f::JarvisLight, v, p) = f.i0 > zero(f.i0) ? v.par / (v.par + f.i0) : 1.0
 
+
 """ Hyperbolic decline with VPD (VPD in Pa) * BRAY (ALEX BOSC) """
 calc_fvpd(f::JarvisHyperbolicVPD, v, p) =
     v.vpdleaf > zero(v.vpdleaf) ? 1.0 / (f.vk1 * v.vpdleaf^f.vk2) : 0.0
@@ -155,6 +156,7 @@ calc_fvpd(f::JarvisFractionDeficitVPD, v, p) =
 """ Linear decline with VPD (VPD1, VPD2 in Pa) * GROMIT (TIM RANDLE) """
 calc_fvpd(f::JarvisLinearDeclineVPD, v, p) = f.d0 > 0.0 ? 1.0 / (1.0 + v.vpdleaf / f.d0) : 1.0
 
+
 """ No response to temperature in Jarvis stomatal conductance """
 calc_ftemp(f::JarvisNoTemp, v, p) = 1.0
 calc_ftemp(f::JarvisTemp1, v, p) = begin
@@ -163,6 +165,7 @@ calc_ftemp(f::JarvisTemp1, v, p) = begin
 end
 calc_ftemp(f::JarvisTemp2, v, p) =
     (v.tleaf - f.t0) * (2 * f.tmax - f.t0 - v.tleaf) / ((f.tref - f.t0) * (2 * f.tmax - f.t0 - f.tref))
+
 
 """ No influence from CO2 for Jarvis stomatal conductance"""
 calc_fco2(f::JarvisNoCO2, v, p) = 1.0

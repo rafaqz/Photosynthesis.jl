@@ -1,151 +1,7 @@
-using Revise, Photosynthesis, Unitful, Test, Libdl
-using Photosynthesis: quad, Lower, Upper
+using Photosynthesis, Unitful, Test, Libdl
 using Unitful: °C, K
 
 photosynlib = dlopen(joinpath(ENV["MAESPA"], "physiol"))
-
-
-emax = FvCBEnergyBalance(photo=EmaxModel())
-ph = emax.photo
-v = EmaxVars()
-v.tleaf = 15°C
-
-# kmfn: rubisco_compensation_point
-kmfn_fortran = Libdl.dlsym(photosynlib, :kmfn_)
-tleaf = ustrip(v.tleaf |> °C)
-
-ieco = 0 # Bernacci
-km_ref = ccall(kmfn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf, ieco)
-km = rubisco_compensation_point(BernacchiCompensation(), v) # Michaelis-Menten for Rubisco, umol mol-1
-@test km.val ≈ km_ref rtol=1e-4
-
-ieco = 1 # Badger-Collatz
-km_ref = ccall(kmfn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf,ieco)
-km = rubisco_compensation_point(BadgerCollatzCompensation(), v) # Michaelis-Menten for Rubisco, umol mol-1
-@test km.val ≈ km_ref rtol=1e-4
-
-# gammafn: co2_compensation_point
-gammafn_fortran = Libdl.dlsym(photosynlib, :gammafn_)
-gammastar_ref = ccall(gammafn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf, 0)
-gammastar = co2_compensation_point(BernacchiCompensation(), v) # Michaelis-Menten for Rubisco, umol mol-1
-@test gammastar.val ≈ gammastar_ref rtol=1e-4
-gammastar_ref = ccall(gammafn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf, 1)
-gammastar = co2_compensation_point(BadgerCollatzCompensation(), v) # Michaelis-Menten for Rubisco, umol mol-1
-@test gammastar.val ≈ gammastar_ref rtol=1e-4
-
-# arrhfn: arrhenius
-arrhfn_fortran = Libdl.dlsym(photosynlib, :arrh_)
-arrh_ref = ccall(arrhfn_fortran, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}), 42.75, 37830.0, 30.0, 25.0)
-arrh = arrhenius(42.75u"μmol*mol^-1", 37830.0u"J*mol^-1", 30.0u"°C" |> u"K", 25.0u"°C" |> u"K")
-@test arrh.val ≈ arrh_ref
-
-
-# quadm: quad
-quadm_fortran = Libdl.dlsym(photosynlib, :quadm_)
-f = ph.rubisco_regen
-a = 0.5
-b = -0.5
-c = 0.05
-quad_ref = ccall(quadm_fortran, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Int32}), a, b, c, 1)/4.0
-quad_test = quad(Lower(), a,b,c)/4
-@test quad_ref ≈ quad_test atol=1e-5
-
-# quadm: quap
-quadp_fortran = Libdl.dlsym(photosynlib, :quadp_)
-f = ph.rubisco_regen
-a = 0.5
-b = -0.5
-c = 0.05
-quad_ref = ccall(quadp_fortran, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Int32}), a, b, c, 1)/4.0
-quad_test = quad(Upper(), a,b,c)/4
-@test quad_ref ≈ quad_test atol=1e-5
-
-# arrhfn: arrhenius
-resp_fortran = Libdl.dlsym(photosynlib, :resp_)
-f = ph.respiration
-rd0 = ustrip(f.rd0)
-rdacc = 1.0
-tleaf = ustrip(v.tleaf |> °C)
-q10f = f.q10f.val
-tref = ustrip(f.tref |> °C)
-dayresp = f.dayresp
-tbelow = ustrip(f.tbelow |> °C)
-resp_ref = ccall(resp_fortran, Float32,
-                        (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}),
-                        rd0, rdacc, tleaf, q10f, tref, dayresp, tbelow)
-v.rd = respiration(f, v)
-@test_broken v.rd.val == resp_ref
-
-# vcmaxtfn: max_rubisco_activity
-vcmaxtfn_fortran = Libdl.dlsym(photosynlib, :vcmaxtfn_)
-v = EmaxVars()
-v.tleaf = 15.0°C |> K
-tleaf = ustrip(v.tleaf |> °C)
-f = VcJmax(vcmaxformulation=NoOptimumVcmax())
-vc = f.vcmaxformulation
-vcmax25 = vc.vcmax25.val
-eavc = vc.eavc.val
-edvc = 0.0
-delsc = 0.0
-tvjup = -100.0
-tvjdn = -100.0
-vcmax_ref = ccall(vcmaxtfn_fortran, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
-                 ), vcmax25, tleaf, eavc, edvc, delsc, tvjup, tvjdn)
-@test ustrip(max_rubisco_activity(f, v)) ≈ vcmax_ref rtol=1e-4
-
-f = DukeVcJmax(vcmaxformulation=OptimumVcmax())
-vcmax_ref = ccall(vcmaxtfn_fortran, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
-                         ), vcmax25, tleaf, eavc, edvc, delsc, tvjup, tvjdn)
-@test ustrip(max_rubisco_activity(f, v)) ≈ vcmax_ref
-
-v = EmaxVars()
-v.tleaf = 15.0°C
-tleaf = v.tleaf.val
-f = VcJmax(vcmaxformulation=OptimumVcmax())
-vc = f.vcmaxformulation
-eavc = vc.eavc.val
-edvc = vc.edvc.val
-delsc = vc.delsc.val
-tvjup = -100.0
-tvjdn = -100.0
-vcmax_ref = ccall(vcmaxtfn_fortran, Float32,
-                         (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
-                         ), vcmax25, tleaf, eavc, edvc, delsc, tvjup, tvjdn)
-@test_broken ustrip(max_rubisco_activity(f, v)) ≈ vcmax_ref rtol=1e-4
-
-v = EmaxVars()
-v.tleaf = 15.0°C
-tleaf = ustrip(v.tleaf |> °C)
-f = DukeVcJmax(vcmaxformulation=OptimumVcmax())
-vc = f.vcmaxformulation
-vcmax25 = vc.vcmax25.val
-eavc = vc.eavc.val
-edvc = vc.edvc.val
-delsc = vc.delsc.val
-tvjup = ustrip(f.tvjup |> °C)
-tvjdn = ustrip(f.tvjdn |> °C)
-vcmax_ref = ccall(vcmaxtfn_fortran, Float32, 
-                         (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}), 
-                         vcmax25, tleaf, eavc, edvc, delsc, tvjup, tvjdn)
-@test ustrip(max_rubisco_activity(f, v)) ≈ vcmax_ref rtol=1e-4
-
-
-# jmaxtfn: max_electron_transport_rate
-jmaxtfn_fortran = Libdl.dlsym(photosynlib, :jmaxtfn_)
-f = Jmax()
-v.tleaf = 15.0°C
-tleaf = ustrip(v.tleaf |> °C)
-jmax25 = f.jmax25.val
-eavj = f.eavj.val
-edvj = f.edvj.val
-delsj = f.delsj.val
-tvjup = -100.0
-tvjdn = -100.0
-jmax_ref = ccall(jmaxtfn_fortran, Float32, 
-                        (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}), 
-                        jmax25, tleaf, eavj, edvj, delsj, tvjup, tvjdn)
-@test ustrip(max_electron_transport_rate(f, v)) ≈ jmax_ref rtol=1e-4
-
 
 function run_fortran_enbal(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata, vfun)
     tzvars = TuzetVars()
@@ -408,6 +264,9 @@ function run_fortran_enbal(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata,
     (tleaf[1], rd[1], emaxleaf[1], psil[1], fsoil[1], aleaf[1], gs[1], ci[1])
 end
 
+
+# Emax
+
 p = FvCBEnergyBalance(photo=EmaxModel(gsmodel=BallBerryStomatalConductance(),
                       vcjmax=DukeVcJmax(),
                       compensation=BadgerCollatzCompensation()))
@@ -419,8 +278,12 @@ soildata = 1
 ismaespa = true
 vfun = 1
 
+(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata, vfun)
+
 (tleaf, rd, emaxleaf, psil, fsoil, aleaf, gs, ci) = 
     run_fortran_enbal(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata, vfun)
+run_enbal!(p, v)
+
 println(v.vcmax)
 
 enbal!(p, v);
@@ -442,6 +305,8 @@ enbal!(p, v);
 @test ci ≈ v.ci.val rtol=1e-6
 
 
+# Ball Berry
+
 p = FvCBEnergyBalance(photo=BallBerryModel(gsmodel=BallBerryStomatalConductance(),
                       vcjmax=DukeVcJmax(),
                       compensation=BadgerCollatzCompensation()))
@@ -454,6 +319,7 @@ ismaespa = false
 
 (tleaf, rd, emaxleaf, psil, fsoil, aleaf, gs, ci) = 
     run_fortran_enbal(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata, vfun)
+run_enbal!(p, v)
 
 @test tleaf ≈ ustrip(v.tleaf |> °C)
 @test rd ≈ v.rd.val
@@ -463,6 +329,8 @@ ismaespa = false
 @test ci ≈ v.ci.val rtol=1e-6
 
 
+# Leuning
+
 p = FvCBEnergyBalance(photo=BallBerryModel(gsmodel=LeuningStomatalConductance(),
                       vcjmax=DukeVcJmax(),
                       compensation=BadgerCollatzCompensation()))
@@ -471,6 +339,7 @@ modelgs = 3
 
 (tleaf, rd, emaxleaf, psil, fsoil, aleaf, gs, ci) = 
     run_fortran_enbal(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata, vfun)
+run_enbal!(p, v)
 
 @test tleaf ≈ ustrip(v.tleaf |> °C)
 # println("tleaf: ", tleaf)

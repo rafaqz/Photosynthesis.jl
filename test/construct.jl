@@ -1,6 +1,4 @@
-using Photosynthesis,
-      Unitful, 
-      Test
+using Photosynthesis, Unitful, Test
 
 @testset "it all actually builds" begin
     BadgerCollatzCompensation()
@@ -41,102 +39,132 @@ using Photosynthesis,
     PotentialSoilMethod()
     EmaxSoilMethod()
     TuzetSoilMethod()
-    BallBerryModel()
-    TuzetModel()
-    EmaxModel()
-    JarvisModel()
-    PhotoVars()
+    BallBerryPhotosynthesis()
+    TuzetPhotosynthesis()
+    EmaxPhotosynthesis()
+    JarvisPhotosynthesis()
+    BallBerryVars()
     EmaxVars()
     TuzetVars()
-    BallBerryVars()
     JarvisVars()
     FvCBEnergyBalance()
 end
 
 @testset "it all actuall runs" begin
-    global p = FvCBEnergyBalance()
-    global v = EmaxVars()
+    p = FvCBEnergyBalance()
+    v = EmaxVars()
+    enbal!(p, v)
 
-    penman_monteith(v.pressure, v.slope, v.lhv, v.rnet, v.vpd, 1.0u"mol*m^-2*s^-1", 1.0u"mol*m^-2*s^-1") # TODO this seems weird
 
-    grashof_number(v.tleaf, v.tair, p.boundary_conductance.leafwidth)
-    cmolar(v.pressure, v.tair)
-    v.gradn = radiation_conductance(p.radiation_conductance, v)
-    boundary_conductance_free(p.boundary_conductance, v)
-    boundary_conductance_forced(p.boundary_conductance, v)
+    # Biophysical 
     latent_heat_water_vapour(v.tair)
     arrhenius(42.75u"J/mol", 37830.0u"J/mol", v.tleaf, 300.0u"K")
 
-    co2_compensation_point(BadgerCollatzCompensation(), v)
-    co2_compensation_point(BernacchiCompensation(), v)
-    rubisco_compensation_point(BadgerCollatzCompensation(), v)
-    rubisco_compensation_point(BernacchiCompensation(), v)
+    # Radiation conductance
+    radiation_conductance(YingPingRadiationConductance(), v)
 
-    max_electron_transport_rate(VcJmax(), v)
-    max_electron_transport_rate(DukeVcJmax(), v)
-    max_rubisco_activity(VcJmax(),v)
-    max_rubisco_activity(DukeVcJmax(),v)
+    # Shape
+    shape_gs(HardMinimumGS(), v, BallBerryPhotosynthesis()) 
+    shape_gs(HyperbolicMinimumGS(), v, BallBerryPhotosynthesis()) 
 
-    respiration(Respiration(), v)
+    # Boundary conductance
+    grashof_number(v.tleaf, v.tair, BoundaryConductance().leafwidth)
+    cmolar(v.pressure, v.tair)
+    boundary_conductance_free(BoundaryConductance(), v)
+    boundary_conductance_forced(BoundaryConductance(), v)
 
+    # Decoupling
+    calc_decoupling(McNaughtonJarvisDecoupling(), v)
+    calc_decoupling(NoDecoupling(), v)
+
+    # Evapotranspiration
+    penman_monteith(v.pressure, v.slope, v.lhv, v.rnet, v.vpd, 1.0u"mol*m^-2*s^-1", 1.0u"mol*m^-2*s^-1") # TODO this seems weird
+    calc_evapotranspiration(PenmanMonteithEvapotranspiration(), v)
+
+
+    # Core
+
+    # Compensation
+    co2_compensation_point(BadgerCollatzCompensation(), v.tleaf)
+    co2_compensation_point(BernacchiCompensation(), v.tleaf)
+    rubisco_compensation_point(BadgerCollatzCompensation(), v.tleaf)
+    rubisco_compensation_point(BernacchiCompensation(), v.tleaf)
+
+    # Flux
+    max_electron_transport_rate(VcJmax(), v.tleaf)
+    max_electron_transport_rate(DukeVcJmax(), v.tleaf)
+    max_rubisco_activity(VcJmax(), v.tleaf)
+    max_rubisco_activity(DukeVcJmax(), v.tleaf)
+
+    # Respiration
+    respiration(Respiration(), v.tleaf)
+
+    # Rubisco regeneration
     rubisco_regeneration(RubiscoRegen(), v)
 
+    # Stomatal conductance submodels
     gsdiva(BallBerryStomatalConductance(), BallBerryVars())
     gsdiva(LeuningStomatalConductance(), BallBerryVars())
     gsdiva(MedlynStomatalConductance(), BallBerryVars())
     gsdiva(ThreeParStomatalConductance(), BallBerryVars())
     gsdiva(TuzetStomatalConductance(), TuzetVars())
 
-    stomatal_conductance!(BallBerryModel(gsmodel=BallBerryStomatalConductance()), BallBerryVars())
-    stomatal_conductance!(BallBerryModel(gsmodel=LeuningStomatalConductance()), BallBerryVars())
-    stomatal_conductance!(BallBerryModel(gsmodel=MedlynStomatalConductance()), BallBerryVars())
-    stomatal_conductance!(BallBerryModel(gsmodel=ThreeParStomatalConductance()), BallBerryVars())
-    stomatal_conductance!(EmaxModel(gsmodel=BallBerryStomatalConductance()), EmaxVars())
-    stomatal_conductance!(EmaxModel(gsmodel=LeuningStomatalConductance()), EmaxVars())
-    stomatal_conductance!(EmaxModel(gsmodel=MedlynStomatalConductance()), EmaxVars())
-    stomatal_conductance!(EmaxModel(gsmodel=ThreeParStomatalConductance()), EmaxVars())
-    stomatal_conductance!(JarvisModel(), JarvisVars())
-    stomatal_conductance!(TuzetModel(), TuzetVars())
+    # Stomatal conductance models
+    stomatal_conductance!(BallBerryPhotosynthesis(gsmodel=BallBerryStomatalConductance()), v)
+    stomatal_conductance!(BallBerryPhotosynthesis(gsmodel=LeuningStomatalConductance()), v)
+    stomatal_conductance!(BallBerryPhotosynthesis(gsmodel=MedlynStomatalConductance()), v)
+    stomatal_conductance!(BallBerryPhotosynthesis(gsmodel=ThreeParStomatalConductance()), v)
+    stomatal_conductance!(EmaxPhotosynthesis(gsmodel=BallBerryStomatalConductance()), v)
+    stomatal_conductance!(EmaxPhotosynthesis(gsmodel=LeuningStomatalConductance()), v)
+    stomatal_conductance!(EmaxPhotosynthesis(gsmodel=MedlynStomatalConductance()), v)
+    stomatal_conductance!(EmaxPhotosynthesis(gsmodel=ThreeParStomatalConductance()), v)
+    stomatal_conductance!(JarvisPhotosynthesis(), JarvisVars())
+    stomatal_conductance!(TuzetPhotosynthesis(), TuzetVars())
 
-    global v = JarvisVars()
-    global p = FvCBEnergyBalance(photo=JarvisModel())
-    photosynthesis!(p.photo, v)
-    v.aleaf
-    v.tleaf
-    v.gs
-    v.cs
+
+    # Formulations
+    
+    v = JarvisVars()
+    p = FvCBEnergyBalance(photosynthesis=JarvisPhotosynthesis())
+    factor_conductance(JarvisPhotosynthesis(), v)
     enbal!(p, v)
-    run_enbal!(p, v)
-    factor_conductance(JarvisModel(), v)
-
-    global v = BallBerryVars()
-    global p = FvCBEnergyBalance(photo=BallBerryModel())
-    photosynthesis!(p.photo, v)
+    photosynthesis!(p.photosynthesis, v)
     v.aleaf
     v.tleaf
     v.gs
     v.cs
     enbal!(p, v)
 
-    global p = FvCBEnergyBalance(photo=TuzetModel())
-    global v = TuzetVars()
-    photosynthesis!(p.photo, v)
+    v = BallBerryVars()
+    p = FvCBEnergyBalance(photosynthesis=BallBerryPhotosynthesis())
+    enbal!(p, v)
+    photosynthesis!(p.photosynthesis, v)
     v.aleaf
     v.tleaf
     v.gs
     v.cs
     enbal!(p, v)
-    run_enbal!(p, v)
 
-    global p = FvCBEnergyBalance(photo=EmaxModel())
-    global v = EmaxVars()
-    photosynthesis!(p.photo, v)
+    p = FvCBEnergyBalance(photosynthesis=TuzetPhotosynthesis())
+    v = TuzetVars()
+    enbal!(p, v)
+    photosynthesis!(p.photosynthesis, v)
     v.aleaf
     v.tleaf
     v.gs
     v.cs
     enbal!(p, v)
-    run_enbal!(p, v)
+
+    p = FvCBEnergyBalance(photosynthesis=EmaxPhotosynthesis())
+    v = EmaxVars()
+    enbal!(p, v)
+    photosynthesis!(p.photosynthesis, v)
+    v.aleaf
+    v.tleaf
+    v.gs
+    v.cs
+    enbal!(p, v)
+
 end
 
 nothing

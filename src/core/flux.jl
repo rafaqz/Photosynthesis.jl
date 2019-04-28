@@ -4,16 +4,15 @@ abstract type AbstractJmax end
 @columns struct Jmax{μMoM2S,JMoK,JMo} <: AbstractJmax
     jmax25::μMoM2S  | 184.0    | μmol*m^-2*s^-1 | Gamma(100, 184/100)    | (0.0, 1000.0)    | _
     delsj::JMoK     | 640.02   | J*mol^-1*K^-1  | Gamma(100, 640.02/100) | (0.0, 1000.0)    | "DELTAS in Medlyn et al. (2002)"
-    eavj::JMo       | 37259.0  | J*mol^-1       | Gamma(100, 37259/100)  | (0.0, 100000.0)  | "Ha     in Medlyn et al. (2002)"
-    edvj::JMo       | 200000.0 | J*mol^-1       | Gamma(100, 200000/100) | (0.0, 1000000.0) | "Hd     in Medlyn et al. (2002)"
+    eavj::JMo       | 37259.0  | J*mol^-1       | Gamma(100, 37259/100)  | (0.0, 100000.0)  | "Ha in Medlyn et al. (2002)"
+    edvj::JMo       | 200000.0 | J*mol^-1       | Gamma(100, 200000/100) | (0.0, 1000000.0) | "Hd in Medlyn et al. (2002)"
 end
 
 abstract type AbstractVcmax end
 
-"@Vcmax mixin macro adds vcmax fields to a struct"
 @mix @columns struct Vcmax{μMoM2S,JMo}
     vcmax25::μMoM2S | 110.0    | μmol*m^-2*s^-1 | Gamma(100, 114/100)   | (0.0, 200.0)    | _
-    eavc::JMo       | 47590.0  | J*mol^-1       | Gamma(100, 47590/100) | (0.0, 100000.0) | "Ha    in Medlyn et al. (2002)"
+    eavc::JMo       | 47590.0  | J*mol^-1       | Gamma(100, 47590/100) | (0.0, 100000.0) | "Ha Medlyn et al. (2002)"
 end
 
 @Vcmax struct NoOptimumVcmax{} <: AbstractVcmax end
@@ -37,28 +36,29 @@ end
 
 
 """ 
-    max_electron_transport_rate(f::DukeVcJmax, v)
+    max_electron_transport_rate(f::DukeVcJmax, tleaf)
 Wrapper to `max_electron_transport_rate()` allowing Vcmax to be forced linearly to zero at low T """
-max_electron_transport_rate(f::DukeVcJmax, v) = begin
-    v.tleaf < f.tvjdn && return zero(f.jmaxformulation.jmax25)
-    jmax = max_electron_transport_rate(f.jmaxformulation, v)
+max_electron_transport_rate(f::DukeVcJmax, tleaf) = begin
+    tleaf < f.tvjdn && return zero(f.jmaxformulation.jmax25)
+    jmax = max_electron_transport_rate(f.jmaxformulation, tleaf)
     # TODO this isn't assigning to anyhthing
-    v.tleaf < f.tvjup && (v.tleaf - f.tvjdn) / (f.tvjup - f.tvjdn) * jmax
+    tleaf < f.tvjup && (tleaf - f.tvjdn) / (f.tvjup - f.tvjdn) * jmax
     jmax
 end
 
 """ 
-    max_electron_transport_rate(f::VcJmax, v)
+    max_electron_transport_rate(f::VcJmax, tleaf)
 Wrapper for `max_electron_transport_rate() that simply runs `max_electron_transport_rate` for `jmaxformulation`
 """
-max_electron_transport_rate(f::VcJmax, v) = max_electron_transport_rate(f.jmaxformulation, v)
+max_electron_transport_rate(f::VcJmax, tleaf) = 
+    max_electron_transport_rate(f.jmaxformulation, tleaf)
 
 """ 
-    max_electron_transport_rate(f::Jmax, v)
+    max_electron_transport_rate(f::Jmax, tleaf)
 Calculates the potential max_electron transport rate (Jmax) at the leaf temperature 
 """
-max_electron_transport_rate(f::Jmax, v) = begin
-    tleafK = v.tleaf |> K
+max_electron_transport_rate(f::Jmax, tleaf) = begin
+    tleafK = tleaf |> K
     K25 = 25.0°C |> K
     f.jmax25 * exp((tleafK - K25) * f.eavj / (R * tleafK * K25)) *
     (1 + exp((f.delsj * K25 - f.edvj) / (R * K25))) /
@@ -75,29 +75,29 @@ function max_rubisco_activity() end
 
 """ Function allowing Vcmax to be forced linearly to zero at low T.  
 Introduced for Duke data. """
-function max_rubisco_activity(f::DukeVcJmax, v)
-    v.tleaf < f.tvjdn && return zero(f.vcmaxformulation.vcmax25)
-    vcmax = max_rubisco_activity(f.vcmaxformulation, v)
+function max_rubisco_activity(f::DukeVcJmax, tleaf)
+    tleaf < f.tvjdn && return zero(f.vcmaxformulation.vcmax25)
+    vcmax = max_rubisco_activity(f.vcmaxformulation, tleaf)
     # TODO this isn't assigning to anyhthing
-    v.tleaf < f.tvjup && (v.tleaf - f.tvjdn) / (f.tvjup - f.tvjdn) * vcmax
+    tleaf < f.tvjup && (tleaf - f.tvjdn) / (f.tvjup - f.tvjdn) * vcmax
     vcmax
 end
 
 """ Wrapper with no alterations to vcmax
 Runs max_rubisco_activity for `vcmaxformlation`"""
-max_rubisco_activity(f::VcJmax, v) = max_rubisco_activity(f.vcmaxformulation, v)
+max_rubisco_activity(f::VcJmax, tleaf) = max_rubisco_activity(f.vcmaxformulation, tleaf)
 
 """ Vcmax forulation with no optimum"""
-function max_rubisco_activity(f::NoOptimumVcmax, v)
-    tleafK = v.tleaf |> K
+function max_rubisco_activity(f::NoOptimumVcmax, tleaf)
+    tleafK = tleaf |> K
     K25 = K(25°C)
-    f.vcmax25 * exp((f.eavc * (v.tleaf - K25)) / (K25 * R * tleafK))
+    f.vcmax25 * exp((f.eavc * (tleaf - K25)) / (K25 * R * tleafK))
 end
 """ Vcmax formulation with optimum"""
-function max_rubisco_activity(f::OptimumVcmax, v)
-    tleafK = v.tleaf |> K
+function max_rubisco_activity(f::OptimumVcmax, tleaf)
+    tleafK = tleaf |> K
     K25 = K(25°C)
-    f.vcmax25 * exp((v.tleaf - K25) * f.eavc / (R * tleafK * K25)) *
+    f.vcmax25 * exp((tleaf - K25) * f.eavc / (R * tleafK * K25)) *
     (1.0 + exp((f.delsc * K25 - f.edvc) / (R * K25))) /
     (1.0 + exp((f.delsc * tleafK - f.edvc) / (R * tleafK)))
 end

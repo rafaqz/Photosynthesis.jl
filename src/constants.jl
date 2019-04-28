@@ -1,5 +1,4 @@
 const TOL = 0.02K          # Tolerance for leaf temp iteration
-const DHEAT = 21.5e-6m^2*s^-1     # molecular diffusivity for heat
 const GBHGBC = 1.32       # Ratio of Gbh:Gbc
 const GSVGSC = 1.57       # Ratio of Gsw:Gsc
 const GBVGBH = 1.075      # Ratio of Gbw:Gbh
