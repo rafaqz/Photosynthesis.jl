@@ -1,10 +1,10 @@
 abstract type AbstractRespiration end
 @mix @columns struct Resp{pK,K,F,μMoM2S}
-    q10f::pK        | 0.67   | K^-1           | _                | (0.0, 1.0)     | "logarithm of the Q10 (Equation for respiration)"
-    dayresp::F      | 1.0    | _              | Beta(5, 1)       | (0.0, 1.0)     | "Respiration in the light as fraction of that in the dark."
-    rd0::μMoM2S     | 0.9    | μmol*m^-2*s^-1 | Gamma(10, 0.9/10)| (0.0, 1.0)     | _
-    tbelow::K       | 173.15 | K              | _                | (250.0, 300.0) | "No respiration occurs below this temperature."
-    tref::K         | 298.15 | K              | _                | (250.0, 350.0) | "Reference temperature (T at which RD0 was measured)"
+    q10f::pK        | 0.67   | K^-1           | _                | (0.0, 1.0)     | "Logarithm of the Q10"
+    dayresp::F      | 1.0    | _              | Beta(5, 1)       | (0.0, 1.0)     | "Respiration in the light as fraction of that in the dark"
+    rd0::μMoM2S     | 0.001  | μmol*m^-2*s^-1 | Gamma(10, 0.9/10)| (0.0, 0.1)     | "Dark respiration at the reference temperature"
+    tbelow::K       | 173.15 | K              | _                | (250.0, 300.0) | "Temperature below which no respiration occurs"
+    tref::K         | 298.15 | K              | _                | (250.0, 350.0) | "Reference temperature at which rd0 was measured"
 end
 
 @Resp struct Respiration{} <: AbstractRespiration end
@@ -22,7 +22,7 @@ respiration!(f::Nothing, v, rd) = zero(rd)
 
 # What is this 10 number???
 function respiration(f::Respiration, tleaf)
-    tleaf < f.tbelow && return zero(v.rd)
+    tleaf < f.tbelow && return zero(f.rd0)
 
     f.rd0 * exp(f.q10f * (tleaf - f.tref)) * f.dayresp
 end

@@ -56,7 +56,7 @@ end
 end
 
 
-abstract type AbstractJarvisPhotosynthesis <: AbstractFvCBPhotosynthesis end
+abstract type AbstractJarvisStomatalConductance <: AbstractStomatalConductance end
 
 """
 Jarvis stomatal conductance model
@@ -64,10 +64,10 @@ Jarvis stomatal conductance model
 Combines factors from soilmethod, co2 method, vpdmethod and tempmethod
 to gain an overall stomatal conductance.
 """
-@MixinFvCBPhoto struct JarvisPhotosynthesis{JC<:AbstractJarvisCO2,
+@columns struct JarvisStomatalConductance{JC<:AbstractJarvisCO2,
                                JV<:AbstractJarvisVPD, JL<:AbstractJarvisLight,
                                JT<:AbstractJarvisTemp, MoMeS, mMoMoS
-                              } <: AbstractJarvisPhotosynthesis
+                              } <: AbstractJarvisStomatalConductance
     co2method::JC   | JarvisNonlinearCO2() | _             | _ | _ | _
     vpdmethod::JV   | JarvisLohammerVPD()  | _             | _ | _ | _
     lightmethod::JL | JarvisLight()        | _             | _ | _ | _
@@ -82,19 +82,32 @@ end
 end
 
 
-photo_init!(f::AbstractJarvisPhotosynthesis, v) = v.vmleaf = f.vmfd
-photo_update!(::AbstractJarvisPhotosynthesis, v, tleaf1) = v.vmleaf = v.vpdleaf / v.pressure
+photo_init!(f::AbstractJarvisStomatalConductance, v) = v.vmleaf = f.vmfd
+photo_update!(::AbstractJarvisStomatalConductance, v, tleaf1) = v.vmleaf = v.vpdleaf / v.pressure
 
-update_extremes!(f::AbstractJarvisPhotosynthesis, v) = begin
+update_extremes!(f::AbstractJarvisStomatalConductance, v) = begin
     v.aleaf = -v.rd
     v.gs = f.gsmin
 end
 
 
 """
+    stomatal_conductance!(f::AbstractJarvisStomatalConductance, v, p)
+Stomatal conductance and for the Jarvis model
+"""
+function stomatal_conductance!(f::AbstractJarvisStomatalConductance, v)
+    v.gs = factor_conductance(f, v)
+    v.ac = rubisco_limited_rate(f, v)
+    v.aj = transport_limited_rate(f, v)
+    v.aleaf = min(v.ac, v.aj) - v.rd
+    nothing
+end
+
+
+"""
     rubisco_limited_rate(v, p)
 Solution when Rubisco activity is limiting for the Jarvis model """
-@inline function rubisco_limited_rate(f::AbstractJarvisPhotosynthesis, v)
+@inline function rubisco_limited_rate(f::AbstractJarvisStomatalConductance, v)
     a = 1.0 / v.gs
     b = (v.rd - v.vcmax) / v.gs - v.cs - v.km
     c = v.vcmax * (v.cs - v.gammastar) - v.rd * (v.cs + v.km)
@@ -102,27 +115,14 @@ Solution when Rubisco activity is limiting for the Jarvis model """
 end
 
 """
-    transport_limited_rate(f::AbstractJarvisPhotosynthesis, v, p)
+    transport_limited_rate(f::AbstractJarvisStomatalConductance, v, p)
 Solution when electron transport rate is limiting for the Jarvis model
 """
-@inline function transport_limited_rate(f::AbstractJarvisPhotosynthesis, v)
+@inline function transport_limited_rate(f::AbstractJarvisStomatalConductance, v)
     a = 1.0 / v.gs
     b = (v.rd - v.vj) / v.gs - v.cs - 2v.gammastar
     c = v.vj * (v.cs - v.gammastar) - v.rd * (v.cs + 2v.gammastar)
     quad(Lower(), a, b, c)
-end
-
-
-"""
-    stomatal_conductance!(f::AbstractJarvisPhotosynthesis, v, p)
-Stomatal conductance and for the Jarvis model
-"""
-function stomatal_conductance!(f::AbstractJarvisPhotosynthesis, v)
-    v.gs = factor_conductance(f, v)
-    v.ac = rubisco_limited_rate(f, v)
-    v.aj = transport_limited_rate(f, v)
-    v.aleaf = min(v.ac, v.aj) - v.rd
-    nothing
 end
 
 """

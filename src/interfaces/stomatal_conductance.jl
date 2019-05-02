@@ -2,6 +2,8 @@
 
 abstract type AbstractStomatalConductance end
 
+abstract type AbstractGSsubModel end
+
 """
     stomatal_conductance!(p, v)
 Stomatal conductance and intercellular CO2 partial pressure calculations.

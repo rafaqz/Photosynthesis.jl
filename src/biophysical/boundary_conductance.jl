@@ -6,8 +6,26 @@ abstract type AbstractBoundaryConductance end
 
 @columns struct BoundaryConductance{M,MolMS} <: AbstractBoundaryConductance
     leafwidth::M | 0.05 | m             | Gamma(2, 0.05/2) | (0.0, 1.0) | "Mean width of leaves"
-    gsc::MolMS   | 1.0  | mol*m^-2*s^-1 | Gamma(2, 2)      | (0.0, 1.0) | "??"
+    gsc::MolMS   | 1.0  | mol*m^-2*s^-1 | Gamma(2, 2)      | (0.0, 1.0) | "Stomatal conductance of the boundary layer to CO₂" # Check this
 end
+
+# TODO remove assingments to v
+vapour_conductance!(f::AbstractBoundaryConductance, v) = begin
+    v.gbhf = boundary_conductance_free(f, v)
+
+    # Total boundary layer conductance for heat
+    # See Leuning et al (1995) PCE 18:1183-1200 Eqn E5
+    v.gbh = v.gbhu + v.gbhf
+    # Total conductance for heat: two-sided
+    v.gh = 2.0(v.gbh + v.gradn)
+
+    # Total conductance for water vapour
+    v.gbv = GBVGBH * v.gbh
+    v.gsv = GSVGSC * f.gsc
+    # gv = nsides * (gbv * gsv) / (gbv + gsv) # already one-sided value
+    (v.gbv * v.gsv) / (v.gbv + v.gsv)
+end
+
 
 """
 Boundary layer conductance for heat - single sided, free convection

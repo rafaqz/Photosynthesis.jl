@@ -13,6 +13,9 @@ using Unitful: R, °C, K, Pa, kPa, MPa, J, W, kJ, kg, g, m, s, mol, mmol, μmol,
 import FieldMetadata: @flattenable, @prior, @limits, @default, @redefault, @description, @units,
                       flattenable, prior, limits, default, description, units
 
+
+
+
 export enbal!,
        run_enbal!,
        photosynthesis!,
@@ -58,12 +61,11 @@ export enbal!,
 
 export AbstractCompensation, BadgerCollatzCompensation, BernacchiCompensation
 
-export AbstractStomatalConductance, BallBerryStomatalConductance,
-       LeuningStomatalConductance, MedlynStomatalConductance,
-       ThreeParStomatalConductance, TuzetStomatalConductance
+export AbstractJmax, Jmax 
 
-export AbstractJmax, AbstractVcmax, AbstractVcJmax,
-       Jmax, NoOptimumVcmax, OptimumVcmax, VcJmax, DukeVcJmax
+export AbstractVcmax, NoOptimumVcmax, OptimumVcmax
+
+export AbstractFlux, Flux, DukeFlux, PotentialModifiedFlux
 
 export AbstractRubiscoRegen, RubiscoRegen
 
@@ -97,10 +99,15 @@ export AbstractJarvisLight, JarvisLight
 export AbstractJarvisTemp, JarvisNoTemp, JarvisTemp1, JarvisTemp2
 
 
-export AbstractPhotosynthesis, AbstractBallBerryPhotosynthesis, AbstractMaespaPhotosynthesis, BallBerryPhotosynthesis,
-       TuzetPhotosynthesis, EmaxPhotosynthesis, JarvisPhotosynthesis
+export AbstractGSsubModel, BallBerryGSsubModel, LeuningGSsubModel, 
+       MedlynGSsubModel, ThreeParGSsubModel, TuzetGSsubModel
 
-export AbstractyFvCBEnergyBalance, FvCBEnergyBalance
+export AbstractStomatalConductance, AbstractBallBerryStomatalConductance, BallBerryStomatalConductance,
+       TuzetStomatalConductance, AbstractEmaxStomatalConductance, EmaxStomatalConductance, JarvisStomatalConductance
+
+export AbstractPhotosynthesis, AbstractFvCBPhotosynthesis, FvCBPhotosynthesis
+
+export AbstractyFvCBEnergyBalance, FvCBEnergyBalance, EmaxEnergyBalance
 
 export BallBerryVars, EmaxVars, TuzetVars, JarvisVars
 

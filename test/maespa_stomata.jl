@@ -5,7 +5,7 @@ using Unitful: °C, K
 emax = FvCBEnergyBalance(photosynthesis=EmaxPhotosynthesis())
 ph = emax.photosynthesis
 v = EmaxVars()
-v.tleaf = 15°C
+v.tleaf = 15°C |> K
 
 
 # Rubisco compensation

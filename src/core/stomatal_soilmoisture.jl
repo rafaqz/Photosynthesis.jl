@@ -3,15 +3,15 @@ abstract type AbstractDeficitSoilData <: AbstractSoilData end
 abstract type AbstractContentSoilData <: AbstractDeficitSoilData end
 
 " @Deficit mixin macro adds water deficit fields to a struct"
-@mix @columns struct MixinDeficit{T}
-    smd1::T   | 1.0 | _ | _ | _ | _
-    smd2::T   | 1.0 | _ | _ | _ | _
+@mix @default_kw struct MixinDeficit{T}
+    smd1::T   | 1.0
+    smd2::T   | 1.0
 end
 
 "@Content mixin macro adds water content fields to a struct"
 @MixinDeficit @mix struct MixinContent{W}
-    swmax::W  | 1.0 | _ | _ | _ | _
-    swmin::W  | 0.0 | _ | _ | _ | _
+    swmax::W  | 1.0
+    swmin::W  | 0.0
 end
 
 "Soil water is measured as deficit"
@@ -21,33 +21,28 @@ end
 "Simulated soil volumetric content"
 @MixinContent struct SimulatedSoilData{} <: AbstractContentSoilData end
 "Soil water is measured as water potential"
-@columns struct PotentialSoilData{T} <: AbstractSoilData
-    swpexp::T | 1.0 | _ | _ | _ | _
-end
-struct NoSoilData <: AbstractSoilData end
 
 
-abstract type AbstractSoilMethod{T} end
+abstract type AbstractSoilMethod end
 
-struct NoSoilMethod <: AbstractSoilMethod{Nothing} end
+struct NoSoilMethod <: AbstractSoilMethod end
 
-@columns struct VolumetricSoilMethod{WC,R,D,T<:AbstractContentSoilData
-                                            } <: AbstractSoilMethod{T}
-    soildata::T  | ContentSoilData() | _ | _ | _ | _
-    wc1::WC      | 0.5               | _ | _ | _ | _
-    wc2::WC      | 0.5               | _ | _ | _ | _
-    soilroot::R  | 0.5               | _ | _ | _ | _ # Not sure these are parameters
-    soildepth::D | 0.5               | _ | _ | _ | _ # One must be a variable...
+@default_kw struct VolumetricSoilMethod{WC,R,D,T<:AbstractContentSoilData} <: AbstractSoilMethod
+    soildata::T  | ContentSoilData()
+    wc1::WC      | 0.5
+    wc2::WC      | 0.5
+    soilroot::R  | 0.5
+    soildepth::D | 0.5
 end
 
-@udefault_kw struct ConstantSoilMethod{T<:NoSoilData} <: AbstractSoilMethod{T}
-    soildata::T | NoSoilData()
-end
-@udefault_kw struct DeficitSoilMethod{T<:AbstractDeficitSoilData} <: AbstractSoilMethod{T}
+struct ConstantSoilMethod <: AbstractSoilMethod end
+
+@default_kw struct DeficitSoilMethod{T<:AbstractDeficitSoilData} <: AbstractSoilMethod
     soildata::T | ContentSoilData()
 end
-@udefault_kw struct PotentialSoilMethod{T<:PotentialSoilData} <: AbstractSoilMethod{T}
-    soildata::T | PotentialSoilData()
+
+@description @limits @units @udefault_kw struct PotentialSoilMethod{E} <: AbstractSoilMethod
+    swpexp::E | 0.5 | kPa^-1 | [0.0, 10.0] | "Exponent for soil water-potential response of stomata"
 end
 
 
@@ -59,40 +54,27 @@ These methods dispatch on AbstractSoilMethod or AbstractSoilData types.
 """
 function soilmoisture_conductance end
 
-soilmoisture_conductance!(f, v) = v.fsoil = 1.0
+soilmoisture_conductance(f::NoSoilMethod, v) = 1.0
+
+soilmoisture_conductance(f::PotentialSoilMethod, v) = exp(f.swpexp * v.swp)
 
 "Convert volumetric data to deficit"
-soilmoisture_conductance!(f::DeficitSoilMethod{<:AbstractContentSoilData}, v) = begin
+soilmoisture_conductance(f::DeficitSoilMethod{<:AbstractContentSoilData}, v) = begin
     s = f.soildata
     soilmoist = (s.swmax - v.soilmoist) / (s.swmax - s.swmin)
-    v.fsoil = soilmoisture_conductance(s, soilmoist, v)
+    soilmoisture_conductance(s, soilmoist, v)
 end
 
-soilmoisture_conductance!(f::DeficitSoilMethod{<:DeficitSoilData}, v) = 
-    v.fsoil = soilmoisture_conductance(f.soildata, v.soilmoist, v)
+soilmoisture_conductance(f::DeficitSoilMethod{<:DeficitSoilData}, v) =
+    soilmoisture_conductance(f.soildata, v.soilmoist, v)
 
-soilmoisture_conductance!(f::PotentialSoilMethod{<:PotentialSoilData}, v) = 
-    v.fsoil = soilmoisture_conductance(f.soildata, v.soilmoist, v)
-
-soilmoisture_conductance!(f::VolumetricSoilMethod{<:SimulatedSoilData}, v) =
+soilmoisture_conductance(f::VolumetricSoilMethod{<:SimulatedSoilData}, v) =
     v.soilmoist = f.soilroot / f.soildepth # TODO fix this, where is fsoil set??
 
-soilmoisture_conductance!(f::VolumetricSoilMethod{<:AbstractContentSoilData}, v) = begin
+soilmoisture_conductance(f::VolumetricSoilMethod{<:AbstractContentSoilData}, v) = begin
     # TODO: check in constructor f.wc1 > f.wc2 && error("error: wc1 needs to be smaller than wc2.")
     fsoil = -f.wc1 / (f.wc2 - f.wc1) + v.soilmoist / (f.wc2 - f.wc1)
-    v.fsoil = max(min(fsoil, 1.0), 0.0)
-end
-
-"""
-    soilmoisture_conductance(soil::PotentialSoilData, soilmoist, v)
-Negative exponential function of soil water potential. 
-"""
-soilmoisture_conductance(soil::PotentialSoilData, soilmoist, v) = begin # Exponential relationship with potential: parameter = SWPEXP
-    # TODO: default value for effect? 
-    if soil.swpexp > zero(soil.swpexp)
-        effect = exp((soil.swpexp/oneunit(soil.swpexp) * soilmoist/oneunit(soilmoist)))
-    end
-    return max(effect, zero(effect))
+    max(min(fsoil, 1.0), 0.0)
 end
 
 """

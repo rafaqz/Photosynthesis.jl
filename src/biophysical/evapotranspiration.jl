@@ -2,7 +2,7 @@ abstract type AbstractEvapotranspiration end
 
 struct PenmanMonteithEvapotranspiration <: AbstractEvapotranspiration end
 
-calc_evapotranspiration(f::PenmanMonteithEvapotranspiration, v) =
+evapotranspiration(f::PenmanMonteithEvapotranspiration, v) =
     penman_monteith(v.pressure, v.slope, v.lhv, v.rnet, v.vpd, v.gh, v.gv)
 
 """

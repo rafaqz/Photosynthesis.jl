@@ -3,7 +3,6 @@ using Photosynthesis: quad, Lower, Upper
 # Quadratic solvers
 # quadm: quad
 quadm_fortran = Libdl.dlsym(photosynlib, :quadm_)
-f = ph.rubisco_regen
 a = 0.5
 b = -0.5
 c = 0.05
@@ -13,7 +12,6 @@ quad_test = quad(Lower(), a,b,c)/4
 
 # quadm: quap
 quadp_fortran = Libdl.dlsym(photosynlib, :quadp_)
-f = ph.rubisco_regen
 a = 0.5
 b = -0.5
 c = 0.05

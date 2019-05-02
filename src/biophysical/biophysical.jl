@@ -12,7 +12,7 @@ Caculates the late hear of water vapour from the air temperature.
 """
 Calculate saturated water vapour pressure (Pa) at temperature Ta (Celsius)
 from Jones 1992 p 110 (note error in a - wrong units)
-TODO: what are thes magic numbers? Name them.
+TODO: what are thes magic numbert? Name them.
 """
 @inline saturated_vapour_pressure(tair) = 613.75Pa * exp(17.502 * tair / (K(240.97°C) + tair))
 
