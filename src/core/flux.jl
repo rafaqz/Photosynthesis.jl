@@ -2,23 +2,23 @@
 abstract type AbstractJmax end
  
 @columns struct Jmax{μMoM2S,JMoK,JMo} <: AbstractJmax
-    jmax25::μMoM2S  | 184.0    | μmol*m^-2*s^-1 | Gamma(100, 184/100)    | (0.0, 1000.0)    | "Maximum rate of electron transport at 25° C"
-    delsj::JMoK     | 640.02   | J*mol^-1*K^-1  | Gamma(100, 640.02/100) | (0.0, 1000.0)    | "DELTAS in Medlyn et al. (2002)"
-    eavj::JMo       | 37259.0  | J*mol^-1       | Gamma(100, 37259/100)  | (0.0, 100000.0)  | "Ha in Medlyn et al. (2002)"
-    edvj::JMo       | 200000.0 | J*mol^-1       | Gamma(100, 200000/100) | (0.0, 1000000.0) | "Hd in Medlyn et al. (2002)"
+    jmax25::μMoM2S  | 184.0    | μmol*m^-2*s^-1 | (0.0, 1000.0)    | "Maximum rate of electron transport at 25° C"
+    delsj::JMoK     | 640.02   | J*mol^-1*K^-1  | (0.0, 1000.0)    | "DELTAS in Medlyn et al. (2002)"
+    eavj::JMo       | 37259.0  | J*mol^-1       | (0.0, 100000.0)  | "Ha in Medlyn et al. (2002)"
+    edvj::JMo       | 200000.0 | J*mol^-1       | (0.0, 1000000.0) | "Hd in Medlyn et al. (2002)"
 end
 
 abstract type AbstractVcmax end
 
 @mix @columns struct Vcmax{μMoM2S,JMo}
-    vcmax25::μMoM2S | 110.0    | μmol*m^-2*s^-1 | Gamma(100, 114/100)   | (0.0, 200.0)    | "Maximumrate rate of rubisco activity at 25° C"
-    eavc::JMo       | 47590.0  | J*mol^-1       | Gamma(100, 47590/100) | (0.0, 100000.0) | "Ha Medlyn et al. (2002)"
+    vcmax25::μMoM2S | 110.0    | μmol*m^-2*s^-1 | (0.0, 200.0)    | "Maximumrate rate of rubisco activity at 25° C"
+    eavc::JMo       | 47590.0  | J*mol^-1       | (0.0, 100000.0) | "Ha Medlyn et al. (2002)"
 end
 
 @Vcmax struct NoOptimumVcmax{} <: AbstractVcmax end
 @Vcmax struct OptimumVcmax{JMo,JMoK} <: AbstractVcmax
-    edvc::JMo       | 1.0      | J*mol^-1       | Gamma(10, 1/10)        | (0.0, 10.0)    | "Hd in Medlyn et al. (2002)"
-    delsc::JMoK     | 629.26   | J*mol^-1*K^-1  | Gamma(100, 629.26/100) | (0.0, 2000.0)  | "DELTAS in Medlyn et al. (2002)"
+    edvc::JMo       | 1.0      | J*mol^-1       | (0.0, 10.0)    | "Hd in Medlyn et al. (2002)"
+    delsc::JMoK     | 629.26   | J*mol^-1*K^-1  | (0.0, 2000.0)  | "DELTAS in Medlyn et al. (2002)"
 end
 
 """ 
@@ -68,15 +68,19 @@ abstract type AbstractFlux end
     vcmaxformulation::V | NoOptimumVcmax()
 end
 @columns struct DukeFlux{F,K} <: AbstractFlux
-    flux::F             | Flux()           | _  | _ | _              | _
-    tvjup::K            | 283.15           | K  | _ | (250.0, 350.0) | _
-    tvjdn::K            | 273.15           | K  | _ | (250.0, 350.0) | _
+    flux::F             | Flux() | _  | _              | _
+    tvjup::K            | 283.15 | K  | (250.0, 350.0) | _
+    tvjdn::K            | 273.15 | K  | (250.0, 350.0) | _
 end
 
 @default_kw struct PotentialModifiedFlux{F,P} <: AbstractFlux
     flux::F             | Flux()           
     potential_model::P  | ZhouPotentialDependence()
 end
+
+fluxparams(x::Flux) = x 
+fluxparams(x) = x.flux 
+
 
 """
     flux(f, v)
@@ -91,7 +95,7 @@ flux(f::Flux, v) =
 Wrapper to `flux()` allowing Jmax and Vcmax to be forced linearly to zero at low T 
 """
 flux(f::DukeFlux, v) = begin
-    jmax, vcmax = flux(f.flux, v)
+    jmax, vcmax = flux(fluxparams(f), v)
     v.tleaf < f.tvjdn && return zero.((jmax, vcmax))
 
     if v.tleaf < f.tvjup
@@ -102,7 +106,7 @@ flux(f::DukeFlux, v) = begin
 end
 
 flux(f::PotentialModifiedFlux, v) = begin
-    jmax, vcmax = flux(f.flux, v)
+    jmax, vcmax = flux(fluxparams(f), v)
     pd = non_stomatal_potential_dependence(f.potential_model, v.swp)
     # println((pd, v.swp))
     jmax * pd, vcmax * pd

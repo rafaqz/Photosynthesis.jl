@@ -5,8 +5,8 @@ const DHEAT = 21.5e-6m^2*s^-1 # molecular diffusivity for heat
 abstract type AbstractBoundaryConductance end
 
 @columns struct BoundaryConductance{M,MolMS} <: AbstractBoundaryConductance
-    leafwidth::M | 0.05 | m             | Gamma(2, 0.05/2) | (0.0, 1.0) | "Mean width of leaves"
-    gsc::MolMS   | 1.0  | mol*m^-2*s^-1 | Gamma(2, 2)      | (0.0, 1.0) | "Stomatal conductance of the boundary layer to CO₂" # Check this
+    leafwidth::M | 0.05 | m             | (0.0, 1.0) | "Mean width of leaves"
+    gsc::MolMS   | 1.0  | mol*m^-2*s^-1 | (0.0, 1.0) | "Stomatal conductance of the boundary layer to CO₂" # Check this
 end
 
 # TODO remove assingments to v

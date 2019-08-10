@@ -1,19 +1,21 @@
 using Photosynthesis, Unitful, Test, Libdl
 using Unitful: °C, K
+using Photosynthesis: fluxparams
 
 photosynlib = dlopen(joinpath(ENV["MAESPA"], "physiol"))
 
 function run_fortran_enbal(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata, vfun)
     tzvars = TuzetVars()
     emaxvars = EmaxVars()
-    ph = p.photo
-    vcj = ph.vcjmax
+    ph = p.photosynthesis
+    sc = ph.stomatal_conductance
+    vcj = fluxparams(ph.flux)
     vc = vcj.vcmaxformulation
     j = vcj.jmaxformulation
     gk = 0.0
     v.rhleaf = v.rh
     d0l = 0.0
-    typeof(ph.gsmodel) <: LeuningStomatalConductance && (d0l = ph.gsmodel.d0l.val)
+    typeof(sc.gs_submodel) <: LeuningGSsubModel && (d0l = sc.gs_submodel.d0l.val)
     iday = 1
     ihour = 1
     nsides = 1
@@ -35,7 +37,7 @@ function run_fortran_enbal(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata,
     gsc =      p.boundary_conductance.gsc.val
     vpd =      v.vpd.val
     press =    v.pressure.val
-    vmfd =     JarvisModel().vmfd.val
+    vmfd =     JarvisStomatalConductance().vmfd.val
     jmax25 =   vcj.jmaxformulation.jmax25.val
     eavj =     j.eavj.val
     edvj =     j.edvj.val
@@ -46,8 +48,8 @@ function run_fortran_enbal(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata,
     delsc = 0.0
     # edvc =     vc.edvc.val
     # delsc =    vc.delsc.val
-    tvjup =    ustrip(vcj.tvjup |> °C)
-    tvjdn =    ustrip(vcj.tvjdn |> °C)
+    tvjup =    ustrip(DukeFlux().tvjup |> °C)
+    tvjdn =    ustrip(DukeFlux().tvjdn |> °C)
     theta =    ph.rubisco_regen.theta
     ajq =      ph.rubisco_regen.ajq
     rd0 =      ph.respiration.rd0.val
@@ -57,8 +59,8 @@ function run_fortran_enbal(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata,
     rtemp =    ustrip(ph.respiration.tref |> °C)
     dayresp =  ph.respiration.dayresp
     tbelow =   ustrip(ph.respiration.tbelow |> °C)
-    gsref =    JarvisModel().gsref.val
-    gsmin =    JarvisModel().gsmin.val
+    gsref =    JarvisStomatalConductance().gsref.val
+    gsmin =    JarvisStomatalConductance().gsmin.val
     i0 =       JarvisLight().i0.val
     d0 =       JarvisLinearDeclineVPD().d0.val
     vk1 =      JarvisHyperbolicVPD().vk1
@@ -73,26 +75,26 @@ function run_fortran_enbal(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata,
     tmax =     ustrip(JarvisTemp1().tmax |> °C)
     soilmoisture = v.soilmoist
     emaxleaf = emaxvars.emaxleaf.val
-    plantk =   EmaxModel().plantk.val
-    totsoilres = EmaxModel().totsoilres.val
+    plantk =   EmaxEnergyBalance().plantk.val
+    totsoilres = EmaxEnergyBalance().totsoilres.val
     smd1 =     DeficitSoilData().smd1
     smd2 =     DeficitSoilData().smd2
     wc1 =      VolumetricSoilMethod().wc1
     wc2 =      VolumetricSoilMethod().wc2
-    swpexp =   PotentialSoilData().swpexp
+    swpexp =   PotentialSoilMethod().swpexp.val
     fsoil =    Float32[v.fsoil]
-    g0 =       ph.g0.val
-    d0l =      LeuningStomatalConductance().d0l.val
-    gamma =    ph.gsmodel.gamma.val
-    vpdmin =   MedlynStomatalConductance().vpdmin.val
-    g1 =       ph.gsmodel.g1
-    gk =       ThreeParStomatalConductance().gk
+    g0 =       sc.g0.val
+    d0l =      LeuningGSsubModel().d0l.val
+    gamma =    sc.gs_submodel.gamma.val
+    vpdmin =   MedlynGSsubModel().vpdmin.val
+    g1 =       sc.gs_submodel.g1
+    gk =       0.0 #ThreeParStomatalConductance().gk
     gs =       Float32[v.gs.val]
     aleaf =    Float32[v.aleaf.val]
     rd =       Float32[v.rd.val]
     minleafwp = emaxvars.minleafwp.val
     ktot =     emaxvars.ktot.val
-    weightedswp = emaxvars.weightedswp.val
+    weightedswp = emaxvars.swp.val
     vpara =    LinearPotentialDependence().vpara.val
     vparb =    LinearPotentialDependence().vparb.val
     vparc =    0.0 # unused
@@ -266,10 +268,11 @@ end
 
 
 # Emax
-
-p = FvCBEnergyBalance(photo=EmaxModel(gsmodel=BallBerryStomatalConductance(),
-                      vcjmax=DukeVcJmax(),
-                      compensation=BadgerCollatzCompensation()))
+sc = EmaxStomatalConductance(gs_submodel=BallBerryGSsubModel())
+photo = FvCBPhotosynthesis(stomatal_conductance=sc,
+                           flux=DukeFlux(),
+                           compensation=BadgerCollatzCompensation())
+p = FvCBEnergyBalance(photosynthesis=photo)
 v = EmaxVars()
 ieco = 1
 modelgs = 2
@@ -282,7 +285,7 @@ vfun = 1
 
 (tleaf, rd, emaxleaf, psil, fsoil, aleaf, gs, ci) = 
     run_fortran_enbal(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata, vfun)
-run_enbal!(p, v)
+enbal!(p, v)
 
 println(v.vcmax)
 
@@ -307,8 +310,8 @@ enbal!(p, v);
 
 # Ball Berry
 
-p = FvCBEnergyBalance(photo=BallBerryModel(gsmodel=BallBerryStomatalConductance(),
-                      vcjmax=DukeVcJmax(),
+p = FvCBEnergyBalance(photo=BallBerryStomatalConductance(gs_submodel=BallBerryStomatalConductance(),
+                      vcjmax=DukeFlux(),
                       compensation=BadgerCollatzCompensation()))
 v = BallBerryVars()
 ieco = 0
@@ -331,8 +334,8 @@ run_enbal!(p, v)
 
 # Leuning
 
-p = FvCBEnergyBalance(photo=BallBerryModel(gsmodel=LeuningStomatalConductance(),
-                      vcjmax=DukeVcJmax(),
+p = FvCBEnergyBalance(photo=BallBerryModel(gs_submodel=LeuningStomatalConductance(),
+                      vcjmax=DukeFlux(),
                       compensation=BadgerCollatzCompensation()))
 v = BallBerryVars()
 modelgs = 3

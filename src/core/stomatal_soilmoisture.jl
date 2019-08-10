@@ -41,7 +41,7 @@ struct ConstantSoilMethod <: AbstractSoilMethod end
     soildata::T | ContentSoilData()
 end
 
-@description @limits @units @udefault_kw struct PotentialSoilMethod{E} <: AbstractSoilMethod
+@description @bounds @units @udefault_kw struct PotentialSoilMethod{E} <: AbstractSoilMethod
     swpexp::E | 0.5 | kPa^-1 | [0.0, 10.0] | "Exponent for soil water-potential response of stomata"
 end
 

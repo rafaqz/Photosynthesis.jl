@@ -14,14 +14,13 @@ using Photosynthesis, Unitful, Test
     BallBerryGSsubModel()
     LeuningGSsubModel()
     MedlynGSsubModel()
-    ThreeParGSsubModel()
     TuzetGSsubModel()
 
     Jmax()
     NoOptimumVcmax()
     OptimumVcmax()
-    VcJmax()
-    DukeVcJmax()
+    Flux()
+    DukeFlux()
     RubiscoRegen()
     Respiration()
 
@@ -55,10 +54,10 @@ end
 @testset "it all actuall runs" begin
     p = FvCBEnergyBalance()
     v = EmaxVars()
-    enbal!(p, v)
 
 
-    # Biophysical 
+    # Biophysical #################################################################
+    
     latent_heat_water_vapour(v.tair)
     arrhenius(42.75u"J/mol", 37830.0u"J/mol", v.tleaf, 300.0u"K")
 
@@ -76,15 +75,15 @@ end
     boundary_conductance_forced(BoundaryConductance(), v)
 
     # Decoupling
-    calc_decoupling(McNaughtonJarvisDecoupling(), v)
-    calc_decoupling(NoDecoupling(), v)
+    decoupling(McNaughtonJarvisDecoupling(), v)
+    decoupling(NoDecoupling(), v)
 
     # Evapotranspiration
     penman_monteith(v.pressure, v.slope, v.lhv, v.rnet, v.vpd, 1.0u"mol*m^-2*s^-1", 1.0u"mol*m^-2*s^-1") # TODO this seems weird
-    calc_evapotranspiration(PenmanMonteithEvapotranspiration(), v)
+    evapotranspiration(PenmanMonteithEvapotranspiration(), v)
 
 
-    # Core
+    # Core ########################################################################
 
     # Compensation
     co2_compensation_point(BadgerCollatzCompensation(), v.tleaf)
@@ -93,10 +92,10 @@ end
     rubisco_compensation_point(BernacchiCompensation(), v.tleaf)
 
     # Flux
-    max_electron_transport_rate(VcJmax(), v.tleaf)
-    max_electron_transport_rate(DukeVcJmax(), v.tleaf)
-    max_rubisco_activity(VcJmax(), v.tleaf)
-    max_rubisco_activity(DukeVcJmax(), v.tleaf)
+    flux(Flux(), v)
+    flux(DukeFlux(), v)
+    flux(Flux(), v)
+    flux(DukeFlux(), v)
 
     # Respiration
     respiration(Respiration(), v.tleaf)
@@ -108,28 +107,24 @@ end
     gsdiva(BallBerryGSsubModel(), BallBerryVars())
     gsdiva(LeuningGSsubModel(), BallBerryVars())
     gsdiva(MedlynGSsubModel(), BallBerryVars())
-    gsdiva(ThreeParGSsubModel(), BallBerryVars())
     gsdiva(TuzetGSsubModel(), TuzetVars())
 
     # Stomatal conductance models
     stomatal_conductance!(BallBerryStomatalConductance(gs_submodel=BallBerryGSsubModel()), v)
     stomatal_conductance!(BallBerryStomatalConductance(gs_submodel=LeuningGSsubModel()), v)
     stomatal_conductance!(BallBerryStomatalConductance(gs_submodel=MedlynGSsubModel()), v)
-    stomatal_conductance!(BallBerryStomatalConductance(gs_submodel=ThreeParGSsubModel()), v)
     stomatal_conductance!(EmaxStomatalConductance(gs_submodel=BallBerryGSsubModel()), v)
     stomatal_conductance!(EmaxStomatalConductance(gs_submodel=LeuningGSsubModel()), v)
     stomatal_conductance!(EmaxStomatalConductance(gs_submodel=MedlynGSsubModel()), v)
-    stomatal_conductance!(EmaxStomatalConductance(gs_submodel=ThreeParGSsubModel()), v)
     stomatal_conductance!(JarvisStomatalConductance(), JarvisVars())
-    stomatal_conductance!(TuzetStomatalConductance(), TuzetVars())
+    # stomatal_conductance!(TuzetStomatalConductance(), TuzetVars())
 
 
-    # Formulations
-    
-    v = JarvisVars()
-    ph = FvCBPhotosynthesis(stomatal_conductance=JarvisStomatalConductance())
+    # Formulations ################################################################
+
+    v = BallBerryVars()
+    ph = FvCBPhotosynthesis(stomatal_conductance=BallBerryStomatalConductance())
     p = FvCBEnergyBalance(photosynthesis=ph)
-    factor_conductance(ph.stomatal_conductance, v)
     enbal!(p, v)
     photosynthesis!(p.photosynthesis, v)
     v.aleaf
@@ -137,10 +132,11 @@ end
     v.gs
     v.cs
     enbal!(p, v)
-
-    v = BallBerryVars()
-    ph = FvCBPhotosynthesis(stomatal_conductance=BallBerryStomatalConductance())
+    
+    v = JarvisVars()
+    ph = FvCBPhotosynthesis(stomatal_conductance=JarvisStomatalConductance())
     p = FvCBEnergyBalance(photosynthesis=ph)
+    factor_conductance(ph.stomatal_conductance, v)
     enbal!(p, v)
     photosynthesis!(p.photosynthesis, v)
     v.aleaf
@@ -172,5 +168,3 @@ end
     enbal!(p, v)
 
 end
-
-nothing

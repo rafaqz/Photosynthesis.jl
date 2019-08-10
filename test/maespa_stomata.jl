@@ -2,7 +2,7 @@ using Photosynthesis, Unitful, Test, Libdl
 using Unitful: °C, K
 
 # Setup
-emax = FvCBEnergyBalance(photosynthesis=EmaxPhotosynthesis())
+emax = FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis())
 ph = emax.photosynthesis
 v = EmaxVars()
 v.tleaf = 15°C |> K

@@ -3,25 +3,25 @@
 
 abstract type AbstractJarvisLight end
 @columns mutable struct JarvisLight{T} <: AbstractJarvisLight
-    i0::T | 1.0 | mol*m^-2*s^-1 | _ | _ | _
+    i0::T | 1.0 | mol*m^-2*s^-1 | _ | _
 end
 
 abstract type AbstractJarvisCO2 end
 struct JarvisNoCO2 <: AbstractJarvisCO2 end
 @columns mutable struct JarvisLinearCO2{T} <: AbstractJarvisCO2
-    gsja::T | 1.0 | μmol^-1*mol | _ | _ | _
+    gsja::T | 1.0 | μmol^-1*mol | _ | _
 end
 @columns mutable struct JarvisNonlinearCO2{T} <: AbstractJarvisCO2
-    gsjb::T | 1.0 | μmol*mol^-1 | _ | _ | _
+    gsjb::T | 1.0 | μmol*mol^-1 | _ | _
 end
 
 
 abstract type AbstractJarvisTemp end
 
 @mix @columns struct JarTemp{T}
-    tmax::T | (273.15 + 40.0) | K | _ | _ | _
-    tref::T | (273.15 + 25.0) | K | _ | _ | _
-    t0::T   | 273.15          | K | _ | _ | _
+    tmax::T | (273.15 + 40.0) | K | _ | _
+    tref::T | (273.15 + 25.0) | K | _ | _
+    t0::T   | 273.15          | K | _ | _
 end
 
 struct JarvisNoTemp <: AbstractJarvisTemp end
@@ -36,8 +36,8 @@ Hyperbolic response to vapour pressure deficit.
 Parameters vk1 and vk2 are the dimensionless scalar and exponent.
 """
 @columns mutable struct JarvisHyperbolicVPD{T} <: AbstractJarvisVPD
-    vk1::T | 1.0 | _ | _ | _ | _
-    vk2::T | 1.0 | _ | _ | _ | _
+    vk1::T | 1.0 | _ | _ | _
+    vk2::T | 1.0 | _ | _ | _
 end
 
 """
@@ -45,14 +45,14 @@ Non-linear Lohammer response to vapour pressure deficit.
 Parameters vpd1 and vpd2 are in Pascals.
 """
 @columns mutable struct JarvisLohammerVPD{T} <: AbstractJarvisVPD
-    vpd1::T  | 1.0 | Pa | _ | _ | _
-    vpd2::T  | 1.0 | Pa | _ | _ | _
+    vpd1::T  | 1.0 | Pa | _ | _
+    vpd2::T  | 1.0 | Pa | _ | _
 end
 @columns mutable struct JarvisFractionDeficitVPD{T} <: AbstractJarvisVPD
-    vmfd0::T | 1.0 | mmol*mol^-1 | _ | _ | _
+    vmfd0::T | 1.0 | mmol*mol^-1 | _ | _
 end
 @columns mutable struct JarvisLinearDeclineVPD{T} <: AbstractJarvisVPD
-    d0::T    | 1.0 | Pa | _ | _ | _
+    d0::T    | 1.0 | Pa | _ | _
 end
 
 
@@ -68,13 +68,13 @@ to gain an overall stomatal conductance.
                                JV<:AbstractJarvisVPD, JL<:AbstractJarvisLight,
                                JT<:AbstractJarvisTemp, MoMeS, mMoMoS
                               } <: AbstractJarvisStomatalConductance
-    co2method::JC   | JarvisNonlinearCO2() | _             | _ | _ | _
-    vpdmethod::JV   | JarvisLohammerVPD()  | _             | _ | _ | _
-    lightmethod::JL | JarvisLight()        | _             | _ | _ | _
-    tempmethod::JT  | JarvisTemp2()        | _             | _ | _ | _
-    gsmin::MoMeS    | 1.0                  | mol*m^-2*s^-1 | _ | _ | _
-    gsref::MoMeS    | 1.0                  | mol*m^-2*s^-1 | _ | _ | _
-    vmfd::mMoMoS    | 1.0                  | mmol*mol^-1   | _ | _ | _
+    co2method::JC   | JarvisNonlinearCO2() | _             | _ | _
+    vpdmethod::JV   | JarvisLohammerVPD()  | _             | _ | _
+    lightmethod::JL | JarvisLight()        | _             | _ | _
+    tempmethod::JT  | JarvisTemp2()        | _             | _ | _
+    gsmin::MoMeS    | 1.0                  | mol*m^-2*s^-1 | _ | _
+    gsref::MoMeS    | 1.0                  | mol*m^-2*s^-1 | _ | _
+    vmfd::mMoMoS    | 1.0                  | mmol*mol^-1   | _ | _
 end
 
 @MixinFvCBVars mutable struct JarvisVars{mMoMo}
@@ -100,7 +100,7 @@ function stomatal_conductance!(f::AbstractJarvisStomatalConductance, v)
     v.ac = rubisco_limited_rate(f, v)
     v.aj = transport_limited_rate(f, v)
     v.aleaf = min(v.ac, v.aj) - v.rd
-    nothing
+    v.aleaf, v.gs
 end
 
 

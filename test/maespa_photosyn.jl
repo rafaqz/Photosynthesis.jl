@@ -10,12 +10,13 @@ function fortran_photosyn(p, v::V, ieco, ismaespabool, modelgs, wsoilmethod, soi
     emaxvars = V <: EmaxVars ? v : EmaxVars()
 
     ph = p.photosynthesis
-    gs = ph.stomatal_conductance
-    vcj = ph.vcjmax
+    sc = ph.stomatal_conductance
+    gs = sc.gs_submodel
+    vcj = Photosynthesis.fluxparams(ph.flux)
     vc = vcj.vcmaxformulation
     j = vcj.jmaxformulation
-    gk = typeof(gs.gs_submodel) <: MedlynGSsubModel ? gs.gs_submodel.gk : 0.0
-    d0l = typeof(gs.gs_submodel) <: LeuningGSsubModel ? gs.gs_submodel.d0l.val : 0.0
+    gk = typeof(sc.gs_submodel) <: MedlynGSsubModel ? sc.gs_submodel.gk : 0.0
+    d0l = typeof(sc.gs_submodel) <: LeuningGSsubModel ? sc.gs_submodel.d0l.val : 0.0
     par =      v.par.val
     tleaf =    Float32[ustrip(v.tleaf |> °C)]
     tmove =    AcclimatizedRespiration().tmove.val
@@ -41,8 +42,8 @@ function fortran_photosyn(p, v::V, ieco, ismaespabool, modelgs, wsoilmethod, soi
         edvc = 0.0
         delsc = 0.0
     end
-    tvjup =    ustrip(vcj.tvjup |> °C)
-    tvjdn =    ustrip(vcj.tvjdn |> °C)
+    tvjup =    ustrip(DukeFlux().tvjup |> °C)
+    tvjdn =    ustrip(DukeFlux().tvjdn |> °C)
     theta =    ph.rubisco_regen.theta
     ajq =      ph.rubisco_regen.ajq
     rd0 =      ph.respiration.rd0.val
@@ -66,7 +67,7 @@ function fortran_photosyn(p, v::V, ieco, ismaespabool, modelgs, wsoilmethod, soi
     t0 =       ustrip(JarvisTemp1().t0 |> °C)
     tref =     ustrip(JarvisTemp1().tref |> °C)
     tmax =     ustrip(JarvisTemp1().tmax |> °C)
-    soilmoisture = typeof(gs.soilmethod) <: PotentialSoilMethod ? v.swp.val : v.soilmoist  
+    soilmoisture = typeof(sc.soilmethod) <: PotentialSoilMethod ? v.swp.val : v.soilmoist  
     emaxleaf = emaxvars.emaxleaf.val
     plantk =   EmaxEnergyBalance().plantk.val
     totsoilres = EmaxEnergyBalance().totsoilres.val
@@ -77,10 +78,10 @@ function fortran_photosyn(p, v::V, ieco, ismaespabool, modelgs, wsoilmethod, soi
     wc2 =      VolumetricSoilMethod().wc2
     swpexp =   PotentialSoilMethod().swpexp.val
     fsoil =    Float32[v.fsoil]
-    g0 =       gs.g0.val
-    gamma =    gs.gs_submodel.gamma.val
+    g0 =       sc.g0.val
+    gamma =    sc.gs_submodel.gamma.val
     vpdmin =   MedlynGSsubModel().vpdmin.val
-    g1 =       gs.gs_submodel.g1
+    g1 =       sc.gs_submodel.g1
     gk =       MedlynGSsubModel().gk
     gs =       Float32[v.gs.val]
     aleaf =    Float32[v.aleaf.val]
@@ -259,7 +260,7 @@ end
                                stomatal_conductance=BallBerryStomatalConductance(
                                     gs_submodel=BallBerryGSsubModel(),
                                     soilmethod=NoSoilMethod()),
-                               vcjmax=DukeVcJmax(),
+                               flux=DukeFlux(),
                                compensation=BadgerCollatzCompensation()))
     v = BallBerryVars()
     ieco = BADGERCOLLATZ
@@ -299,7 +300,7 @@ end
                                   gs_submodel=BallBerryGSsubModel(),
                                   soilmethod=PotentialSoilMethod()
                               ),
-                              vcjmax=DukeVcJmax(),
+                              flux=DukeFlux(),
                               compensation=BadgerCollatzCompensation())
                          )
     v = BallBerryVars()
@@ -332,7 +333,7 @@ end
                               stomatal_conductance=BallBerryStomatalConductance(
                                   gs_submodel=LeuningGSsubModel(),
                                   soilmethod=NoSoilMethod()),
-                              vcjmax=DukeVcJmax(),
+                              flux=DukeFlux(),
                               compensation=BadgerCollatzCompensation()))
     v = BallBerryVars()
     ieco = BADGERCOLLATZ
@@ -364,7 +365,7 @@ end
                               stomatal_conductance=BallBerryStomatalConductance(
                                   gs_submodel=MedlynGSsubModel(),
                                   soilmethod=NoSoilMethod()),
-                              vcjmax=DukeVcJmax(),
+                              flux=DukeFlux(),
                               compensation=BadgerCollatzCompensation()))
     v = BallBerryVars()
     ieco = BADGERCOLLATZ
@@ -396,7 +397,7 @@ end
                               stomatal_conductance=EmaxStomatalConductance(
                                   gs_submodel=BallBerryGSsubModel(),
                                   soilmethod=EmaxSoilMethod()),
-                              vcjmax=DukeVcJmax(),
+                              flux=DukeFlux(),
                               compensation=BadgerCollatzCompensation()))
     p = EmaxEnergyBalance(energy_balance=p1)
     v = EmaxVars()

@@ -1,10 +1,11 @@
+abstract type AbstractGSsubModel end
 
 # Ball-Berry implementation of stomatal conductance
 
 " @Gs mixin macro adds stomatal conductance fields to a struct"
 @mix @columns struct MixinBallBerryGs{μMoMo,F}
-    gamma::μMoMo    | 0.0    | μmol*mol^-1    | Gamma(1, 2)     | (0.0, 10.0) | "Gamma for all Ball-Berry type models"
-    g1::F           | 7.0    | _              | Gamma(10, 7/10) | (0.0, 10.0) | "Slope parameter"
+    gamma::μMoMo    | 0.0    | μmol*mol^-1  | (0.0, 10.0) | "Gamma for all Ball-Berry type models"
+    g1::F           | 7.0    | _            | (0.0, 10.0) | "Slope parameter"
 end
 
 """
@@ -27,9 +28,9 @@ gsdiva(f::BallBerryGSsubModel, v) = f.g1 * v.rh / (v.cs - f.gamma)
 abstract type AbstractBallBerryStomatalConductance <: AbstractStomatalConductance end
 
 @mix @columns struct MixinBallBerryStomCond{MoM2S,GS,SM}
-    g0::MoM2S       | 0.03                  | mol*m^-2*s^-1 | Gamma(10, 0.03/10) | (0.0, 0.2) | "Stomatal leakiness (gs when photosynthesis is zero)"
-    gs_submodel::GS | BallBerryGSsubModel() | _ | _ | _ | _
-    soilmethod::SM  | PotentialSoilMethod() | _ | _ | _ | _
+    g0::MoM2S       | 0.03                  | mol*m^-2*s^-1 | (0.0, 0.2) | "Stomatal leakiness (gs when photosynthesis is zero)"
+    gs_submodel::GS | BallBerryGSsubModel() | _             | _          | _
+    soilmethod::SM  | PotentialSoilMethod() | _             | _          | _
 end
 
 @MixinBallBerryStomCond struct BallBerryStomatalConductance{} <: AbstractBallBerryStomatalConductance end

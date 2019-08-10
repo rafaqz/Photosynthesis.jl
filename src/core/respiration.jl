@@ -1,16 +1,16 @@
 abstract type AbstractRespiration end
 @mix @columns struct Resp{pK,K,F,μMoM2S}
-    q10f::pK        | 0.67   | K^-1           | _                | (0.0, 1.0)     | "Logarithm of the Q10"
-    dayresp::F      | 1.0    | _              | Beta(5, 1)       | (0.0, 1.0)     | "Respiration in the light as fraction of that in the dark"
-    rd0::μMoM2S     | 0.001  | μmol*m^-2*s^-1 | Gamma(10, 0.9/10)| (0.0, 0.1)     | "Dark respiration at the reference temperature"
-    tbelow::K       | 173.15 | K              | _                | (250.0, 300.0) | "Temperature below which no respiration occurs"
-    tref::K         | 298.15 | K              | _                | (250.0, 350.0) | "Reference temperature at which rd0 was measured"
+    q10f::pK        | 0.67   | K^-1           | (0.0, 1.0)     | "Logarithm of the Q10"
+    dayresp::F      | 1.0    | _              | (0.0, 1.0)     | "Respiration in the light as fraction of that in the dark"
+    rd0::μMoM2S     | 0.001  | μmol*m^-2*s^-1 | (0.0, 0.1)     | "Dark respiration at the reference temperature"
+    tbelow::K       | 173.15 | K              | (250.0, 300.0) | "Temperature below which no respiration occurs"
+    tref::K         | 298.15 | K              | (250.0, 350.0) | "Reference temperature at which rd0 was measured"
 end
 
 @Resp struct Respiration{} <: AbstractRespiration end
 @Resp struct AcclimatizedRespiration{pK,K} <: AbstractRespiration
-    k10f::pK        | 10.0   | K^-1           | _             | (0.0, 10.0) | _
-    tmove::K        | 10.0   | K              | Gamma(2, 1/2) | (0.0, 10.0) | _
+    k10f::pK        | 10.0   | K^-1           | (0.0, 10.0) | _
+    tmove::K        | 10.0   | K              | (0.0, 10.0) | _
 end
 
 struct FractionalRespiration{R} <: AbstractRespiration 

@@ -5,12 +5,12 @@
 abstract type AbstractFvCBPhotosynthesis <: AbstractPhotosynthesis end
 
 "Mixin fields for FvCB photosynthesis"
-@columns struct FvCBPhotosynthesis{F,KM,Ru,Re,GS} <: AbstractFvCBPhotosynthesis
-    flux::F                  | PotentialModifiedFlux()        | _ | _ | _ | _
-    compensation::KM         | BernacchiCompensation()        | _ | _ | _ | _
-    rubisco_regen::Ru        | RubiscoRegen()                 | _ | _ | _ | _
-    respiration::Re          | Respiration()                  | _ | _ | _ | _       
-    stomatal_conductance::GS | BallBerryStomatalConductance() | _ | _ | _ | _
+@default_kw struct FvCBPhotosynthesis{F,KM,Ru,Re,GS} <: AbstractFvCBPhotosynthesis
+    flux::F                  | PotentialModifiedFlux()
+    compensation::KM         | BernacchiCompensation()
+    rubisco_regen::Ru        | RubiscoRegen()        
+    respiration::Re          | Respiration()        
+    stomatal_conductance::GS | BallBerryStomatalConductance()
 end
 
 check_extremes!(p::AbstractFvCBPhotosynthesis, v) = begin
@@ -80,7 +80,7 @@ function enbal!(p::AbstractFvCBEnergyBalance, v)
 
     # Calculations that don't depend on tleaf
     v.lhv = latent_heat_water_vapour(v.tair)
-    v.slope = calc_slope(v.tair)
+    v.slope = slope(v.tair)
     v.gradn = radiation_conductance(p.radiation_conductance, v)
     v.gbhu = boundary_conductance_forced(p.boundary_conductance, v)
 
@@ -90,7 +90,7 @@ function enbal!(p::AbstractFvCBEnergyBalance, v)
         v.gv = vapour_conductance!(p.boundary_conductance, v)
 
         v.et = evapotranspiration(p.evapotranspiration, v)
-        v.decoup = calc_decoupling(p.decoupling, v) # only for output?
+        v.decoup = decoupling(p.decoupling, v) # only for output?
 
         # End of subroutine if no iterations wanted.
         p.itermax == 0 || v.aleaf <= zero(v.aleaf) && return true

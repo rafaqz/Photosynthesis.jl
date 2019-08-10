@@ -5,13 +5,12 @@ using Unitful,
       DocStringExtensions,
       Mixers,
       Roots,
-      FieldMetadata,
-      Distributions
+      FieldMetadata
 
 using Unitful: R, °C, K, Pa, kPa, MPa, J, W, kJ, kg, g, m, s, mol, mmol, μmol, σ
 
-import FieldMetadata: @flattenable, @prior, @limits, @default, @redefault, @description, @units,
-                      flattenable, prior, limits, default, description, units
+import FieldMetadata: @flattenable, @prior, @bounds, @default, @redefault, @description, @units,
+                      flattenable, bounds, default, description, units
 
 
 
@@ -27,10 +26,11 @@ export enbal!,
        rubisco_regeneration,
        rubisco_limited_rate,
        transport_limited_rate,
-       calc_slope,
+       slope,
+       flux,
        max_electron_transport_rate,
        max_rubisco_activity,
-       calc_decoupling, leaftemp,
+       decoupling, leaftemp,
        gsdiva,
        cmolar,
        ball_berry!,
@@ -42,7 +42,7 @@ export enbal!,
        model_update!,
        converge_tleaf!,
        vjmax_water,
-       calc_evapotranspiration,
+       evapotranspiration,
        penman_monteith,
        factor_conductance,
        radiation_conductance,
@@ -122,7 +122,7 @@ export BallBerryVars, EmaxVars, TuzetVars, JarvisVars
     $(SIGNATURES)
     """
 
-@chain columns @description @limits @prior @units @udefault_kw
+@chain columns @description @bounds @units @udefault_kw
 
 include("utils.jl")
 include("constants.jl")
@@ -151,7 +151,6 @@ include("formulations/jarvis/jarvis.jl")
 include("formulations/ballberry/ballberry.jl")
 include("formulations/ballberry/medlyn.jl")
 include("formulations/ballberry/leuning.jl")
-include("formulations/ballberry/threepar.jl")
 include("formulations/ballberry/maespa/maespa.jl")
 include("formulations/ballberry/maespa/emax.jl")
 include("formulations/ballberry/maespa/tuzet.jl")

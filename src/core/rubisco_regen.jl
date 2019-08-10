@@ -1,7 +1,7 @@
 abstract type AbstractRubiscoRegen end
 @columns struct RubiscoRegen{} <: AbstractRubiscoRegen
-    theta::Float64  | 0.4    | _              | Beta(8, 12)  | (0.0, 1.0) | "Shape parameter of the non-rectangular hyperbola"
-    ajq::Float64    | 0.324  | _              | Beta(4, 8.3) | (0.0, 1.0) | "Quantum yield of electron transport"
+    theta::Float64  | 0.4    | _ | (0.0, 1.0) | "Shape parameter of the non-rectangular hyperbola"
+    ajq::Float64    | 0.324  | _ | (0.0, 1.0) | "Quantum yield of electron transport"
 end
 
 """ 

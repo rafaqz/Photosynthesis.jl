@@ -38,5 +38,5 @@ Slope `s` for Penman-Monteith equation, in Pa K^-1
 
 this is somewhat expensive with two calls to exp(), so it is good to precalculate instead of repeating
 """
-calc_slope(tair) = (saturated_vapour_pressure(tair + 0.1oneunit(tair)) -
-                  saturated_vapour_pressure(tair)) / 0.1oneunit(tair)
+slope(tair) = (saturated_vapour_pressure(tair + 0.1oneunit(tair)) -
+               saturated_vapour_pressure(tair)) / 0.1oneunit(tair)

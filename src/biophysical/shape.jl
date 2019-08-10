@@ -3,7 +3,7 @@ abstract type AbstractGSShape end
 struct HardMinimumGS <: AbstractGSShape end
 
 @columns struct HyperbolicMinimumGS <: AbstractGSShape
-    hmshape::Float64 | 0.999 | _ | Beta(20, 1.01) | (0.9, 1.0) | _
+    hmshape::Float64 | 0.999 | _ | (0.9, 1.0) | _
 end
 
 function shape_gs(f::HardMinimumGS, v, p) 

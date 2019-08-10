@@ -20,7 +20,7 @@ The same options are available for specialised stomatal conducance,
 but using emax soil water methods.
 """
 @MixinBallBerryStomCond struct EmaxStomatalConductance{SH} <: AbstractEmaxStomatalConductance 
-    gsshape::SH    | HardMinimumGS() | _  | _ | _ | _
+    gsshape::SH    | HardMinimumGS() | _  | _ | _
 end
 
 struct JarvisMode <: AbstractJarvisStomatalConductance end
@@ -76,9 +76,9 @@ abstract type AbstractEmaxEnergyBalance <: AbstractFvCBEnergyBalance end
 @columns struct EmaxEnergyBalance{EB,SR,PK} <: AbstractEmaxEnergyBalance 
     energy_balance::EB | FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis(
                                                stomatal_conductance=EmaxStomatalConductance(
-                                                   soilmethod=EmaxSoilMethod()))) | _ | _ | _ | _
-    totsoilres::SR     | 0.5  | m^2*s^1*MPa^1*mmol^-1 | (0.0, 10.0) | _ | _
-    plantk::PK         | 3.0  | mmol*m^-2*s^-1*MPa^-1 | (0.0, 10.0) | _ | _
+                                                   soilmethod=EmaxSoilMethod()))) | _ | _ | _
+    totsoilres::SR     | 0.5  | m^2*s^1*MPa^1*mmol^-1 | (0.0, 10.0) | _
+    plantk::PK         | 3.0  | mmol*m^-2*s^-1*MPa^-1 | (0.0, 10.0) | _
 end
 
 enbal!(f::AbstractEmaxEnergyBalance, v) = begin

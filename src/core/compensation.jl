@@ -2,11 +2,11 @@
 abstract type AbstractCompensation end
 
 @columns @flattenable struct BadgerCollatzCompensation{μMoMo,kJMo,K} <: AbstractCompensation
-    Kc25::μMoMo   | false  | 404.0    | μmol*mol^-1    | Gamma(100, 404/100)    | (0.0, 1000.0)     | "MM coefft of Rubisco for CO2"
-    Ko25::μMoMo   | false  | 248000.0 | μmol*mol^-1    | Gamma(100, 248000/100) | (0.0, 10000000.0) | "MM coefft of Rubisco for O2"
-    ΔHa_Kc::kJMo  | false  | 59.4     | kJ*mol^-1      | Gamma(100, 59.4/100)   | (0.0, 200.0)      | "Temp. response of Kc"
-    ΔHa_Ko::kJMo  | false  | 36.0     | kJ*mol^-1      | Gamma(100, 36/100)     | (0.0, 200.0)      | "Temp. response of Ko"
-    tref::K       | false  | 298.15   | K              | _                      | (250.0, 350.0)    | "Temperature reference, usually 25.0° C"
+    Kc25::μMoMo   | false  | 404.0    | μmol*mol^-1    | (0.0, 1000.0)     | "MM coefft of Rubisco for CO2"
+    Ko25::μMoMo   | false  | 248000.0 | μmol*mol^-1    | (0.0, 10000000.0) | "MM coefft of Rubisco for O2"
+    ΔHa_Kc::kJMo  | false  | 59.4     | kJ*mol^-1      | (0.0, 200.0)      | "Temp. response of Kc"
+    ΔHa_Ko::kJMo  | false  | 36.0     | kJ*mol^-1      | (0.0, 200.0)      | "Temp. response of Ko"
+    tref::K       | false  | 298.15   | K              | (250.0, 350.0)    | "Temperature reference, usually 25.0° C"
 end
 
 """
@@ -14,13 +14,13 @@ Bernacchi et al 2001 PCE 24: 253 - 260
 Extra deactivation terms may be required above 40°C.
 """
 @columns @flattenable struct BernacchiCompensation{μMoMo,kJMo,K} <: AbstractCompensation
-    Kc25::μMoMo  | false | 404.9    | μmol*mol^-1    | Gamma(10, 404.9/10)    | (1.0, 1000.0)     | "MM coefft of Rubisco for CO2"
-    Ko25::μMoMo  | false | 278400.0 | μmol*mol^-1    | Gamma(10, 278400/10)   | (1.0, 10000000.0) | "MM coefft of Rubisco for O2"
-    Γ☆25::μMoMo  | false | 42.75    | μmol*mol^-1    | Gamma(10, 42.75/10)    | (1.0, 100.0)      | _
-    ΔHa_Kc::kJMo | false | 79.43    | kJ*mol^-1      | Gamma(10, 79.43/10)    | (1.0, 100.0)      | "Temp. response of Kc"
-    ΔHa_Ko::kJMo | false | 36.38    | kJ*mol^-1      | Gamma(10, 36.38/10)    | (1.0, 100.0)      | "Temp. response of Ko"
-    ΔHa_Γ☆::kJMo | false | 37.83    | kJ*mol^-1      | Gamma(10, 37.83/10)    | (1.0, 100.0)      | _
-    tref::K      | false | 298.15   | K              | _                      | (250.0, 350.0)    | _
+    Kc25::μMoMo  | false | 404.9    | μmol*mol^-1    | (1.0, 1000.0)     | "MM coefft of Rubisco for CO2"
+    Ko25::μMoMo  | false | 278400.0 | μmol*mol^-1    | (1.0, 10000000.0) | "MM coefft of Rubisco for O2"
+    Γ☆25::μMoMo  | false | 42.75    | μmol*mol^-1    | (1.0, 100.0)      | _
+    ΔHa_Kc::kJMo | false | 79.43    | kJ*mol^-1      | (1.0, 100.0)      | "Temp. response of Kc"
+    ΔHa_Ko::kJMo | false | 36.38    | kJ*mol^-1      | (1.0, 100.0)      | "Temp. response of Ko"
+    ΔHa_Γ☆::kJMo | false | 37.83    | kJ*mol^-1      | (1.0, 100.0)      | _
+    tref::K      | false | 298.15   | K              | (250.0, 350.0)    | _
 end
 
 """ Calculates Γ*, or the CO2 compensation point in the absence of
