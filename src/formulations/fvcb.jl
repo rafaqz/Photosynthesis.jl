@@ -1,21 +1,40 @@
 
 # Abstract/mixin implementation of FvCB photosynthesis
 
-"Abstract type for all FvCB photosynthesis"
+"""
+Abstract supertype for all Farquhar/von Caemmerer/Berry derived photosynthesis models
+"""
 abstract type AbstractFvCBPhotosynthesis <: AbstractPhotosynthesis end
 
-"Mixin fields for FvCB photosynthesis"
+flux_model(p::AbstractFvCBPhotosynthesis) = p.flux_model
+compensation_model(p::AbstractFvCBPhotosynthesis) = p.compensation_model
+rubisco_regen_model(p::AbstractFvCBPhotosynthesis) = p.rubisco_regen_model
+respiration_model(p::AbstractFvCBPhotosynthesis) = p.respiration_model
+stomatal_conductance_model(p::AbstractFvCBPhotosynthesis) = p.stomatal_conductance_model
+
+
+"""
+    FvCBPhotosynthesis(flux, compensation, rubisco_regen, respiration, stomatal_conductance)
+
+General Farquhar von Caemmerer Berry model of photosynthesis. Organised as a modular
+components of electron flux, CO2 and rubusco compensation, rubisco regeneration, 
+respiration and stomatal conductance.
+
+Farquhar, G.D., S. Caemmerer and J.A. Berry. 1980.
+A biochemical model of photosynthetic CO2 assimilation in leaves of C3 species.
+Planta. 149:78-90.
+"""
 @default_kw struct FvCBPhotosynthesis{F,KM,Ru,Re,GS} <: AbstractFvCBPhotosynthesis
-    flux::F                  | PotentialModifiedFlux()
-    compensation::KM         | BernacchiCompensation()
-    rubisco_regen::Ru        | RubiscoRegen()        
-    respiration::Re          | Respiration()        
-    stomatal_conductance::GS | BallBerryStomatalConductance()
+    flux_model::F                  | PotentialModifiedFlux()
+    compensation_model::KM         | BernacchiCompensation()
+    rubisco_regen_model::Ru        | RubiscoRegen()
+    respiration_model::Re          | Respiration()
+    stomatal_conductance_model::GS | BallBerryStomatalConductance()
 end
 
-check_extremes!(p::AbstractFvCBPhotosynthesis, v) = begin
+check_extremes!(v, p::AbstractFvCBPhotosynthesis) = begin
     if v.jmax <= zero(v.jmax) || v.vcmax <= zero(v.vcmax)
-        update_extremes!(p.stomatal_conductance, v)
+        update_extremes!(stomatal_conductance_model(p), v)
         return true
     end
     false
@@ -23,6 +42,7 @@ end
 
 """
     photosynthesis!(p::AbstractFvCBPhotosynthesis, v)
+
 Calculates photosynthesis according to the ECOCRAFT
 agreed formulation of the Farquharvon Caemmerer (1982) equations.
 
@@ -30,47 +50,76 @@ Farquhar, G.D., S. Caemmerer and J.A. Berry. 1980.
 A biochemical model of photosynthetic CO2 assimilation in leaves of C3 species.
 Planta. 149:78-90.
 """
-function photosynthesis!(p::AbstractFvCBPhotosynthesis, v)
-    v.gammastar = co2_compensation_point(p.compensation, v.tleaf) # CO2 compensation point, umol mol-1
-    v.km = rubisco_compensation_point(p.compensation, v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
-    v.jmax, v.vcmax = flux(p.flux, v) # Potential electron transport rate and maximum Rubisco activity
-    v.rd = respiration(p.respiration, v.tleaf) # Day leaf respiration, umol m-2 s-1
-    v.vj = rubisco_regeneration(p.rubisco_regen, v)
+function photosynthesis!(v, p::AbstractFvCBPhotosynthesis)
+    v.gammastar = co2_compensation_point(compensation_model(p), v.tleaf) # CO2 compensation point, umol mol-1
+    v.km = rubisco_compensation_point(compensation_model(p), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
+    v.jmax, v.vcmax = flux(flux_model(p), v) # Potential electron transport rate and maximum Rubisco activity
+    v.rd = respiration(respiration_model(p), v.tleaf) # Day leaf respiration, umol m-2 s-1
+    v.vj = rubisco_regeneration(rubisco_regen_model(p), v)
 
     # Zero values and exit in extreme cases.
-    check_extremes!(p, v) && return nothing
+    check_extremes!(v, p) && return nothing
 
-    v.aleaf, v.gs = stomatal_conductance!(p.stomatal_conductance, v)
-    
+    v.aleaf, v.gs = stomatal_conductance!(v, stomatal_conductance_model(p))
+
     v.ci = v.gs > zero(v.gs) && v.aleaf > zero(v.aleaf) ? v.cs - v.aleaf / v.gs : v.cs
 
     v.aleaf
 end
 
 
-
-# Abstract or concrete implementation of an FvCB energy balance
-
+"""
+Energy balance model based on genral FvCB photosynthesis, 
+derived from Maespa/Maestra models.
+"""
 abstract type AbstractFvCBEnergyBalance <: AbstractEnergyBalance end
 
-@flattenable @default_kw struct FvCBEnergyBalance{
+enbal_update!(v, f::AbstractFvCBEnergyBalance, tleaf) = nothing
+
+"""
+    FvCBEnergyBalance(radiation_conductance, 
+                      boundary_conductance, 
+                      decoupling, 
+                      evapotranspiration, 
+                      photosynthesis, 
+                      max_itererations)
+
+Energy-balance model composed of submodels from radiation conductance, 
+boundary conductance, decoupling, evapotranspiration
+photosynthesis.
+
+`max_itererations` determines the maximum number of iterations to perform to determine 
+flux and temperature.
+"""
+@default_kw @flattenable struct FvCBEnergyBalance{
                                     Ra<:AbstractRadiationConductance,
                                     Bo<:AbstractBoundaryConductance,
                                     De<:AbstractDecoupling,
-                                    Ev, 
+                                    Ev,
                                     Ph
                                    } <: AbstractFvCBEnergyBalance
-    radiation_conductance::Ra | YingPingRadiationConductance()     | true
-    boundary_conductance::Bo  | BoundaryConductance()              | true
-    decoupling::De            | McNaughtonJarvisDecoupling()       | true
-    evapotranspiration::Ev    | PenmanMonteithEvapotranspiration() | true
-    photosynthesis::Ph        | FvCBPhotosynthesis()               | true
-    itermax::Int              | 100                                | false
+    radiation_conductance_model::Ra | YingPingRadiationConductance()     | true
+    boundary_conductance_model::Bo  | BoundaryConductance()              | true
+    decoupling_model::De            | McNaughtonJarvisDecoupling()       | true
+    evapotranspiration_model::Ev    | PenmanMonteithEvapotranspiration() | true
+    photosynthesis_model::Ph        | FvCBPhotosynthesis()               | true
+    max_itererations::Int           | 100                                | false
 end
 
-enbal_update!(f::AbstractFvCBEnergyBalance, v, tleaf) = nothing
+radiation_conductance_model(p::AbstractFvCBEnergyBalance) = p.radiation_conductance_model 
+boundary_conductance_model(p::AbstractFvCBEnergyBalance) = p.boundary_conductance_model
+decoupling_model(p::AbstractFvCBEnergyBalance) = p.decoupling_model
+evapotranspiration_model(p::AbstractFvCBEnergyBalance) = p.evapotranspiration_model
+photosynthesis_model(p::AbstractFvCBEnergyBalance) = p.photosynthesis_model
+max_itererations(p::AbstractFvCBEnergyBalance) = p.max_itererations
 
-function enbal!(p::AbstractFvCBEnergyBalance, v)
+
+"""
+    enbal!(v, p::AbstractFvCBEnergyBalance)
+
+Photosynthesis is run iteratively until energy balance stabilisies.
+"""
+function enbal!(v, p::AbstractFvCBEnergyBalance)
 
     # Initialise to ambient conditions
     v.tleaf = v.tair
@@ -81,19 +130,19 @@ function enbal!(p::AbstractFvCBEnergyBalance, v)
     # Calculations that don't depend on tleaf
     v.lhv = latent_heat_water_vapour(v.tair)
     v.slope = slope(v.tair)
-    v.gradn = radiation_conductance(p.radiation_conductance, v)
-    v.gbhu = boundary_conductance_forced(p.boundary_conductance, v)
+    v.gradn = radiation_conductance(radiation_conductance_model(p), v)
+    v.gbhu = boundary_conductance_forced(boundary_conductance_model(p), v)
 
     # Converge on leaf temperature
-    for iter = 1:p.itermax
-        aleaf = photosynthesis!(p.photosynthesis, v)
-        v.gv = vapour_conductance!(p.boundary_conductance, v)
+    for iter = 1:max_itererations(p)
+        aleaf = photosynthesis!(v, photosynthesis_model(p))
+        v.gv = vapour_conductance!(v, boundary_conductance_model(p))
 
-        v.et = evapotranspiration(p.evapotranspiration, v)
-        v.decoup = decoupling(p.decoupling, v) # only for output?
+        v.et = evapotranspiration(evapotranspiration_model(p), v)
+        v.decoup = decoupling(decoupling_model(p), v) # only for output?
 
         # End of subroutine if no iterations wanted.
-        p.itermax == 0 || v.aleaf <= zero(v.aleaf) && return true
+        max_itererations(p) == 0 || v.aleaf <= zero(v.aleaf) && return true
 
         gbc = v.gbh / GBHGBC
         v.cs = v.ca - v.aleaf / gbc
@@ -101,7 +150,7 @@ function enbal!(p::AbstractFvCBEnergyBalance, v)
         v.vpdleaf = v.et * v.pressure / v.gv
         v.rhleaf = 1.0 - v.vpdleaf / saturated_vapour_pressure(tleaf)
 
-        enbal_update!(p, v, tleaf) # Model-specific var updates
+        enbal_update!(v, p, tleaf) # Model-specific var updates
 
         # Check to see whether convergence was achieved or failed
         if abs(v.tleaf - tleaf) < TOL
@@ -111,7 +160,7 @@ function enbal!(p::AbstractFvCBEnergyBalance, v)
 
         v.tleaf = tleaf # Update temperature for another iteration
 
-        iter == p.itermax && error("leaf temperature convergence failed")
+        iter == max_itererations(p) && error("leaf temperature convergence failed")
     end
     # fheat = v.rnet - v.lhv * v.et
 
@@ -122,7 +171,7 @@ end
     # shared
     cs::μMoMo        | 400.0       | μmol*mol^-1           | _
     vpdleaf::kPa     | 0.8         | kPa                   | _
-    rhleaf::F        | 0.99        | _                     |  "Only in Ball-Berry Stomatal Conductance"
+    rhleaf::F        | 0.99        | _                     | "Only in Ball-Berry Stomatal Conductance"
     # energy balance
     fheat::WM2       | 0.0         | W*m^-2                | _
     gbhu::MMoPaJS    | 0.0         | m*mol*Pa*J^-1*s^-1    | _

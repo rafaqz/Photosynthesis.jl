@@ -1,7 +1,5 @@
-using Photosynthesis, Unitful, Test, Libdl
 using Unitful: °C, K
-
-include("/home/raf/julia/Photosynthesis/test/shared.jl")
+include("shared.jl")
 
 function fortran_photosyn(p, v::V, ieco, ismaespabool, modelgs, wsoilmethod, soildata, vfun) where V
     ismaespa = unsigned(0) + ismaespabool
@@ -9,14 +7,14 @@ function fortran_photosyn(p, v::V, ieco, ismaespabool, modelgs, wsoilmethod, soi
     tzvars = V <: TuzetVars ? v : TuzetVars()
     emaxvars = V <: EmaxVars ? v : EmaxVars()
 
-    ph = p.photosynthesis
-    sc = ph.stomatal_conductance
+    ph = p.photosynthesis_model
+    sc = ph.stomatal_conductance_model
     gs = sc.gs_submodel
-    vcj = Photosynthesis.fluxparams(ph.flux)
+    vcj = Photosynthesis.fluxparams(ph.flux_model)
     vc = vcj.vcmaxformulation
     j = vcj.jmaxformulation
-    gk = typeof(sc.gs_submodel) <: MedlynGSsubModel ? sc.gs_submodel.gk : 0.0
-    d0l = typeof(sc.gs_submodel) <: LeuningGSsubModel ? sc.gs_submodel.d0l.val : 0.0
+    gk = typeof(sc.gs_submodel) <: MedlynStomatalConductanceSubModel ? sc.gs_submodel.gk : 0.0
+    d0l = typeof(sc.gs_submodel) <: LeuningStomatalConductanceSubModel ? sc.gs_submodel.d0l.val : 0.0
     par =      v.par.val
     tleaf =    Float32[ustrip(v.tleaf |> °C)]
     tmove =    AcclimatizedRespiration().tmove.val
@@ -44,15 +42,15 @@ function fortran_photosyn(p, v::V, ieco, ismaespabool, modelgs, wsoilmethod, soi
     end
     tvjup =    ustrip(DukeFlux().tvjup |> °C)
     tvjdn =    ustrip(DukeFlux().tvjdn |> °C)
-    theta =    ph.rubisco_regen.theta
-    ajq =      ph.rubisco_regen.ajq
-    rd0 =      ph.respiration.rd0.val
-    q10f =     ph.respiration.q10f.val
+    theta =    ph.rubisco_regen_model.theta
+    ajq =      ph.rubisco_regen_model.ajq
+    rd0 =      ph.respiration_model.rd0.val
+    q10f =     ph.respiration_model.q10f.val
     k10f =     AcclimatizedRespiration().k10f.val
-    tref =     ustrip(ph.respiration.tref |> °C)
-    rtemp =    ustrip(ph.respiration.tref |> °C)
-    dayresp =  ph.respiration.dayresp
-    tbelow =   ustrip(ph.respiration.tbelow |> °C)
+    tref =     ustrip(ph.respiration_model.tref |> °C)
+    rtemp =    ustrip(ph.respiration_model.tref |> °C)
+    dayresp =  ph.respiration_model.dayresp
+    tbelow =   ustrip(ph.respiration_model.tbelow |> °C)
     gsref =    JarvisStomatalConductance().gsref.val
     gsmin =    JarvisStomatalConductance().gsmin.val
     i0 =       JarvisLight().i0.val
@@ -67,7 +65,7 @@ function fortran_photosyn(p, v::V, ieco, ismaespabool, modelgs, wsoilmethod, soi
     t0 =       ustrip(JarvisTemp1().t0 |> °C)
     tref =     ustrip(JarvisTemp1().tref |> °C)
     tmax =     ustrip(JarvisTemp1().tmax |> °C)
-    soilmoisture = typeof(sc.soilmethod) <: PotentialSoilMethod ? v.swp.val : v.soilmoist  
+    soilmoisture = typeof(sc.soil_model) <: PotentialSoilMethod ? v.swp.val : v.soilmoist  
     emaxleaf = emaxvars.emaxleaf.val
     plantk =   EmaxEnergyBalance().plantk.val
     totsoilres = EmaxEnergyBalance().totsoilres.val
@@ -80,9 +78,9 @@ function fortran_photosyn(p, v::V, ieco, ismaespabool, modelgs, wsoilmethod, soi
     fsoil =    Float32[v.fsoil]
     g0 =       sc.g0.val
     gamma =    sc.gs_submodel.gamma.val
-    vpdmin =   MedlynGSsubModel().vpdmin.val
+    vpdmin =   MedlynStomatalConductanceSubModel().vpdmin.val
     g1 =       sc.gs_submodel.g1
-    gk =       MedlynGSsubModel().gk
+    gk =       MedlynStomatalConductanceSubModel().gk
     gs =       Float32[v.gs.val]
     aleaf =    Float32[v.aleaf.val]
     rd =       Float32[v.rd.val]
@@ -97,7 +95,7 @@ function fortran_photosyn(p, v::V, ieco, ismaespabool, modelgs, wsoilmethod, soi
     gbh =      v.gbh.val
     sf =       tzvars.sf.val
     psiv =     tzvars.psiv.val
-    hmshape =  HyperbolicMinimumGS().hmshape
+    hmshape =  HyperbolicMinimum().hmshape
     psilin =   tzvars.psilin.val
     psil =     Float32[emaxvars.psil.val]
     ci =       Float32[v.ci.val]
@@ -256,11 +254,11 @@ function fortran_photosyn(p, v::V, ieco, ismaespabool, modelgs, wsoilmethod, soi
 end
 
 @testset "Ball Berry" begin
-    p = FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis(
-                               stomatal_conductance=BallBerryStomatalConductance(
-                                    gs_submodel=BallBerryGSsubModel(),
-                                    soilmethod=NoSoilMethod()),
-                               flux=DukeFlux(),
+    p = FvCBEnergyBalance(photosynthesis_model=FvCBPhotosynthesis(
+                               stomatal_conductance_model=BallBerryStomatalConductance(
+                                    gs_submodel=BallBerryStomatalConductanceSubModel(),
+                                    soil_model=NoSoilMethod()),
+                               flux_model=DukeFlux(),
                                compensation=BadgerCollatzCompensation()))
     v = BallBerryVars()
     ieco = BADGERCOLLATZ
@@ -270,13 +268,13 @@ end
     ismaespa = false
     vfun = 1
     # Prime variables
-    enbal!(p, v)
+    enbal!(v, p)
 
     # Run fortran
     (rd, fsoil, aleaf, gs, ci) =
         fortran_photosyn(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata, vfun)
     # Run julia
-    photosynthesis!(p.photosynthesis, v)
+    photosynthesis!(v, p.photosynthesis_model)
 
     v.rd, v.fsoil, v.aleaf, v.gs, v.ci
     v.tleaf |> °C
@@ -295,14 +293,16 @@ end
 
 
 @testset "Ball Berry water potential" begin
-    p = FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis(
-                              stomatal_conductance=BallBerryStomatalConductance(
-                                  gs_submodel=BallBerryGSsubModel(),
-                                  soilmethod=PotentialSoilMethod()
-                              ),
-                              flux=DukeFlux(),
-                              compensation=BadgerCollatzCompensation())
-                         )
+    p = FvCBEnergyBalance(
+         photosynthesis_model=FvCBPhotosynthesis(
+             stomatal_conductance_model=BallBerryStomatalConductance(
+                 gs_submodel=BallBerryStomatalConductanceSubModel(),
+                 soil_model=PotentialSoilMethod(),
+             ),
+             flux_model=DukeFlux(),
+             compensation_model=BadgerCollatzCompensation(),
+         )
+    )
     v = BallBerryVars()
     ieco = BADGERCOLLATZ
     modelgs = BALLBERRY_GS
@@ -311,13 +311,13 @@ end
     ismaespa = false
     vfun = 1
     # Prime variables
-    enbal!(p, v)
+    enbal!(v, p)
 
     # Run fortran
     (rd, fsoil, aleaf, gs, ci) =
         fortran_photosyn(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata, vfun)
     # Run julia
-    photosynthesis!(p.photosynthesis, v)
+    photosynthesis!(v, p.photosynthesis_model)
 
     v.rd, v.fsoil, v.aleaf, v.gs, v.ci
     v.tleaf |> °C
@@ -329,12 +329,16 @@ end
 end
 
 @testset "Leuning" begin
-    p = FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis(
-                              stomatal_conductance=BallBerryStomatalConductance(
-                                  gs_submodel=LeuningGSsubModel(),
-                                  soilmethod=NoSoilMethod()),
-                              flux=DukeFlux(),
-                              compensation=BadgerCollatzCompensation()))
+    p = FvCBEnergyBalance(
+         photosynthesis_model=FvCBPhotosynthesis(
+             stomatal_conductance_model=BallBerryStomatalConductance(
+                 gs_submodel=LeuningStomatalConductanceSubModel(),
+                 soil_model=NoSoilMethod(),
+             ),
+             flux_model=DukeFlux(),
+             compensation_model=BadgerCollatzCompensation()
+        )
+    )
     v = BallBerryVars()
     ieco = BADGERCOLLATZ
     modelgs = BALLBERRY_GS
@@ -343,13 +347,13 @@ end
     ismaespa = false
     vfun = 1
     # Prime variables
-    enbal!(p, v)
+    enbal!(v, p)
 
     # Run fortran
     (rd, fsoil, aleaf, gs, ci) =
         fortran_photosyn(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata, vfun)
     # Run julia
-    photosynthesis!(p.photosynthesis, v)
+    photosynthesis!(v, p.photosynthesis_model)
 
     v.rd, v.fsoil, v.aleaf, v.gs, v.ci
     v.tleaf |> °C
@@ -361,12 +365,15 @@ end
 end
 
 @testset "Medlyn" begin
-    p = FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis(
-                              stomatal_conductance=BallBerryStomatalConductance(
-                                  gs_submodel=MedlynGSsubModel(),
-                                  soilmethod=NoSoilMethod()),
-                              flux=DukeFlux(),
-                              compensation=BadgerCollatzCompensation()))
+    p = FvCBEnergyBalance(
+        photosynthesis_model=FvCBPhotosynthesis(
+            stomatal_conductance=BallBerryStomatalConductance(
+                gs_submodel=MedlynStomatalConductanceSubModel(),
+                soil_model=NoSoilMethod()),
+            flux_model=DukeFlux(),
+            compensation_model=BadgerCollatzCompensation()
+        )
+    )
     v = BallBerryVars()
     ieco = BADGERCOLLATZ
     modelgs = MEDLYN_GS
@@ -375,13 +382,13 @@ end
     ismaespa = false
     vfun = 1
     # Prime variables
-    enbal!(p, v)
+    enbal!(v, p)
 
     # Run fortran
     (rd, fsoil, aleaf, gs, ci) =
         fortran_photosyn(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata, vfun)
     # Run julia
-    photosynthesis!(p.photosynthesis, v)
+    photosynthesis!(v, p.photosynthesis_model)
 
     v.rd, v.fsoil, v.aleaf, v.gs, v.ci
     v.tleaf |> °C
@@ -393,13 +400,16 @@ end
 end
 
 @testset "Emax" begin
-    p1 = FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis(
-                              stomatal_conductance=EmaxStomatalConductance(
-                                  gs_submodel=BallBerryGSsubModel(),
-                                  soilmethod=EmaxSoilMethod()),
-                              flux=DukeFlux(),
-                              compensation=BadgerCollatzCompensation()))
-    p = EmaxEnergyBalance(energy_balance=p1)
+    p1 = FvCBEnergyBalance(
+        photosynthesis_model=FvCBPhotosynthesis(
+            stomatal_conductance_model=EmaxStomatalConductance(
+                gs_submodel=BallBerryStomatalConductanceSubModel(),
+                soil_model=EmaxSoilMethod()
+            ),
+            flux_model=DukeFlux(),
+        compensation_model=BadgerCollatzCompensation())
+    )
+    p = EmaxEnergyBalance(energy_balance_model=p1)
     v = EmaxVars()
     ieco = BADGERCOLLATZ
     modelgs = BALLBERRY_GS
@@ -409,12 +419,12 @@ end
     vfun = 1
 
     # Prime variables
-    enbal!(p, v)
+    enbal!(v, p)
     # Run fortran
     (rd, fsoil, aleaf, gs, ci) =
-        fortran_photosyn(p.energy_balance, v, ieco, ismaespa, modelgs, wsoilmethod, soildata, vfun)
+        fortran_photosyn(p.energy_balance_model, v, ieco, ismaespa, modelgs, wsoilmethod, soildata, vfun)
     # Run julia
-    photosynthesis!(p.energy_balance.photosynthesis, v)
+    photosynthesis!(v, p.energy_balance_model.photosynthesis_model)
     v.rd, v.fsoil, v.aleaf, v.gs, v.ci
 
     @test fsoil ≈ v.fsoil rtol=1e-7

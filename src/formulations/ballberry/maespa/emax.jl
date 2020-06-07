@@ -4,8 +4,8 @@
     non_stomatal::NS | ZhouPotentialDependence()
 end
 
-soilmoisture_conductance!(f::EmaxSoilMethod, v) = begin
-    pd = non_stomatal_potential_dependence(f.non_stomatal, v.swp)
+soilmoisture_conductance!(v, m::EmaxSoilMethod) = begin
+    pd = non_stomatal_potential_dependence(m.non_stomatal, v.swp)
     v.vcmax *= pd
     v.jmax *= pd
     oneunit(v.fsoil)
@@ -19,9 +19,11 @@ Emax photosynthesis inherited from Maespa.
 The same options are available for specialised stomatal conducance,
 but using emax soil water methods.
 """
-@MixinBallBerryStomCond struct EmaxStomatalConductance{SH} <: AbstractEmaxStomatalConductance 
-    gsshape::SH    | HardMinimumGS() | _  | _ | _
+@MixinBallBerryStomatalConductance struct EmaxStomatalConductance{SH} <: AbstractEmaxStomatalConductance 
+    gsshape::SH    | HardMinimum() | _  | _ | _
 end
+
+gsshape(m::AbstractEmaxStomatalConductance) = m.gsshape
 
 struct JarvisMode <: AbstractJarvisStomatalConductance end
 
@@ -35,11 +37,11 @@ end
 
 
 """
-    stomatal_conductance!(f::AbstractEmaxStomatalConductance, v)
+    stomatal_conductance!(v, f::AbstractEmaxStomatalConductance)
 Stomatal conductance calculations for the Jarvis model
 """
-function stomatal_conductance!(f::AbstractEmaxStomatalConductance, v)
-    v.gsdiva = gsdiva(f.gs_submodel, v)
+function stomatal_conductance!(v, m::AbstractEmaxStomatalConductance)
+    v.gsdiva = gsdiva(gs_submodel(m), v)
 
     # Maximum transpiration rate
     emaxleaf = v.ktot * (v.swp - v.minleafwp)
@@ -64,7 +66,7 @@ function stomatal_conductance!(f::AbstractEmaxStomatalConductance, v)
         v.aj = transport_limited_rate(JarvisMode(), v)
         aleaf = min(v.ac, v.aj) - v.rd
 
-        gs = shape_gs(f.gsshape, v, f)
+        gs = shape_gs(gsshape(m), v, m)
     end
 
     aleaf, gs 
@@ -74,14 +76,18 @@ end
 abstract type AbstractEmaxEnergyBalance <: AbstractFvCBEnergyBalance end
 
 @columns struct EmaxEnergyBalance{EB,SR,PK} <: AbstractEmaxEnergyBalance 
-    energy_balance::EB | FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis(
+    energy_balance_model::EB | FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis(
                                                stomatal_conductance=EmaxStomatalConductance(
                                                    soilmethod=EmaxSoilMethod()))) | _ | _ | _
-    totsoilres::SR     | 0.5  | m^2*s^1*MPa^1*mmol^-1 | (0.0, 10.0) | _
-    plantk::PK         | 3.0  | mmol*m^-2*s^-1*MPa^-1 | (0.0, 10.0) | _
+    totsoilres::SR           | 0.5  | m^2*s^1*MPa^1*mmol^-1 | (0.0, 10.0) | _
+    plantk::PK               | 3.0  | mmol*m^-2*s^-1*MPa^-1 | (0.0, 10.0) | _
 end
 
-enbal!(f::AbstractEmaxEnergyBalance, v) = begin
-    v.ktot = 10 / (f.totsoilres + 1.0 / f.plantk)
-    enbal!(f.energy_balance, v)
+energy_balance_model(m::AbstractEmaxEnergyBalance) = m.energy_balance_model
+totsoilres(m::AbstractEmaxEnergyBalance) = m.totsoilres
+plantk(m::AbstractEmaxEnergyBalance) = m.plantk
+
+enbal!(v, m::AbstractEmaxEnergyBalance) = begin
+    v.ktot = 10 / (totsoilres(m) + 1.0 / plantk(m))
+    enbal!(v, energy_balance_model(m))
 end

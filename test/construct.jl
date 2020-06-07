@@ -11,10 +11,10 @@ using Photosynthesis, Unitful, Test
     JarvisFractionDeficitVPD()
     JarvisLinearDeclineVPD()
 
-    BallBerryGSsubModel()
-    LeuningGSsubModel()
-    MedlynGSsubModel()
-    TuzetGSsubModel()
+    BallBerryStomatalConductanceSubModel()
+    LeuningStomatalConductanceSubModel()
+    MedlynStomatalConductanceSubModel()
+    TuzetStomatalConductanceSubModel()
 
     Jmax()
     NoOptimumVcmax()
@@ -65,8 +65,8 @@ end
     radiation_conductance(YingPingRadiationConductance(), v)
 
     # Shape
-    shape_gs(HardMinimumGS(), v, BallBerryStomatalConductance()) 
-    shape_gs(HyperbolicMinimumGS(), v, BallBerryStomatalConductance()) 
+    shape_gs(HardMinimum(), v, BallBerryStomatalConductance()) 
+    shape_gs(HyperbolicMinimum(), v, BallBerryStomatalConductance()) 
 
     # Boundary conductance
     grashof_number(v.tleaf, v.tair, BoundaryConductance().leafwidth)
@@ -104,20 +104,20 @@ end
     rubisco_regeneration(RubiscoRegen(), v)
 
     # Stomatal conductance submodels
-    gsdiva(BallBerryGSsubModel(), BallBerryVars())
-    gsdiva(LeuningGSsubModel(), BallBerryVars())
-    gsdiva(MedlynGSsubModel(), BallBerryVars())
-    gsdiva(TuzetGSsubModel(), TuzetVars())
+    gsdiva(BallBerryStomatalConductanceSubModel(), BallBerryVars())
+    gsdiva(LeuningStomatalConductanceSubModel(), BallBerryVars())
+    gsdiva(MedlynStomatalConductanceSubModel(), BallBerryVars())
+    gsdiva(TuzetStomatalConductanceSubModel(), TuzetVars())
 
     # Stomatal conductance models
-    stomatal_conductance!(BallBerryStomatalConductance(gs_submodel=BallBerryGSsubModel()), v)
-    stomatal_conductance!(BallBerryStomatalConductance(gs_submodel=LeuningGSsubModel()), v)
-    stomatal_conductance!(BallBerryStomatalConductance(gs_submodel=MedlynGSsubModel()), v)
-    stomatal_conductance!(EmaxStomatalConductance(gs_submodel=BallBerryGSsubModel()), v)
-    stomatal_conductance!(EmaxStomatalConductance(gs_submodel=LeuningGSsubModel()), v)
-    stomatal_conductance!(EmaxStomatalConductance(gs_submodel=MedlynGSsubModel()), v)
-    stomatal_conductance!(JarvisStomatalConductance(), JarvisVars())
-    # stomatal_conductance!(TuzetStomatalConductance(), TuzetVars())
+    stomatal_conductance!(v, BallBerryStomatalConductance(gs_submodel=BallBerryStomatalConductanceSubModel()))
+    stomatal_conductance!(v, BallBerryStomatalConductance(gs_submodel=LeuningStomatalConductanceSubModel()))
+    stomatal_conductance!(v, BallBerryStomatalConductance(gs_submodel=MedlynStomatalConductanceSubModel()))
+    stomatal_conductance!(v, EmaxStomatalConductance(gs_submodel=BallBerryStomatalConductanceSubModel()))
+    stomatal_conductance!(v, EmaxStomatalConductance(gs_submodel=LeuningStomatalConductanceSubModel()))
+    stomatal_conductance!(v, EmaxStomatalConductance(gs_submodel=MedlynStomatalConductanceSubModel()))
+    # stomatal_conductance!(v, JarvisStomatalConductance(), JarvisVars())
+    # stomatal_conductance!(TuzetVars(), TuzetStomatalConductance())
 
 
     # Formulations ################################################################
@@ -125,28 +125,27 @@ end
     v = BallBerryVars()
     ph = FvCBPhotosynthesis(stomatal_conductance=BallBerryStomatalConductance())
     p = FvCBEnergyBalance(photosynthesis=ph)
-    enbal!(p, v)
-    photosynthesis!(p.photosynthesis, v)
+    enbal!(v, p)
+    photosynthesis!(v, p.photosynthesis_model)
     v.aleaf
     v.tleaf
     v.gs
     v.cs
-    enbal!(p, v)
+    enbal!(v, p)
     
     v = JarvisVars()
-    ph = FvCBPhotosynthesis(stomatal_conductance=JarvisStomatalConductance())
-    p = FvCBEnergyBalance(photosynthesis=ph)
-    factor_conductance(ph.stomatal_conductance, v)
-    enbal!(p, v)
-    photosynthesis!(p.photosynthesis, v)
+    ph = FvCBPhotosynthesis(stomatal_conductance_model=JarvisStomatalConductance())
+    p = FvCBEnergyBalance(photosynthesis_model=ph)
+    factor_conductance(ph.stomatal_conductance_model, v)
+    enbal!(v, p)
+    photosynthesis!(v, p.photosynthesis_model)
     v.aleaf
     v.tleaf
     v.gs
     v.cs
-    enbal!(p, v)
+    enbal!(v, p)
 
-    # ph = FvCBPhotosynthesis(stomatal_conductance=TuzetStomatalConductance())
-    # p = TuzetEnergyBalance(photosynthesis=ph)
+    # ph = FvCBPhotosynthesis(stomatal_conductance=TuzetStomatalConductance()) # p = TuzetEnergyBalance(photosynthesis=ph)
     # v = TuzetVars()
     # enbal!(p, v)
     # photosynthesis!(p.photosynthesis, v)
@@ -157,14 +156,14 @@ end
     # enbal!(p, v)
 
     v = BallBerryVars()
-    ph = FvCBPhotosynthesis(stomatal_conductance=EmaxStomatalConductance())
+    ph = FvCBPhotosynthesis(stomatal_conductance_model=EmaxStomatalConductance())
     v = EmaxVars()
-    enbal!(p, v)
-    photosynthesis!(p.photosynthesis, v)
+    enbal!(v, p)
+    photosynthesis!(v, p.photosynthesis_model)
     v.aleaf
     v.tleaf
     v.gs
     v.cs
-    enbal!(p, v)
+    enbal!(v, p)
 
 end

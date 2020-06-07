@@ -9,10 +9,8 @@ using Unitful,
 
 using Unitful: R, °C, K, Pa, kPa, MPa, J, W, kJ, kg, g, m, s, mol, mmol, μmol, σ
 
-import FieldMetadata: @flattenable, @prior, @bounds, @default, @redefault, @description, @units,
+import FieldMetadata: @flattenable, @bounds, @default, @description, @units,
                       flattenable, bounds, default, description, units
-
-
 
 
 export enbal!,
@@ -59,9 +57,9 @@ export enbal!,
        arrhenius,
        penman_monteith
 
-export AbstractCompensation, BadgerCollatzCompensation, BernacchiCompensation
+export Compensation, BadgerCollatzCompensation, BernacchiCompensation
 
-export AbstractJmax, Jmax 
+export AbstractJmax, Jmax
 
 export AbstractVcmax, NoOptimumVcmax, OptimumVcmax
 
@@ -69,8 +67,9 @@ export AbstractFlux, Flux, DukeFlux, PotentialModifiedFlux
 
 export AbstractRubiscoRegen, RubiscoRegen
 
-export AbstractRespiration, Respiration, AcclimatizedRespiration,
-       AbstractGSShape, HardMinimumGS, HyperbolicMinimumGS
+export AbstractRespiration, Respiration, AcclimatizedRespiration
+
+export StomatalConductanceShape, HardMinimum, HyperbolicMinimum
 
 export AbstractRadiationConductance, YingPingRadiationConductance
 
@@ -99,8 +98,8 @@ export AbstractJarvisLight, JarvisLight
 export AbstractJarvisTemp, JarvisNoTemp, JarvisTemp1, JarvisTemp2
 
 
-export AbstractGSsubModel, BallBerryGSsubModel, LeuningGSsubModel, 
-       MedlynGSsubModel, ThreeParGSsubModel, TuzetGSsubModel
+export AbstractStomatalConductanceSubModel, BallBerryStomatalConductanceSubModel, LeuningStomatalConductanceSubModel,
+       MedlynStomatalConductanceSubModel, ThreeParStomatalConductanceSubModel, TuzetStomatalConductanceSubModel
 
 export AbstractStomatalConductance, AbstractBallBerryStomatalConductance, BallBerryStomatalConductance,
        TuzetStomatalConductance, AbstractEmaxStomatalConductance, EmaxStomatalConductance, JarvisStomatalConductance
@@ -122,7 +121,7 @@ export BallBerryVars, EmaxVars, TuzetVars, JarvisVars
     $(SIGNATURES)
     """
 
-@chain columns @description @bounds @units @udefault_kw
+@chain columns @udefault_kw @units @bounds @description
 
 include("utils.jl")
 include("constants.jl")

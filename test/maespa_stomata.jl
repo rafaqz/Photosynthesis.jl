@@ -1,12 +1,11 @@
-using Photosynthesis, Unitful, Test, Libdl
 using Unitful: °C, K
+include("shared.jl")
 
 # Setup
-emax = FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis())
-ph = emax.photosynthesis
+emax = FvCBEnergyBalance(photosynthesis_model=FvCBPhotosynthesis())
+ph = emax.photosynthesis_model
 v = EmaxVars()
 v.tleaf = 15°C |> K
-
 
 # Rubisco compensation
 # kmfn: rubisco_compensation_point
@@ -22,4 +21,3 @@ ieco = 1 # Badger-Collatz
 km_ref = ccall(kmfn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf,ieco)
 km = rubisco_compensation_point(BadgerCollatzCompensation(), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
 @test km.val ≈ km_ref rtol=1e-4
-

@@ -10,7 +10,7 @@ abstract type AbstractBoundaryConductance end
 end
 
 # TODO remove assingments to v
-vapour_conductance!(f::AbstractBoundaryConductance, v) = begin
+vapour_conductance!(v, f::AbstractBoundaryConductance) = begin
     v.gbhf = boundary_conductance_free(f, v)
 
     # Total boundary layer conductance for heat

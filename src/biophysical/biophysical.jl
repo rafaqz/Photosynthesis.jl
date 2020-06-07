@@ -25,10 +25,13 @@ end
 
 """
     arrhenius(kt, ea, t, tref)
+
 The Arrhenius function.
-kT is the value at tref deg # 
-Ea the activation energy (j mol - 1) and 
-T the temp (deg #).
+
+-`kt`: is the value at tref deg # 
+-`ea`: the activation energy (j mol - 1) and 
+-`t`: the temp in °C or K
+-`tref`: the reference temp in °C or K
 Standard form and temperature difference form.
 """
 arrhenius(A, Ea, T) = arrhenius(A, Ea, T |> K)

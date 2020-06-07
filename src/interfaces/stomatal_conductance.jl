@@ -2,7 +2,7 @@
 
 abstract type AbstractStomatalConductance end
 
-abstract type AbstractGSsubModel end
+abstract type AbstractStomatalConductanceSubModel end
 
 """
     stomatal_conductance!(p, v)

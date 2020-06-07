@@ -1,9 +1,13 @@
-using Photosynthesis, Unitful, Test, Libdl
 using Unitful: °C, K
+include("shared.jl")
 
 # Setup
-emax = FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis(stomatal_conductance=EmaxStomatalConductance()))
-ph = emax.photosynthesis
+emax = FvCBEnergyBalance(
+    photosynthesis_model=FvCBPhotosynthesis(
+        stomatal_conductance_model=EmaxStomatalConductance()
+    )
+)
+ph = emax.photosynthesis_model
 v = EmaxVars()
 v.tleaf = 15°C
 photosynlib = dlopen(joinpath(ENV["MAESPA"], "physiol"))

@@ -12,11 +12,13 @@ radiation_conductance(f::YingPingRadiationConductance, v) =
 
 """
     yingping_radiation_conductance(tair, rdfipt, tuipt, tdipt)
+
 Returns the "radiation conductance" at given temperature.
 Formula from Ying-Ping"s version of Maestro.
+
 See also Jones (1992) p. 108.0
 
-Return mol*m^-2*s^-1
+Returns quantity with units mol*m^-2*s^-1
 """
 yingping_radiation_conductance(tair, rdfipt, tuipt, tdipt) =
     4 * σ * ((tair |> K)^3) * rdfipt / tdipt * EMLEAF * 

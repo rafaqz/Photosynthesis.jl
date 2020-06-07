@@ -1,5 +1,7 @@
 using Photosynthesis: quad, Lower, Upper
 
+include("shared.jl")
+
 # Quadratic solvers
 # quadm: quad
 quadm_fortran = Libdl.dlsym(photosynlib, :quadm_)
