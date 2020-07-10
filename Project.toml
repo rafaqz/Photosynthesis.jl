@@ -1,7 +1,7 @@
 name = "Photosynthesis"
 uuid = "5e10c064-2706-53a3-a67d-d473e313a663"
 authors = ["Rafael Schouten <rafaelschouten@gmail.com>"]
-version = "0.0.0"
+version = "0.1.0"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
