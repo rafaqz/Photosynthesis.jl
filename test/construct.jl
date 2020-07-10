@@ -24,7 +24,7 @@ using Photosynthesis, Unitful, Test
     RubiscoRegen()
     Respiration()
 
-    YingPingRadiationConductance()
+    WangRadiationConductance()
     BoundaryConductance()
     McNaughtonJarvisDecoupling()
     NoDecoupling()
@@ -62,7 +62,7 @@ end
     arrhenius(42.75u"J/mol", 37830.0u"J/mol", v.tleaf, 300.0u"K")
 
     # Radiation conductance
-    radiation_conductance(YingPingRadiationConductance(), v)
+    radiation_conductance(WangRadiationConductance(), v)
 
     # Shape
     shape_gs(HardMinimum(), v, BallBerryStomatalConductance()) 

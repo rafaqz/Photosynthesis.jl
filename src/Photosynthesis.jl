@@ -4,7 +4,7 @@ using Unitful,
       FieldDefaults,
       DocStringExtensions,
       Mixers,
-      Roots,
+      SimpleRoots,
       FieldMetadata
 
 using Unitful: R, °C, K, Pa, kPa, MPa, J, W, kJ, kg, g, m, s, mol, mmol, μmol, σ
@@ -71,7 +71,7 @@ export AbstractRespiration, Respiration, AcclimatizedRespiration
 
 export StomatalConductanceShape, HardMinimum, HyperbolicMinimum
 
-export AbstractRadiationConductance, YingPingRadiationConductance
+export AbstractRadiationConductance, WangRadiationConductance
 
 export AbstractBoundaryConductance, BoundaryConductance
 
@@ -123,7 +123,6 @@ export BallBerryVars, EmaxVars, TuzetVars, JarvisVars
 
 @chain columns @udefault_kw @units @bounds @description
 
-include("utils.jl")
 include("constants.jl")
 include("vars.jl")
 

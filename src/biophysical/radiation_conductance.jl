@@ -1,13 +1,13 @@
 
 abstract type AbstractRadiationConductance end
 
-@columns struct YingPingRadiationConductance{T} <: AbstractRadiationConductance
+@columns struct WangRadiationConductance{T} <: AbstractRadiationConductance
     rdfipt::T | 1.0 | _ | (0.0, 2.0) | "Not documented in MAESPA"
     tuipt::T  | 1.0 | _ | (0.0, 2.0) | "Not documented in MAESPA"
     tdipt::T  | 1.0 | _ | (0.0, 2.0) | "Not documented in MAESPA"
 end
 
-radiation_conductance(f::YingPingRadiationConductance, v) =
+radiation_conductance(f::WangRadiationConductance, v) =
     yingping_radiation_conductance(v.tair, f.rdfipt, f.tuipt, f.tdipt)
 
 """

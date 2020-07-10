@@ -121,7 +121,7 @@ RubiscoRegen
 AbstractRespiration
 Respiration
 AbstractRadiationConductance
-YingPingRadiationConductance
+WangRadiationConductance
 AbstractBoundaryConductance
 BoundaryConductance
 ```

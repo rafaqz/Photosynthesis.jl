@@ -98,7 +98,7 @@ flux and temperature.
                                     Ev,
                                     Ph
                                    } <: AbstractFvCBEnergyBalance
-    radiation_conductance_model::Ra | YingPingRadiationConductance()     | true
+    radiation_conductance_model::Ra | WangRadiationConductance()     | true
     boundary_conductance_model::Bo  | BoundaryConductance()              | true
     decoupling_model::De            | McNaughtonJarvisDecoupling()       | true
     evapotranspiration_model::Ev    | PenmanMonteithEvapotranspiration() | true

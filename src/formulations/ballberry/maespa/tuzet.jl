@@ -80,7 +80,7 @@ function enbal!(v, p::TuzetEnergyBalance)
     bracket = -100.0oneunit(v.psil), zero(v.psil)
     tolz = 1e-03oneunit(v.psil)
 
-    v.psilin = find_zero(x -> leaf_water_potential_finder(p.energy_balance, v, x), bracket, FalsePosition(), atol=tolz)
+    v.psilin = findzero(x -> leaf_water_potential_finder(p.energy_balance, v, x), bracket; atol=tolz)
     nothing
 end
 

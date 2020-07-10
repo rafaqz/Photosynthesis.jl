@@ -15,6 +15,8 @@ respiration(f::Nothing, tleaf) = zero(rd)
 
 """
     Respiration(q10f, dayresp, rd0, tbelow, tref)
+
+Standard respiration model
 """
 @MixinResp struct Respiration{} <: AbstractRespiration end
 
