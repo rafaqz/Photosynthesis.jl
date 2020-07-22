@@ -25,6 +25,8 @@ Parameters are `gamma` in μmol*mol^-1 and `g1` scalar,
 which are also used for all Ball-Berry type models.
 
 (modelgs = 2 in maestra)
+
+$(FIELDDOCTABLE)
 """
 @MixinBallBerryStomatalConductanceSubModel struct BallBerryStomatalConductanceSubModel{} <: AbstractStomatalConductanceSubModel end
 
@@ -53,6 +55,8 @@ soil_model(m::AbstractBallBerryStomatalConductance) = m.soil_model
     BallBerryStomatalConductance(g0, gs_submodel, soil_model)
 
 Simple Ball-Berry stomatal conductance model.
+
+$(FIELDDOCTABLE)
 """
 @MixinBallBerryStomatalConductance struct BallBerryStomatalConductance{} <: AbstractBallBerryStomatalConductance end
 
@@ -62,6 +66,8 @@ Simple Ball-Berry stomatal conductance model.
                   gs_div_a, km, ci, gammastar, gs, gsv, gbv, jmax, vcmax, rd, ac, aleaf, vj, aj, fsoil)
 
 Variables for Ball-Berry stomatal conductance models.
+
+$(FIELDDOCTABLE)
 """
 @MixinFvCBVars mutable struct BallBerryVars{} end
 

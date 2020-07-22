@@ -30,6 +30,8 @@ non_stomatal_potential_dependence(f::NoPotentialDependence, swp) = 1.0
 
 Simple linear dependance. `vpara` is the swp where vcmax and 
 jmax are set to zero, while at `vparb` fluxes are at their maximum rate.
+
+$(FIELDDOCTABLE)
 """
 @columns struct LinearPotentialDependence{Pa} <: AbstractPotentialDependence
     vpara::Pa | -300.0 | kPa | (0.0, -2000.0) | _
@@ -49,6 +51,8 @@ non_stomatal_potential_dependence(f::LinearPotentialDependence, swp) =
     ZhouPotentialDependence(s, ψ)
 
 Parameters following Zhou, et al. Agricultural and Forest Meteorology, 2013.
+
+$(FIELDDOCTABLE)
 """
 @columns struct ZhouPotentialDependence{S,Ψ} <: AbstractPotentialDependence
     s::S | 2.0  | MPa^-1 | (0.4, 12.0)  | "Sensitivity parameter indicating the steepness of the decline"

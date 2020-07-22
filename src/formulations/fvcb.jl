@@ -24,6 +24,8 @@ agreed formulation of the Farquharvon Caemmerer (1982) equations.
 Farquhar, G.D., S. Caemmerer and J.A. Berry. 1980.
 A biochemical model of photosynthetic CO2 assimilation in leaves of C3 species.
 Planta. 149:78-90.
+
+$(FIELDDOCTABLE)
 """
 @default_kw struct FvCBPhotosynthesis{F,KM,Ru,Re,GS} <: AbstractFvCBPhotosynthesis
     flux_model::F                  | PotentialModifiedFlux()
@@ -85,6 +87,8 @@ photosynthesis.
 
 `max_itererations` determines the maximum number of iterations to perform to determine 
 flux and temperature.
+
+$(FIELDDOCTABLE)
 """
 @default_kw @flattenable struct FvCBEnergyBalance{
                                     Ra<:AbstractRadiationConductance,

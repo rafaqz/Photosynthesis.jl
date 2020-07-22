@@ -5,6 +5,8 @@
 Medlyn stomatal conductance formulation parameters
 Has the extra `vpdmin` paramater in Pa.
 (modelgs = 4 in maestra)
+
+$(FIELDDOCTABLE)
 """
 @MixinBallBerryStomatalConductanceSubModel struct MedlynStomatalConductanceSubModel{Pa} <: AbstractBallBerryStomatalConductanceSubModel
     vpdmin::Pa | 1500.0 | kPa | _ | _

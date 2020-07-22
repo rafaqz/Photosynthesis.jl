@@ -30,6 +30,8 @@ end
     DeficitSoilData(smd1, smd2)
 
 Soil water is measured as deficit
+
+$(FIELDDOCTABLE)
 """
 @MixinDeficit struct DeficitSoilData{} <: AbstractDeficitSoilData end
 
@@ -37,6 +39,8 @@ Soil water is measured as deficit
     ContentSoilData(swmin, swmax, smd1, smd2)
 
 Soil water is measured as volumetric content
+
+$(FIELDDOCTABLE)
 """
 @MixinContent struct ContentSoilData{} <: AbstractContentSoilData end
 
@@ -44,6 +48,8 @@ Soil water is measured as volumetric content
     SimulatedSoilData(swmin, swmax, smd1, smd2)
 
 Simulated soil volumetric content.
+
+$(FIELDDOCTABLE)
 """
 @MixinContent struct SimulatedSoilData{} <: AbstractContentSoilData end
 
@@ -68,6 +74,8 @@ function soilmoisture_conductance end
     VolumetricSoilMethod(soildata, wc1, wc2, soilroot, soildepth)
 
 Soil method where soil water is handled volumetrically.
+
+$(FIELDDOCTABLE)
 """
 @default_kw struct VolumetricSoilMethod{WC,R,D,T<:AbstractContentSoilData} <: AbstractSoilMethod
     soildata::T  | ContentSoilData()
@@ -105,6 +113,8 @@ struct ConstantSoilMethod <: AbstractSoilMethod end
     PotentialSoilMethod(soildata, swpexp)
 
 Soil mmodel where soil water is measured as water potential.
+
+$(FIELDDOCTABLE)
 """
 @udefault_kw @units @bounds @description struct PotentialSoilMethod{E} <: AbstractSoilMethod
     swpexp::E | 0.5 | kPa^-1 | (0.0, 10.0) | "Exponent for soil water-potential response of stomata"
@@ -117,6 +127,8 @@ soilmoisture_conductance(f::PotentialSoilMethod, v) = exp(f.swpexp * v.swp)
     DeficitSoilMethod(soildata)
 
 Soil method where soil water is handled as a moisture deficit.
+
+$(FIELDDOCTABLE)
 """
 @default_kw struct DeficitSoilMethod{T<:AbstractDeficitSoilData} <: AbstractSoilMethod
     soildata::T | ContentSoilData()

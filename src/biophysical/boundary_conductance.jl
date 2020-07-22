@@ -40,6 +40,8 @@ function vapour_conductance! end
     BoundaryConductance(; leafwidth=0.05u"m", gsc=1.0u"mol*m^-2*s^-1")
 
 Standard boundary conductance formulation parameters.
+
+$(FIELDDOCTABLE)
 """
 @columns struct BoundaryConductance{M,MolMS} <: AbstractBoundaryConductance
     leafwidth::M | 0.05 | m             | (0.0, 1.0) | "Mean width of leaves"

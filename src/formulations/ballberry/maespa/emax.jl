@@ -2,6 +2,8 @@
     EmaxSoilMethod(soilmethod, non_stomatal)
 
 Emax implementation of soil method
+
+$(FIELDDOCTABLE)
 """
 @default_kw struct EmaxSoilMethod{T,NS} <: AbstractSoilMethod 
     soilmethod::T    | ConstantSoilMethod()
@@ -20,6 +22,8 @@ end
 
 The same options are available for specialised stomatal conducance,
 but using emax soil water methods.
+
+$(FIELDDOCTABLE)
 """
 @MixinBallBerryStomatalConductance struct EmaxStomatalConductance{SH} <: AbstractBallBerryStomatalConductance 
     gsshape::SH    | HardMinimum() | _  | _ | _
@@ -71,6 +75,8 @@ end
     EmaxVars()
 
 Varbles for Emax models
+
+$(FIELDDOCTABLE)
 """
 @MixinFvCBVars mutable struct EmaxVars{M,EL,KT,P}
     minleafwp::M   | 0.1         | kPa                   | _
@@ -81,9 +87,11 @@ end
 
 
 """
-EmaxEnergyBalance(energy_balance_model, totsoilres, plantk)
+    EmaxEnergyBalance(energy_balance_model, totsoilres, plantk)
 
 Wrapper to FvCBEnergyBalance model, adding `totsoilres` and `plantk` parameters.
+
+$(FIELDDOCTABLE)
 """
 @columns struct EmaxEnergyBalance{EB,SR,PK} <: AbstractFvCBEnergyBalance 
     energy_balance_model::EB | FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis(

@@ -32,6 +32,8 @@ end
 
 Parameters to calculate co2 and rubisco compensation 
 points using the Badger-Collatz formulation.
+
+$(FIELDDOCTABLE)
 """
 @flattenable @columns struct BadgerCollatzCompensation{μMoMo,kJMo,K} <: Compensation
 #   Field        | Flat   | Default  | Units          | Bounds            | Description
@@ -58,6 +60,8 @@ Parameters to calculate CO2 and Rubisco compensation points using the
 formulation from Bernacchi et al 2001, PCE 24: 253-260. 
 
 Note: Extra deactivation terms may be required above 40°C.
+
+$(FIELDDOCTABLE)
 """
 @flattenable @columns struct BernacchiCompensation{μMoMo,kJMo,K} <: Compensation
 #   Field        | Flat  | Default  | Units          | Bounds            | Description

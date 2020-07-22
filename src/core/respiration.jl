@@ -30,6 +30,8 @@ Standard respiration model.
 Calculates respiration from temperature using a Q10 (exponential) formulation 
 
 TODO: specify origin of formulation
+
+$(FIELDDOCTABLE)
 """
 @MixinResp struct Respiration{} <: AbstractRespiration end
 
@@ -45,6 +47,8 @@ Respiration with acclimatization parameters `k10f` and `tmove`.
 
 TODO test this. The formulation appears to need a variable `tmove`, 
 not a parameter.
+
+$(FIELDDOCTABLE)
 """
 @MixinResp struct AcclimatizedRespiration{pK,K} <: AbstractRespiration
 #   Field    | Default | Unit | Bonds       | Description

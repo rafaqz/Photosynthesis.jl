@@ -5,6 +5,8 @@
     TuzetStomatalConductanceSubModel(gamma, g1)
 
 Tuzet stomatal conductance formulation parameters. (modelgs = 5 in maestra)
+
+$(FIELDDOCTABLE)
 """
 @MixinBallBerryStomatalConductanceSubModel struct TuzetStomatalConductanceSubModel{} <: AbstractStomatalConductanceSubModel end
 
@@ -37,6 +39,8 @@ end
 Tuzet stomatal conductance model.
 
 This model is limited to using `TuzetStomatalConductance` and `TuzetSoilMethods`.
+
+$(FIELDDOCTABLE)
 """
 @MixinBallBerryStomatalConductance struct TuzetStomatalConductance{} <: AbstractBallBerryStomatalConductance end
 
@@ -50,6 +54,8 @@ end
     TuzetVars()
 
 Variables object for Tuzet models.
+
+$(FIELDDOCTABLE)
 """
 @MixinFvCBVars mutable struct TuzetVars{kPa,pkPa}
 #   Field       | Default | Units  | 
@@ -68,6 +74,8 @@ end
 Tuzet implementation of energy balance.
 Essentially just a wrapper that runs a standard FvCB energy balance, with Tuzet 
 stomatal conductance formulation and soil moisture routines in a root finder.
+
+$(FIELDDOCTABLE)
 """
 @default struct TuzetEnergyBalance{EB} <: AbstractFvCBEnergyBalance 
     energy_balance::EB | FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis(stomatal_conductance=TuzetStomatalConductance))

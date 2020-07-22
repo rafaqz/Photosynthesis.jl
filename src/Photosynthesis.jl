@@ -5,11 +5,13 @@ module Photosynthesis
     read(path, String)
 end Photosynthesis
 
-using Unitful,
+using DocStringExtensions,
       FieldDefaults,
+      FieldDocTables,
+      FieldMetadata,
       Mixers,
       SimpleRoots,
-      FieldMetadata
+      Unitful
 
 using Unitful: R, °C, K, Pa, kPa, MPa, J, W, kJ, kg, g, m, s, mol, mmol, μmol, σ
 
@@ -107,6 +109,11 @@ export AbstractEnergyBalance, AbstractFvCBEnergyBalance, FvCBEnergyBalance,
        EmaxEnergyBalance, TuzetEnergyBalance
 
 export BallBerryVars, EmaxVars, TuzetVars, JarvisVars
+
+
+const FIELDDOCTABLE = FieldDocTable((:Default, :Units, :Description),
+                                    (default, units, description);
+                                    truncation=(40, 40, 100))
 
 @chain columns @udefault_kw @units @bounds @description
 

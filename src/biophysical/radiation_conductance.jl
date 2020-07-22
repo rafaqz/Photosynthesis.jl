@@ -21,6 +21,8 @@ Returns the "radiation conductance" at given temperature.
 Formula from Ying-Ping"s version of Maestro.
 
 See also Jones (1992) p. 108.0
+
+$(FIELDDOCTABLE)
 """
 @columns struct WangRadiationConductance{T} <: AbstractRadiationConductance
     rdfipt::T | 1.0 | _ | (0.0, 2.0) | "Not documented in MAESPA"

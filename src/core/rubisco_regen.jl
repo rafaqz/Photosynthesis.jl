@@ -18,6 +18,8 @@ function rubisco_regeneration end
 Rubisco regeneration model. 
 
 TODO: specify origin of formulation
+
+$(FIELDDOCTABLE)
 """
 @columns struct RubiscoRegen{} <: AbstractRubiscoRegen
     theta::Float64 | 0.4    | _ | (0.0, 1.0) | "Shape parameter of the non-rectangular hyperbola"

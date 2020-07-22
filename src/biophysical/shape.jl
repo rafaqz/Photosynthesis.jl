@@ -34,6 +34,8 @@ end
 Return stomatal conductance value that switches to the minimum value `g0`
 using a hyperbolic curve, used for optimization to avoid discontinuity. 
 `hmshape` determines how smooth the transition is.
+
+$(FIELDDOCTABLE)
 """
 @columns struct HyperbolicMinimum <: StomatalConductanceShape
     hmshape::Float64 | 0.999 | _ | (0.9, 1.0) | _
