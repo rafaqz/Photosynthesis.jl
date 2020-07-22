@@ -92,10 +92,10 @@ end
     rubisco_compensation_point(BernacchiCompensation(), v.tleaf)
 
     # Flux
-    flux(Flux(), v)
-    flux(DukeFlux(), v)
-    flux(Flux(), v)
-    flux(DukeFlux(), v)
+    Photosynthesis.flux(Flux(), v)
+    Photosynthesis.flux(DukeFlux(), v)
+    Photosynthesis.flux(Flux(), v)
+    Photosynthesis.flux(DukeFlux(), v)
 
     # Respiration
     respiration(Respiration(), v.tleaf)
@@ -104,10 +104,10 @@ end
     rubisco_regeneration(RubiscoRegen(), v)
 
     # Stomatal conductance submodels
-    gsdiva(BallBerryStomatalConductanceSubModel(), BallBerryVars())
-    gsdiva(LeuningStomatalConductanceSubModel(), BallBerryVars())
-    gsdiva(MedlynStomatalConductanceSubModel(), BallBerryVars())
-    gsdiva(TuzetStomatalConductanceSubModel(), TuzetVars())
+    gs_div_a(BallBerryStomatalConductanceSubModel(), BallBerryVars())
+    gs_div_a(LeuningStomatalConductanceSubModel(), BallBerryVars())
+    gs_div_a(MedlynStomatalConductanceSubModel(), BallBerryVars())
+    gs_div_a(TuzetStomatalConductanceSubModel(), TuzetVars())
 
     # Stomatal conductance models
     stomatal_conductance!(v, BallBerryStomatalConductance(gs_submodel=BallBerryStomatalConductanceSubModel()))

@@ -1,5 +1,22 @@
+"""
+Evapotranspiration models, define an [`evapotranspiration`](@ref) method.
+"""
 abstract type AbstractEvapotranspiration end
 
+"""
+    evapotranspiration(f::AbstractEvapotranspiration, v)
+
+Calculate the rate of evapotranspiration in u"mol*m^-2*s^-1".
+
+Where v is a variables object.
+"""
+function evapotranspiration end
+
+"""
+    PenmanMonteithEvapotranspiration()
+
+Penman-Monteith evapotranspiration model
+"""
 struct PenmanMonteithEvapotranspiration <: AbstractEvapotranspiration end
 
 evapotranspiration(f::PenmanMonteithEvapotranspiration, v) =
@@ -7,6 +24,7 @@ evapotranspiration(f::PenmanMonteithEvapotranspiration, v) =
 
 """
     penman_monteith(pressure, slope, lhv, rnet, vpd, gh, gv)
+
 This subroutine calculates evapotranspiration by leaves using the Penman - Monteith equation.
 
 Inputs:
@@ -33,6 +51,8 @@ end
 
 
 """ 
+    slope(tair)
+
 Calculate vapour pressure change with temperature -
 Slope `s` for Penman-Monteith equation, in Pa K^-1
 

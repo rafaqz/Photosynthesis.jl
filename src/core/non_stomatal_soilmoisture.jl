@@ -1,10 +1,16 @@
 
+"""
+Models for non-stomatal dependence of of vcmax and jmax on soil water 
+potential. Calculated in [`non_stomatal_potential_dependence`](@ref).
+"""
 abstract type AbstractPotentialDependence end
 
 """
-    non_stomatal_potential_dependence (f::AbstractPotentialDependence, swp)
+    non_stomatal_potential_dependence(f::AbstractPotentialDependence, swp)
 
 Calculate dependence on soil water potential outside of stomatal effects.
+
+Returns a value between `0.0` and `1.0`
 """
 function non_stomatal_potential_dependence end
 
@@ -12,15 +18,12 @@ function non_stomatal_potential_dependence end
     NoPotentialDependence()
 
 Parameterless model where soil moisture has no non-stomatal effects.
+
+Simply returns `1`
 """
 struct NoPotentialDependence{} <: AbstractPotentialDependence end
 
-"""
-    non_stomatal_potential_dependence(f::NoPotentialDependence, swp)
-
-Simply returns 1.0
-"""
-non_stomatal_potential_dependence(f::NoPotentialDependence, swp) = kneunit(swp) / oneunit(swp)
+non_stomatal_potential_dependence(f::NoPotentialDependence, swp) = 1.0
 
 """
     LinearPotentialDependence(vpara, vparb)
@@ -33,11 +36,6 @@ jmax are set to zero, while at `vparb` fluxes are at their maximum rate.
     vparb::Pa | -100.0 | kPa | (0.0, -2000.0) | _
 end
 
-"""
-    non_stomatal_potential_dependence(f::LinearPotentialDependence, swp)
-
-Applies LinearPotentialDependence, returning a Float64
-"""
 non_stomatal_potential_dependence(f::LinearPotentialDependence, swp) =
     if soilwaterpotential < f.vpara
         zero(oneunit(f.vpara) / oneunit(f.vpara))
@@ -57,10 +55,5 @@ Parameters following Zhou, et al. Agricultural and Forest Meteorology, 2013.
     ψ::Ψ | -1.0 | MPa    | (-0.1, -4.0) | "The water potential at which f(Ψpd) decreases to half of its maximum value"
 end
 
-"""
-    non_stomatal_potential_dependence(f::ZhouPotentialDependence, swp)
-
-Zhou, et al. Agricultural and Forest Meteorology. 2013.0
-"""
 non_stomatal_potential_dependence(f::ZhouPotentialDependence, swp) =
     (1 + exp(f.s * f.ψ)) / (1 + exp(f.s * (f.ψ - swp)))

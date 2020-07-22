@@ -14,8 +14,9 @@ SimpleRoots = "6accb78c-d340-5052-9dc3-a835939e19d0"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "SafeTestsets"]
+test = ["Libdl", "SafeTestsets", "Test"]

@@ -1,5 +1,5 @@
 
-# Tuzet mplementation of stomatal conductance
+# Tuzet implementation of stomatal conductance ---------------------------------------
 
 """ 
     TuzetStomatalConductanceSubModel(gamma, g1)
@@ -8,12 +8,11 @@ Tuzet stomatal conductance formulation parameters. (modelgs = 5 in maestra)
 """
 @MixinBallBerryStomatalConductanceSubModel struct TuzetStomatalConductanceSubModel{} <: AbstractStomatalConductanceSubModel end
 
-"""
-    gsdiva(::TuzetStomatalConductance, v) """
-gsdiva(f::TuzetStomatalConductanceSubModel, v) = (f.g1 / (v.cs - f.gamma)) * fpsil(v.psilin, v.sf, v.psiv)
+gs_div_a(f::TuzetStomatalConductanceSubModel, v) = (f.g1 / (v.cs - f.gamma)) * fpsil(v.psilin, v.sf, v.psiv)
 
 """
     fpsil(psil, sf, psiv)
+
 Tuzet et al. 2003 leaf water potential function
 """
 fpsil(psil, sf, psiv) = (1 + exp(sf * psiv)) / (1 + exp(sf * (psiv - psil)))
@@ -21,18 +20,16 @@ fpsil(psil, sf, psiv) = (1 + exp(sf * psiv)) / (1 + exp(sf * (psiv - psil)))
 
 # Tuzet mplementation of soil method
 
-# @MixinMaespaSoil struct TuzetSoilMethod{} <: AbstractSoilMethod end
+@default_kw struct TuzetSoilMethod{T,NS} <: AbstractSoilMethod
+    soilmethod::T    | ConstantSoilMethod()
+    potentialdependence_model::NS | ZhouPotentialDependence()
+end
 
+# TODO: Fix this
 # soilmoisture_conductance!(v, f::TuzetSoilMethod) = begin
     # What is this from? v.psif = (1 + exp(v.sf * v.psiv)) / (1 + exp(v.sf * (v.psiv - v.psil)))
-    # pd = non_stomatal_potential_dependence(f.non_stomatal, v.weightedswp)
-    # v.vcmax *= pd
-    # v.jmax *= pd
+    # non_stomatal_potential_dependence(f.potentialdependence_model, v.weightedswp)
 # end
-
-
-
-# Implementation of photosynthesis
 
 """
     TuzetStomatalConductance(gs_submodel, soilmethod)
@@ -43,11 +40,17 @@ This model is limited to using `TuzetStomatalConductance` and `TuzetSoilMethods`
 """
 @MixinBallBerryStomatalConductance struct TuzetStomatalConductance{} <: AbstractBallBerryStomatalConductance end
 
+# Change defaults for gs_submodel and soilmethod
 @default TuzetStomatalConductance begin
     gs_submodel | TuzetStomatalConductanceSubModel()
     soilmethod  | TuzetSoilMethod()
 end
 
+"""
+    TuzetVars()
+
+Variables object for Tuzet models.
+"""
 @MixinFvCBVars mutable struct TuzetVars{kPa,pkPa}
 #   Field       | Default | Units  | 
     psilin::kPa | -999.0  | kPa    | _
@@ -56,10 +59,11 @@ end
 end
 
 
+# Tuzet implementation of energy balance ---------------------------------------------
 
 """
     TuzetEnergyBalance(energy_balance)
-    TuzetEnergyBalance(; energy_balance=)
+    TuzetEnergyBalance(; energy_balance)
 
 Tuzet implementation of energy balance.
 Essentially just a wrapper that runs a standard FvCB energy balance, with Tuzet 
@@ -87,8 +91,8 @@ end
 """
     leaf_water_potential_finder(p, v, psilin)
 
-PSIL finder. A wrapper function that
-return the squared difference in PSILIN and PSIL
+PSIL finder. A wrapper function for the energy balance that returns the squared 
+difference in PSILIN and PSIL, for use in a root finder.
 """
 function leaf_water_potential_finder(p, v, psilin)
     v.ci = zero(v.ci)

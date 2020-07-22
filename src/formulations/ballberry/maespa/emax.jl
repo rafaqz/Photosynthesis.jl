@@ -1,5 +1,9 @@
-# Emax implementation of soil method
-@udefault_kw struct EmaxSoilMethod{T,NS} <: AbstractSoilMethod 
+"""
+    EmaxSoilMethod(soilmethod, non_stomatal)
+
+Emax implementation of soil method
+"""
+@default_kw struct EmaxSoilMethod{T,NS} <: AbstractSoilMethod 
     soilmethod::T    | ConstantSoilMethod()
     non_stomatal::NS | ZhouPotentialDependence()
 end
@@ -11,37 +15,27 @@ soilmoisture_conductance!(v, m::EmaxSoilMethod) = begin
     oneunit(v.fsoil)
 end
 
-# Emax implementation of stomatal conductance
-abstract type AbstractEmaxStomatalConductance <: AbstractBallBerryStomatalConductance end
-
 """
-Emax photosynthesis inherited from Maespa.
+    EmaxStomatalConductance(BallBerryStomatalConductance(gsshape, g0, gs_submodel, soil_model)
+
 The same options are available for specialised stomatal conducance,
 but using emax soil water methods.
 """
-@MixinBallBerryStomatalConductance struct EmaxStomatalConductance{SH} <: AbstractEmaxStomatalConductance 
+@MixinBallBerryStomatalConductance struct EmaxStomatalConductance{SH} <: AbstractBallBerryStomatalConductance 
     gsshape::SH    | HardMinimum() | _  | _ | _
 end
 
-gsshape(m::AbstractEmaxStomatalConductance) = m.gsshape
+gsshape(m::EmaxStomatalConductance) = m.gsshape
 
 struct JarvisMode <: AbstractJarvisStomatalConductance end
 
-
-@MixinFvCBVars mutable struct EmaxVars{M,EL,KT,P}
-    minleafwp::M   | 0.1         | kPa                   | _
-    emaxleaf::EL   | 400.0       | mmol*m^-2*s^-1        | _
-    ktot::KT       | 2.0         | mmol*m^-2*s^-1*MPa^-1 | _
-    psil::P        | -111.0      | kPa                   | _
-end
-
-
 """
-    stomatal_conductance!(v, f::AbstractEmaxStomatalConductance)
-Stomatal conductance calculations for the Jarvis model
+    stomatal_conductance!(v, f::EmaxStomatalConductance)
+
+Stomatal conductance calculations for the Emax model
 """
-function stomatal_conductance!(v, m::AbstractEmaxStomatalConductance)
-    v.gsdiva = gsdiva(gs_submodel(m), v)
+function stomatal_conductance!(v, m::EmaxStomatalConductance)
+    v.gs_div_a = gs_div_a(gs_submodel(m), v)
 
     # Maximum transpiration rate
     emaxleaf = v.ktot * (v.swp - v.minleafwp)
@@ -73,9 +67,25 @@ function stomatal_conductance!(v, m::AbstractEmaxStomatalConductance)
 end
 
 
-abstract type AbstractEmaxEnergyBalance <: AbstractFvCBEnergyBalance end
+"""
+    EmaxVars()
 
-@columns struct EmaxEnergyBalance{EB,SR,PK} <: AbstractEmaxEnergyBalance 
+Varbles for Emax models
+"""
+@MixinFvCBVars mutable struct EmaxVars{M,EL,KT,P}
+    minleafwp::M   | 0.1         | kPa                   | _
+    emaxleaf::EL   | 400.0       | mmol*m^-2*s^-1        | _
+    ktot::KT       | 2.0         | mmol*m^-2*s^-1*MPa^-1 | _
+    psil::P        | -111.0      | kPa                   | _
+end
+
+
+"""
+EmaxEnergyBalance(energy_balance_model, totsoilres, plantk)
+
+Wrapper to FvCBEnergyBalance model, adding `totsoilres` and `plantk` parameters.
+"""
+@columns struct EmaxEnergyBalance{EB,SR,PK} <: AbstractFvCBEnergyBalance 
     energy_balance_model::EB | FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis(
                                                stomatal_conductance=EmaxStomatalConductance(
                                                    soilmethod=EmaxSoilMethod()))) | _ | _ | _
@@ -83,11 +93,11 @@ abstract type AbstractEmaxEnergyBalance <: AbstractFvCBEnergyBalance end
     plantk::PK               | 3.0  | mmol*m^-2*s^-1*MPa^-1 | (0.0, 10.0) | _
 end
 
-energy_balance_model(m::AbstractEmaxEnergyBalance) = m.energy_balance_model
-totsoilres(m::AbstractEmaxEnergyBalance) = m.totsoilres
-plantk(m::AbstractEmaxEnergyBalance) = m.plantk
+energy_balance_model(m::EmaxEnergyBalance) = m.energy_balance_model
+totsoilres(m::EmaxEnergyBalance) = m.totsoilres
+plantk(m::EmaxEnergyBalance) = m.plantk
 
-enbal!(v, m::AbstractEmaxEnergyBalance) = begin
+enbal!(v, m::EmaxEnergyBalance) = begin
     v.ktot = 10 / (totsoilres(m) + 1.0 / plantk(m))
     enbal!(v, energy_balance_model(m))
 end

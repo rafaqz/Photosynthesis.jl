@@ -1,10 +1,13 @@
 """
 Stomatal conductance submodels.
-Formaulations are often identical to Ball-Berry, with changes only to this submodel.
+
+Many stomatal conductance formulations are identical to Ball-Berry, 
+with changes only to this submodel.
 """
 abstract type AbstractBallBerryStomatalConductanceSubModel <: AbstractStomatalConductanceSubModel end
 
-" @ mixin macro adds stomatal conductance fields to a struct"
+
+# mixin macro that adds stomatal conductance fields to a struct
 @mix @columns struct MixinBallBerryStomatalConductanceSubModel{μMoMo,F}
     gamma::μMoMo    | 0.0    | μmol*mol^-1  | (0.0, 10.0) | "Gamma for all Ball-Berry type models"
     g1::F           | 7.0    | _            | (0.0, 10.0) | "Slope parameter"
@@ -25,7 +28,7 @@ which are also used for all Ball-Berry type models.
 """
 @MixinBallBerryStomatalConductanceSubModel struct BallBerryStomatalConductanceSubModel{} <: AbstractStomatalConductanceSubModel end
 
-gsdiva(m::BallBerryStomatalConductanceSubModel, v) = g1(m) * v.rh / (v.cs - gamma(m))
+gs_div_a(m::BallBerryStomatalConductanceSubModel, v) = g1(m) * v.rh / (v.cs - gamma(m))
 
 
 """
@@ -34,9 +37,7 @@ Most other models inherit fields and behaviours from this.
 """
 abstract type AbstractBallBerryStomatalConductance <: AbstractStomatalConductance end
 
-"""
-Mixin fields for objects inheriting AbstractBallBerryStomatalConductance
-"""
+# Mixin fields for objects inheriting AbstractBallBerryStomatalConductance
 @mix @columns struct MixinBallBerryStomatalConductance{MoM2S,GS,SM}
     g0::MoM2S       | 0.03                                   | mol*m^-2*s^-1 | (0.0, 0.2) | "Stomatal leakiness (gs when photosynthesis is zero)"
     gs_submodel::GS | BallBerryStomatalConductanceSubModel() | _             | _          | _
@@ -46,11 +47,6 @@ end
 g0(m::AbstractBallBerryStomatalConductance) = m.g0
 gs_submodel(m::AbstractBallBerryStomatalConductance) = m.gs_submodel
 soil_model(m::AbstractBallBerryStomatalConductance) = m.soil_model
-
-update_extremes!(v, m::AbstractBallBerryStomatalConductance) = begin
-    v.aleaf = -v.rd
-    v.gs = g0(m)
-end
 
 
 """
@@ -63,7 +59,7 @@ Simple Ball-Berry stomatal conductance model.
 """
     BallBerryVars(tair, windspeed, par, rnet, soilmoist, pressure, tleaf, swp, swpshade, vpd, ca, rh,
                   cs, vpdleaf, rhleaf, fheat, gbhu, gbhf, gh, gbh, gv, gradn, lhv, et, slope, decoup,
-                  gsdiva, km, ci, gammastar, gs, gsv, gbv, jmax, vcmax, rd, ac, aleaf, vj, aj, fsoil)
+                  gs_div_a, km, ci, gammastar, gs, gsv, gbv, jmax, vcmax, rd, ac, aleaf, vj, aj, fsoil)
 
 Variables for Ball-Berry stomatal conductance models.
 """
@@ -74,52 +70,60 @@ Variables for Ball-Berry stomatal conductance models.
     stomatal_conductance!(v, m::AbstractBallBerryStomatalConductance)
 
 Stomatal conductance calculations.
+
+Returns a tuple of leaf assimilation and stomatal conductance 
+`(aleaf, gs)` in `u"μmol*m^-2*s^-1" and `u"mol*m^-2*s^-1"`
 """
 function stomatal_conductance!(v, m::AbstractBallBerryStomatalConductance)
     v.fsoil = soilmoisture_conductance(soil_model(m), v)
-    v.gsdiva = gsdiva(gs_submodel(m), v) * v.fsoil
+    v.gs_div_a = gs_div_a(gs_submodel(m), v) * v.fsoil
 
-    ac = rubisco_limited_rate(m, v, v.gsdiva)
-    aj = transport_limited_rate(m, v, v.gsdiva)
+    ac = rubisco_limited_rate(m, v, v.gs_div_a)
+    aj = transport_limited_rate(m, v, v.gs_div_a)
 
     aleaf = min(ac, aj) - v.rd
-    gs = max(g0(m) + v.gsdiva * aleaf, g0(m))
+    gs = max(g0(m) + v.gs_div_a * aleaf, g0(m))
 
-    aleaf, gs
+    return aleaf, gs
 end
 
 """
-    rubisco_limited_rate(m::AbstractBallBerryStomatalConductance, v, gsdiva)
+    rubisco_limited_rate(m::AbstractBallBerryStomatalConductance, v, gs_div_a)
 
-Solution when Rubisco activity is limiting for all Ball-Berry models
+Solution for assimilation when Rubisco activity is limiting, for all Ball-Berry models
+
+Returns assimilation rate in `u"μmol*m^-2*s^-1"`
 """
-function rubisco_limited_rate(m::AbstractBallBerryStomatalConductance, v, gsdiva)
-    a = g0(m) + gsdiva * (v.vcmax - v.rd)
-    b = (1.0 - v.cs * gsdiva) * (v.vcmax - v.rd) + g0(m) * (v.km - v.cs) -
-        gsdiva * (v.vcmax * v.gammastar + v.km * v.rd)
-    c = -(1.0 - v.cs * gsdiva) * (v.vcmax * v.gammastar + v.km * v.rd) -
+function rubisco_limited_rate(m::AbstractBallBerryStomatalConductance, v, gs_div_a)
+    a = g0(m) + gs_div_a * (v.vcmax - v.rd)
+    b = (1.0 - v.cs * gs_div_a) * (v.vcmax - v.rd) + g0(m) * (v.km - v.cs) -
+        gs_div_a * (v.vcmax * v.gammastar + v.km * v.rd)
+    c = -(1.0 - v.cs * gs_div_a) * (v.vcmax * v.gammastar + v.km * v.rd) -
         g0(m) * v.km * v.cs
     cic = quad(Upper(), a, b, c)
 
-    if (cic <= zero(cic)) || (cic > v.cs)
-        ac = zero(v.vcmax)
+    ac = if (cic <= zero(cic)) || (cic > v.cs)
+        zero(v.vcmax)
     else
-        ac = v.vcmax * (cic - v.gammastar) / (cic + v.km)
+        v.vcmax * (cic - v.gammastar) / (cic + v.km)
     end
-    ac
+    return ac
 end
 
 
 """
-    transport_limited_rate(m::AbstractBallBerryStomatalConductance, v, gsdiva)
+    transport_limited_rate(m::AbstractBallBerryStomatalConductance, v, gs_div_a)
 
-Solution for when electron transport rate is limiting for all Ball-Berry type models
+Solution for assimilation rate when electron transport rate is limiting, 
+for all Ball-Berry type models.
+
+Returns assimilation rate in `u"μmol*m^-2*s^-1"`
 """
-function transport_limited_rate(m::AbstractBallBerryStomatalConductance, v, gsdiva)
-    a = g0(m) + gsdiva * (v.vj - v.rd)
-    b = (1 - v.cs * gsdiva) * (v.vj - v.rd) + g0(m) * (2v.gammastar - v.cs) -
-        gsdiva * (v.vj * v.gammastar + 2v.gammastar * v.rd)
-    c = -(1 - v.cs * gsdiva) * v.gammastar * (v.vj + 2v.rd) - g0(m) * 2v.gammastar * v.cs
+function transport_limited_rate(m::AbstractBallBerryStomatalConductance, v, gs_div_a)
+    a = g0(m) + gs_div_a * (v.vj - v.rd)
+    b = (1 - v.cs * gs_div_a) * (v.vj - v.rd) + g0(m) * (2v.gammastar - v.cs) -
+        gs_div_a * (v.vj * v.gammastar + 2v.gammastar * v.rd)
+    c = -(1 - v.cs * gs_div_a) * v.gammastar * (v.vj + 2v.rd) - g0(m) * 2v.gammastar * v.cs
     cij = quad(Upper(), a, b, c)
     aj = v.vj * (cij - v.gammastar) / (cij + 2v.gammastar)
 
@@ -127,6 +131,5 @@ function transport_limited_rate(m::AbstractBallBerryStomatalConductance, v, gsdi
         cij = v.cs
         aj = v.vj * (cij - v.gammastar) / (cij + 2v.gammastar)
     end
-
-    aj
+    return aj
 end

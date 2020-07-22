@@ -10,4 +10,5 @@ model for C3 plants. Plant, Celt and Environment (1995) 18, 339-355
     d0l::Pa    | 1500.0 | Pa | (0.0, 2000.0) | _
 end
 
-gsdiva(f::LeuningStomatalConductanceSubModel, v) = f.g1 / ( v.cs - f.gamma) / (1.0 + v.vpdleaf / f.d0l)
+gs_div_a(f::LeuningStomatalConductanceSubModel, v) = 
+    f.g1 / ( v.cs - f.gamma) / (1.0 + v.vpdleaf / f.d0l)

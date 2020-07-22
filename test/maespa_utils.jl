@@ -1,6 +1,7 @@
+using Photosynthesis
 using Photosynthesis: quad, Lower, Upper
 
-include("shared.jl")
+include(joinpath(dirname(pathof(Photosynthesis)), "../test/shared.jl"))
 
 # Quadratic solvers
 # quadm: quad

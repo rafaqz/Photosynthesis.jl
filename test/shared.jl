@@ -1,5 +1,7 @@
 using Photosynthesis, Unitful, Test, Libdl
 
+using Unitful: °C, K
+
 const BALLBERRY_GS = 2
 const LEUNING_GS = 3
 const MEDLYN_GS = 4

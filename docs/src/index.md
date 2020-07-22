@@ -1,140 +1,189 @@
 
-# Photosynthesis
-
-A Farquhar-von-Cammerer-Berry (FvCB) photosynthesis model.
-
-This module at its core is a rewrite of the Maespa/Maestra models in Julia. It
-has been written to have a modular structure that can be easily modified or added
-to at any level. It is also designed to itself be a component of larger
-model.
-
-It aims to provide a comprehensive yet minimalist set of photosynthesis and leaf
-energy balance models, eventually including as many as possible published
-photosynthesis formulations: but nothing else. Growth models, 3D canopy models,
-nutrient uptake etc. should be supplied from another package. The code for these
-from Masepas/Maestra has *intentionally* not been included to improve modularity
-and reduce complexity.
-
-Only parameters that are actually used must be specified, and all
-parameters have sensible defaults.
-
-Photosynthesis.jl uses a hierarchical structure of parameters that are composed
-of modular pieces of functionality. They contain the variables the formulation
-requires and also are dispatched to the methods specified for the formulation.
-
-All sub-model choices are specified by selecting sub-model types, not `if`
-blocks as is common in older models. This means that the set of used parameters
-and functions is always known to the compiler, which may allow more automation
-of sensitivity analysis and parameter estimation.
-
-## Main photosynthesis routines
-
-These are the main functions that run overall photosynthesis processes.
-
 ```@docs
-photosynthesis!
-phototranspiration!
-run_phototrans!
-```
-
-## Specific functions
-
-Any of these functions can be overridden for a specific parameter types.
-
-```@docs
-stomatal_conductance!
-calc_km
-rubisco_compensation
-calc_slope
-calc_jmax
-calc_vcmax
-gsdiva
-cmolar
-respiration
-evapotranspiration
-penman_monteith
-soil_induced_conductance
-factor_conductance
-radiation_conductance
-boundary_conductance_free
-boundary_conductance_forced
-co2_compensation
-rubusico_compenstion
-saturated_vapour_pressure
+Photosynthesis
 ```
 
 
-## Type Hierarchy
-
-### Main parameters
+## Energy balance model
 
 ```@docs
-PhotoParams
-PhotoVars
+Photosynthesis.AbstractEnergyBalance
+Photosynthesis.AbstractFvCBEnergyBalance
+FvCBEnergyBalance
+enbal!
+Photosynthesis.enbal_init!
+Photosynthesis.enbal_update!
 ```
 
-### Model selection
+### Model variables
 
 ```@docs
-FvCBPhoto
-AbstractPhotoModel
-AbstractBallBerryModel
-AbstractMaespaModel
-BallBerryModel
-TuzetModel
-EmaxModel
-JarvisModel
+BallBerryVars
 ```
 
-### CO2 and Rubisco Compensation
+## Biophysical components
 
 ```@docs
-AbstractCompensation
-BadgerCollatzCompensation
-BernacchiCompensation
+Photosynthesis.saturated_vapour_pressure
+Photosynthesis.vapour_pressure_deficit
+Photosynthesis.latent_heat_water_vapour
+Photosynthesis.penman_monteith
+Photosynthesis.arrhenius
+Photosynthesis.leaftemp
 ```
 
-### Stomatal conductance
+### Boundary conductance
 
 ```@docs
-AbstractStomatalConductance
-BallBerryStomatalConductance
-LeuningStomatalConductance
-MedlynStomatalConductance
-ThreeParStomatalConductance
-TuzetStomatalConductance
-```
-
-### Photosynthesis
-
-```@docs
-AbstractJmax
-AbstractVcmax
-AbstractVcJmax
-Jmax
-NoOptimumVcmax
-OptimumVcmax
-VcJmax
-DukeVcJmax
-AbstractRubiscoRegen
-RubiscoRegen
-AbstractRespiration
-Respiration
-AbstractRadiationConductance
-WangRadiationConductance
 AbstractBoundaryConductance
 BoundaryConductance
+Photosynthesis.boundary_conductance_free
+Photosynthesis.boundary_conductance_forced
+Photosynthesis.vapour_conductance! 
+Photosynthesis.grashof_number
+Photosynthesis.cmolar
+Photosynthesis.free_boundary_conductance
+Photosynthesis.forced_boundary_conductance
 ```
 
-### Decoupling
+### Canopy-atmosphere decoupling
 
 ```@docs
 AbstractDecoupling
 McNaughtonJarvisDecoupling
 NoDecoupling
+Photosynthesis.decoupling
 ```
 
-### Soil water 
+### Evapotranspiration
+
+```@docs
+AbstractEvapotranspiration 
+PenmanMonteithEvapotranspiration
+Photosynthesis.evapotranspiration
+Photosynthesis.penman_monteith(ρa, Δ, lhv, Rn, Da, gh, gv)
+Photosynthesis.slope
+```
+
+### Radiation conductance
+
+```@docs
+AbstractRadiationConductance
+WangRadiationConductance
+radiation_conductance
+wang_radiation_conductance
+```
+
+## Photosynthesis model
+
+```@docs
+AbstractPhotosynthesis
+AbstractFvCBPhotosynthesis
+FvCBPhotosynthesis
+photosynthesis!
+```
+
+### CO2 and Rubisco Compensation
+
+```@docs
+Compensation
+BadgerCollatzCompensation
+BernacchiCompensation
+Photosynthesis.co2_compensation_point
+Photosynthesis.rubisco_compensation_point
+```
+
+### Flux
+
+```@docs
+AbstractFlux
+Flux
+DukeFlux
+PotentialModifiedFlux
+Photosynthesis.flux
+```
+
+#### Electron transport rate
+
+```@docs
+AbstractJmax
+Jmax
+Photosynthesis.max_electron_transport_rate
+```
+
+### Rubisco activity 
+
+```@docs
+AbstractVcmax
+OptimumVcmax
+NoOptimumVcmax
+Photosynthesis.max_rubisco_activity
+```
+
+### Rubisco regeneration 
+
+```@docs
+AbstractRubiscoRegen
+RubiscoRegen
+Photosynthesis.rubisco_regeneration
+```
+
+### Respiration
+
+```@docs
+AbstractRespiration
+Respiration
+AcclimatizedRespiration
+Photosynthesis.respiration
+```
+
+### Non-stomatal soil water-potential dependence 
+
+```@docs
+AbstractPotentialDependence
+LinearPotentialDependence
+ZhouPotentialDependence
+NoPotentialDependence
+Photosynthesis.non_stomatal_potential_dependence
+```
+
+## Stomatal conductance models
+
+```@docs
+AbstractStomatalConductance
+AbstractBallBerryStomatalConductance
+BallBerryStomatalConductance
+Photosynthesis.stomatal_conductance!
+Photosynthesis.rubisco_limited_rate
+Photosynthesis.transport_limited_rate
+Photosynthesis.gs_init!
+Photosynthesis.gs_update!
+Photosynthesis.check_extremes!
+Photosynthesis.update_extremes!
+```
+
+### Stomatal conductance sub-models
+
+```@docs
+AbstractStomatalConductanceSubModel
+AbstractBallBerryStomatalConductanceSubModel
+BallBerryStomatalConductanceSubModel
+LeuningStomatalConductanceSubModel
+MedlynStomatalConductanceSubModel
+Photosynthesis.gs_div_a
+```
+
+### Stomatal conductance shape 
+
+```@docs
+StomatalConductanceShape 
+HardMinimum 
+HyperbolicMinimum
+Photosynthesis.shape_gs
+```
+
+
+### Stomatal soil water dependence
 
 ```@docs
 AbstractSoilMethod
@@ -142,13 +191,14 @@ VolumetricSoilMethod
 ConstantSoilMethod
 DeficitSoilMethod
 PotentialSoilMethod
-EmaxSoilMethod
-TuzetSoilMethod
+NoSoilMethod
+Photosynthesis.soilmoisture_conductance
 ```
 
-### Soil Data
+#### Soil Data
 
-Kinds of soil water data available.
+Kinds of soil water data used in [`DeficitSoilMethod`](@ref) and
+[`VolumetricSoilMethod`](@ref).
 
 ```@docs
 AbstractSoilData
@@ -157,33 +207,53 @@ AbstractContentSoilData
 DeficitSoilData
 ContentSoilData
 SimulatedSoilData
-PotentialSoilData
-NoSoilData
 ```
 
-### Dependence 
-
-Dependence of vcmax and jmax on soil moisture. This is used in the Emax and
-Tuzet models with the [`vjmax_water`](@ref) function.
+## EMAX Model
 
 ```@docs
-AbstractPotentialDependence
-LinearPotentialDependence
-ZhouPotentialDependence
-NoPotentialDependence
+EmaxEnergyBalance
+EmaxStomatalConductance
+EmaxSoilMethod
+EmaxVars
 ```
 
-### Jarvis Model
+## Tuzet Model
 
 ```@docs
+TuzetEnergyBalance
+TuzetStomatalConductance
+TuzetStomatalConductanceSubModel
+TuzetVars
+Photosynthesis.leaf_water_potential_finder
+Photosynthesis.fpsil
+```
+
+## Jarvis Model
+
+```@docs
+JarvisStomatalConductance
+Photosynthesis.factor_conductance
+AbstractJarvisLight
+JarvisLight
+Photosynthesis.light_factor
+
+AbstractJarvisTemp
+JarvisNoTemp
+JarvisTemp1
+JarvisTemp2
+Photosynthesis.temp_factor
+
 AbstractJarvisCO2
 JarvisNoCO2
 JarvisLinearCO2
 JarvisNonlinearCO2
+Photosynthesis.co2_factor
+
 AbstractJarvisVPD
 JarvisHyperbolicVPD
 JarvisLohammerVPD
 JarvisFractionDeficitVPD
 JarvisLinearDeclineVPD
+Photosynthesis.vpd_factor
 ```
-

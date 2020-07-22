@@ -1,13 +1,14 @@
-using Unitful: °C, K
-using Photosynthesis: fluxparams
-#include("shared.jl")
+using Photosynthesis
+using Photosynthesis: flux_model
+
+include(joinpath(dirname(pathof(Photosynthesis)), "../test/shared.jl"))
 
 function run_fortran_enbal(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata, vfun)
     tzvars = TuzetVars()
     emaxvars = EmaxVars()
     ph = p.photosynthesis_model
     sc = ph.stomatal_conductance_model
-    vcj = fluxparams(ph.flux_model)
+    vcj = flux_model(ph.flux_model)
     vc = vcj.vcmaxformulation
     j = vcj.jmaxformulation
     gk = 0.0
@@ -58,7 +59,7 @@ function run_fortran_enbal(p, v, ieco, ismaespa, modelgs, wsoilmethod, soildata,
     dayresp =  ph.respiration_model.dayresp
     tbelow =   ustrip(ph.respiration_model.tbelow |> °C)
     gsref =    JarvisStomatalConductance().gsref.val
-    gsmin =    JarvisStomatalConductance().gsmin.val
+    gsmin =    JarvisStomatalConductance().g0.val
     i0 =       JarvisLight().i0.val
     d0 =       JarvisLinearDeclineVPD().d0.val
     vk1 =      JarvisHyperbolicVPD().vk1

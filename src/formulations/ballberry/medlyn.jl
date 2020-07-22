@@ -11,7 +11,5 @@ Has the extra `vpdmin` paramater in Pa.
     gk::F      | 0.3    | _   | _ | _
 end
 
-"""
-    gsdiva(::MedlynStomatalConductance, v) """
-gsdiva(f::MedlynStomatalConductanceSubModel, v) =
+gs_div_a(f::MedlynStomatalConductanceSubModel, v) =
     (oneunit(f.g1) + f.g1) / (max(f.vpdmin, v.vpdleaf)/kPa)^(1 - f.gk) / v.cs

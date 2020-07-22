@@ -9,6 +9,8 @@ const CPAIR = 1010.0J*kg^-1*K^-1  # heat capacity of air (J kg-1 K-1)
 const EMLEAF = 0.95       # Emissivity of thermal radiation by leaf TODO: should not be constant, and is often higher
 const H2OLV0 = 2.501e6J*kg^-1    # latent heat H2O (J/kg)
 const H2OMW = 18.0e-3kg*mol^-1# mol mass H2O (kg/mol)
+const DHEAT = 21.5e-6m^2*s^-1 # molecular diffusivity for heat
+
 
 # Values of physical constants
 # const DEFWIND = 2.5m*s^-1       # Default wind speed (m s-1)

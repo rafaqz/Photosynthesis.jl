@@ -4,21 +4,15 @@ Abstract supertype for all photosynthesis models
 abstract type AbstractPhotosynthesis end
 
 """
-    photosynthesis!(params::AbstractPhotosynthesis, vars)
+    photosynthesis!(vars, params::AbstractPhotosynthesis)
 
-Run a photosynthesis model.
+Run a photosynthesis model, writing results to `vars`.
 """
 function photosynthesis! end
 
 """
-    photo_init!(vars, params::AbstractStomatalConductance)
+    check_extremes!(v, p::AbstractFvCBPhotosynthesis)
 
-Initialise variables based on AbstractStomatalConductance model. 
+Check extreme values are in tolerable ranges
 """
-function photo_init! end
-
-function photo_update! end 
-
 function check_extremes! end
-
-function update_extremes! end

@@ -1,6 +1,4 @@
 
-# Abstract/mixin implementation of FvCB photosynthesis
-
 """
 Abstract supertype for all Farquhar/von Caemmerer/Berry derived photosynthesis models
 """
@@ -19,6 +17,9 @@ stomatal_conductance_model(p::AbstractFvCBPhotosynthesis) = p.stomatal_conductan
 General Farquhar von Caemmerer Berry model of photosynthesis. Organised as a modular
 components of electron flux, CO2 and rubusco compensation, rubisco regeneration, 
 respiration and stomatal conductance.
+
+Calculates photosynthesis according to the ECOCRAFT
+agreed formulation of the Farquharvon Caemmerer (1982) equations.
 
 Farquhar, G.D., S. Caemmerer and J.A. Berry. 1980.
 A biochemical model of photosynthetic CO2 assimilation in leaves of C3 species.
@@ -40,16 +41,11 @@ check_extremes!(v, p::AbstractFvCBPhotosynthesis) = begin
     false
 end
 
-"""
-    photosynthesis!(p::AbstractFvCBPhotosynthesis, v)
+update_extremes!(v, m::AbstractStomatalConductance) = begin
+    v.aleaf = -v.rd
+    v.gs = g0(m)
+end
 
-Calculates photosynthesis according to the ECOCRAFT
-agreed formulation of the Farquharvon Caemmerer (1982) equations.
-
-Farquhar, G.D., S. Caemmerer and J.A. Berry. 1980.
-A biochemical model of photosynthetic CO2 assimilation in leaves of C3 species.
-Planta. 149:78-90.
-"""
 function photosynthesis!(v, p::AbstractFvCBPhotosynthesis)
     v.gammastar = co2_compensation_point(compensation_model(p), v.tleaf) # CO2 compensation point, umol mol-1
     v.km = rubisco_compensation_point(compensation_model(p), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
@@ -69,8 +65,7 @@ end
 
 
 """
-Energy balance model based on genral FvCB photosynthesis, 
-derived from Maespa/Maestra models.
+Energy balance models based on genral FvCB photosynthesis, derived from Maespa/Maestra models.
 """
 abstract type AbstractFvCBEnergyBalance <: AbstractEnergyBalance end
 
@@ -113,12 +108,6 @@ evapotranspiration_model(p::AbstractFvCBEnergyBalance) = p.evapotranspiration_mo
 photosynthesis_model(p::AbstractFvCBEnergyBalance) = p.photosynthesis_model
 max_itererations(p::AbstractFvCBEnergyBalance) = p.max_itererations
 
-
-"""
-    enbal!(v, p::AbstractFvCBEnergyBalance)
-
-Photosynthesis is run iteratively until energy balance stabilisies.
-"""
 function enbal!(v, p::AbstractFvCBEnergyBalance)
 
     # Initialise to ambient conditions
@@ -167,6 +156,11 @@ function enbal!(v, p::AbstractFvCBEnergyBalance)
     tleaf
 end
 
+"""
+    @MixinEnviroVars
+
+Mixin variables for [`FvCBEnergyBalance`](@ref) variables objects.
+"""
 @MixinEnviroVars @mix struct MixinFvCBVars{μMoMo,kPa,F,WM2,MMoPaJS,μMoM2S,JMo,PaK,MoM2S,MoμMo,μMoMo}
     # shared
     cs::μMoMo        | 400.0       | μmol*mol^-1           | _
@@ -185,7 +179,7 @@ end
     slope::PaK       | 0.0         | Pa*K^-1               | _
     decoup::F        | 0.0         | _                     | _
     # photosynthesis
-    gsdiva::MoμMo    | 0.0         | mol*μmol^-1           | _
+    gs_div_a::MoμMo  | 0.0         | mol*μmol^-1           | _
     km::μMoMo        | 0.0         | μmol*mol^-1           | _
     ci::μMoMo        | 0.0         | μmol*mol^-1           | _
     gammastar::μMoMo | 0.0         | μmol*mol^-1           | _

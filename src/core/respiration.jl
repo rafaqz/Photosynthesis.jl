@@ -1,6 +1,16 @@
+
+"""
+Respiration models, run in a [`respiration`](@ref) method.
+"""
 abstract type AbstractRespiration end
 
-function respiration! end
+""" 
+    respiration(f::Union{Nothing,Respiration}, tleaf)
+
+Respiration for formulation `f` at temperature `tleaf` in `u"K"`.
+Returns respiration in `u"μmol*m^-2*s^-1"`.
+"""
+function respiration end
 
 @mix @columns struct MixinResp{pK,K,F,μMoM2S}
 #   Field       | Default | Unit           | Bonds          | Description
@@ -11,21 +21,19 @@ function respiration! end
     tref::K     | 298.15  | K              | (250.0, 350.0) | "Reference temperature at which rd0 was measured"
 end
 
-respiration(f::Nothing, tleaf) = zero(rd) 
+respiration(f::Nothing, tleaf) = 0.0μmol*m^-2*s^-1
 
 """
     Respiration(q10f, dayresp, rd0, tbelow, tref)
 
-Standard respiration model
+Standard respiration model.
+Calculates respiration from temperature using a Q10 (exponential) formulation 
+
+TODO: specify origin of formulation
 """
 @MixinResp struct Respiration{} <: AbstractRespiration end
 
-""" 
-    respiration(f::Respiration, tleaf)
-
-Calculates respiration from temperature using a Q10 (exponential) formulation 
-"""
-function respiration(f::Respiration, tleaf)
+respiration(f::Respiration, tleaf) = begin
     tleaf < f.tbelow && return zero(f.rd0)
     f.rd0 * exp(f.q10f * (tleaf - f.tref)) * f.dayresp
 end
@@ -33,7 +41,10 @@ end
 """
     AcclimatizedRespiration(k10f, tmove, q10f, dayresp, rd0, tbelow, tref)
 
-Respiration with acclimatization parameters. 
+Respiration with acclimatization parameters `k10f` and `tmove`. 
+
+TODO test this. The formulation appears to need a variable `tmove`, 
+not a parameter.
 """
 @MixinResp struct AcclimatizedRespiration{pK,K} <: AbstractRespiration
 #   Field    | Default | Unit | Bonds       | Description
@@ -41,13 +52,7 @@ Respiration with acclimatization parameters.
     tmove::K | 10.0    | K    | (0.0, 10.0) | _
 end
 
-""" 
-    respiration(f::AcclimatizedRespiration, tleaf)
-
-Calculates respiration from temperature using a Q10 (exponential) formulation 
-and acclimatisation parameters.
-"""
-function respiration(f::AcclimatizedRespiration, tleaf)
+respiration(f::AcclimatizedRespiration, tleaf) = begin
     tleaf < f.tbelow && return zero(v.rd)
     rd0acc = f.rd0 * exp(f.k10f * (f.tmove - f.tref))
     rd0acc * exp(f.q10f * (tleaf - f.tref)) * f.dayresp 
@@ -60,3 +65,4 @@ end
 # TODO: The cutoff should be a parameter
 # lightfrac = v.par < 100oneunit(v.par) ? oneunit(dayresp(f.formulation)) : dayresp(f.formulation)
 # respiration(f.formulation, v) * lightfrac 
+#

@@ -1,6 +1,6 @@
-using Unitful: °C, K
+using Photosynthesis
 
-# include("shared.jl")
+include(joinpath(dirname(pathof(Photosynthesis)), "../test/shared.jl"))
 
 # Setup
 emax = FvCBEnergyBalance(

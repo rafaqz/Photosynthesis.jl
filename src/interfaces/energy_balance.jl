@@ -1,5 +1,7 @@
-# Energy balance interface
 
+"""
+Energy balance models
+"""
 abstract type AbstractEnergyBalance end
 
 """

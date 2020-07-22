@@ -49,6 +49,9 @@ Simulated soil volumetric content.
 
 
 
+"""
+Methods for calculating the effect of soil moisture on stomatal conductance. 
+"""
 abstract type AbstractSoilMethod end
 
 """
@@ -128,7 +131,6 @@ end
 
 soilmoisture_conductance(f::DeficitSoilMethod{<:DeficitSoilData}, v) =
     soilmoisture_conductance(f.soildata, v.soilmoist, v)
-
 
 """
     soilmoisture_conductance(soil::AbstractDeficitSoilData, soilmoist, v)
