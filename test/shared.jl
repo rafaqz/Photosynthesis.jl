@@ -29,7 +29,7 @@ if Sys.islinux()
         run(`gfortran -ffree-line-length-200 -shared -O2 metcom.f90 -o metcom.so -fPIC`)
         run(`gfortran -shared -O2 physiol.f90 -o physiol.so -fPIC`)
     end
-elseif Sys.isapple() then
+elseif Sys.isapple()
     if !isfile(joinpath(maespa_dir, "physiol.dylib"))
         cd(maespa_dir)
         println("Compiling maespa...")
