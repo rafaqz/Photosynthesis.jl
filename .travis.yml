@@ -16,28 +16,6 @@ addons:
    packages:
    - gfortran
 
-# Download and compile the maespa fortran
-script:
-  - git clone https://github.com/rafaqz/maespa.git
-  - cd maespa
-  - export MAESPA=$(pwd)
-  - |
-    if [ $TRAVIS_OS_NAME = linux ]; then
-        gfortran -ffree-line-length-200 -shared -o2 maestcom.f90 -o maestcom.so -fpic; 
-        gfortran -ffree-line-length-200 -shared -O2 metcom.f90 -o metcom.so -fPIC;
-        gfortran -shared -O2 physiol.f90 -o physiol.so -fPIC;
-
-    fi
-  - |
-    if [ $TRAVIS_OS_NAME = osx ]; then
-        gfortran -ffree-line-length-200 -shared -o2 maestcom.f90 -o maestcom.dylib -fpic; 
-        gfortran -ffree-line-length-200 -shared -O2 metcom.f90 -o metcom.dylib -fPIC;
-        gfortran -shared -O2 physiol.f90 -o physiol.dylib -fPIC;
-
-    fi
-  - cd ..
-  - julia -e 'using Pkg; Pkg.build(); Pkg.test(coverage=true)'
-
 jobs:
   allow_failures:
     - julia: nightly

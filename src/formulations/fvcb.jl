@@ -48,17 +48,17 @@ update_extremes!(v, m::AbstractStomatalConductance) = begin
     v.gs = g0(m)
 end
 
-function photosynthesis!(v, p::AbstractFvCBPhotosynthesis)
-    v.gammastar = co2_compensation_point(compensation_model(p), v.tleaf) # CO2 compensation point, umol mol-1
-    v.km = rubisco_compensation_point(compensation_model(p), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
-    v.jmax, v.vcmax = flux(flux_model(p), v) # Potential electron transport rate and maximum Rubisco activity
-    v.rd = respiration(respiration_model(p), v.tleaf) # Day leaf respiration, umol m-2 s-1
-    v.vj = rubisco_regeneration(rubisco_regen_model(p), v)
+function photosynthesis!(v, m::AbstractFvCBPhotosynthesis)
+    v.gammastar = co2_compensation_point(compensation_model(m), v.tleaf) # CO2 compensation point, umol mol-1
+    v.km = rubisco_compensation_point(compensation_model(m), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
+    v.jmax, v.vcmax = flux(flux_model(m), v) # Potential electron transport rate and maximum Rubisco activity
+    v.rd = respiration(respiration_model(m), v.tleaf) # Day leaf respiration, umol m-2 s-1
+    v.vj = rubisco_regeneration(rubisco_regen_model(m), v)
 
     # Zero values and exit in extreme cases.
-    check_extremes!(v, p) && return nothing
+    check_extremes!(v, m) && return nothing
 
-    v.aleaf, v.gs = stomatal_conductance!(v, stomatal_conductance_model(p))
+    v.aleaf, v.gs = stomatal_conductance!(v, stomatal_conductance_model(m))
 
     v.ci = v.gs > zero(v.gs) && v.aleaf > zero(v.aleaf) ? v.cs - v.aleaf / v.gs : v.cs
 
@@ -91,18 +91,16 @@ flux and temperature.
 $(FIELDDOCTABLE)
 """
 @default_kw @flattenable struct FvCBEnergyBalance{
-                                    Ra<:AbstractRadiationConductance,
-                                    Bo<:AbstractBoundaryConductance,
-                                    De<:AbstractDecoupling,
-                                    Ev,
-                                    Ph
-                                   } <: AbstractFvCBEnergyBalance
-    radiation_conductance_model::Ra | WangRadiationConductance()     | true
+        Ra<:AbstractRadiationConductance,
+        Bo<:AbstractBoundaryConductance,
+        De<:AbstractDecoupling,Ev,Ph,I,A} <: AbstractFvCBEnergyBalance
+    radiation_conductance_model::Ra | WangRadiationConductance()         | true
     boundary_conductance_model::Bo  | BoundaryConductance()              | true
     decoupling_model::De            | McNaughtonJarvisDecoupling()       | true
     evapotranspiration_model::Ev    | PenmanMonteithEvapotranspiration() | true
     photosynthesis_model::Ph        | FvCBPhotosynthesis()               | true
-    max_itererations::Int           | 100                                | false
+    max_itererations::I             | 100                                | false
+    atol::A                         | TOL                                | false
 end
 
 radiation_conductance_model(p::AbstractFvCBEnergyBalance) = p.radiation_conductance_model 
@@ -111,8 +109,26 @@ decoupling_model(p::AbstractFvCBEnergyBalance) = p.decoupling_model
 evapotranspiration_model(p::AbstractFvCBEnergyBalance) = p.evapotranspiration_model
 photosynthesis_model(p::AbstractFvCBEnergyBalance) = p.photosynthesis_model
 max_itererations(p::AbstractFvCBEnergyBalance) = p.max_itererations
+atol(p::AbstractFvCBEnergyBalance) = p.atol
 
-function enbal!(v, p::AbstractFvCBEnergyBalance)
+"""
+    enbal!(v, m::AbstractFvCBEnergyBalance)
+
+Calculates leaf photosynthesis and transpiration for an `AbstractEnergyBalance`
+model `m` and variables `v`.
+
+Results are written to v.
+
+These may be calculated by:
+
+1. Assuming leaf temperature is the same as air temperature, 
+   and stomatal carbon has the same conentration as in the air. 
+2. Using iterative scheme of Leuning et al (1995) (PCE 18:1183-1200) 
+   to calculate leaf temperature and stomatal carbon concentration.
+
+Setting `max_iterations=0` gives 1, max_iterations > 0 (default 100) gives 2.
+"""
+function enbal!(v, m::AbstractFvCBEnergyBalance)
 
     # Initialise to ambient conditions
     v.tleaf = v.tair
@@ -123,41 +139,42 @@ function enbal!(v, p::AbstractFvCBEnergyBalance)
     # Calculations that don't depend on tleaf
     v.lhv = latent_heat_water_vapour(v.tair)
     v.slope = slope(v.tair)
-    v.gradn = radiation_conductance(radiation_conductance_model(p), v)
-    v.gbhu = boundary_conductance_forced(boundary_conductance_model(p), v)
+    v.gradn = radiation_conductance(radiation_conductance_model(m), v)
+    v.gbhu = boundary_conductance_forced(boundary_conductance_model(m), v)
 
     # Converge on leaf temperature
-    for iter = 1:max_itererations(p)
-        aleaf = photosynthesis!(v, photosynthesis_model(p))
-        v.gv = vapour_conductance!(v, boundary_conductance_model(p))
+    for iter = 1:max_itererations(m)
+        aleaf = photosynthesis!(v, photosynthesis_model(m))
+        v.gv = vapour_conductance!(v, boundary_conductance_model(m))
 
-        v.et = evapotranspiration(evapotranspiration_model(p), v)
-        v.decoup = decoupling(decoupling_model(p), v) # only for output?
+        v.et = evapotranspiration(evapotranspiration_model(m), v)
+        v.decoup = decoupling(decoupling_model(m), v) # only for output?
 
         # End of subroutine if no iterations wanted.
-        max_itererations(p) == 0 || v.aleaf <= zero(v.aleaf) && return true
+        max_itererations(m) == 0 || v.aleaf <= zero(v.aleaf) && return true
 
         gbc = v.gbh / GBHGBC
         v.cs = v.ca - v.aleaf / gbc
-        tleaf = leaftemp(p, v)
+        tleaf = leaftemp(m, v)
         v.vpdleaf = v.et * v.pressure / v.gv
         v.rhleaf = 1.0 - v.vpdleaf / saturated_vapour_pressure(tleaf)
 
-        enbal_update!(v, p, tleaf) # Model-specific var updates
+        enbal_update!(v, m, tleaf) # Model-specific var updates
 
-        # Check to see whether convergence was achieved or failed
-        if abs(v.tleaf - tleaf) < TOL
+        # Check to see whether convergence has occurred
+        if abs(v.tleaf - tleaf) < atol(m)
             v.tleaf = tleaf
             return true
         end
 
         v.tleaf = tleaf # Update temperature for another iteration
 
-        iter == max_itererations(p) && error("leaf temperature convergence failed")
+        iter == max_itererations(m) && error("leaf temperature convergence failed")
     end
     # fheat = v.rnet - v.lhv * v.et
 
-    tleaf
+    # Temperature convergence did not occur
+    return false
 end
 
 """

@@ -8,8 +8,8 @@ Photosynthesis
 
 ```@docs
 Photosynthesis.AbstractEnergyBalance
-Photosynthesis.AbstractFvCBEnergyBalance
-FvCBEnergyBalance
+Photosynthesis.AbstractLeuningEnergyBalance
+LeuningEnergyBalance
 enbal!
 Photosynthesis.enbal_init!
 Photosynthesis.enbal_update!

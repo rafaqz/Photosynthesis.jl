@@ -11,8 +11,6 @@ emax = FvCBEnergyBalance(
 ph = emax.photosynthesis_model
 v = EmaxVars()
 v.tleaf = 15°C
-photosynlib = dlopen(joinpath(ENV["MAESPA"], "physiol"))
-
 
 # Rubisco compensation
 # kmfn: rubisco_compensation_point

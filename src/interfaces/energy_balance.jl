@@ -20,14 +20,11 @@ the leaf temperature convergene loop
 function enbal_update! end
 
 """
-    enbal!(v, p)
+    enbal!(v, m)
 
-This subroutine calculates leaf photosynthesis and transpiration.
+Calculates leaf photosynthesis and transpiration for an `AbstractEnergyBalance`
+model `m` and variables `v`.
 
-These may be calculated by:
-(1) assuming leaf temperature = air temperature, cs = ca and ds = da
-(2) using iterative scheme of Leuning et al (1995) (PCE 18:1183-1200) to calculate leaf temp, CsCa.
-
-Setting max_iterations = 0 gives (1); max_iterations > 0 (suggest 100) gives (2).
+Results are written to v.
 """
 function enbal! end
