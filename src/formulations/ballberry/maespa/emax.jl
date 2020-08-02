@@ -1,7 +1,7 @@
 """
     EmaxSoilMethod(soilmethod, non_stomatal)
 
-Emax implementation of soil method
+Emax implementation of soil method. 
 
 $(FIELDDOCTABLE)
 """
@@ -23,6 +23,8 @@ end
 The same options are available for specialised stomatal conducance,
 but using emax soil water methods.
 
+WARNING: Currently not passing tests
+
 $(FIELDDOCTABLE)
 """
 @MixinBallBerryStomatalConductance struct EmaxStomatalConductance{SH} <: AbstractBallBerryStomatalConductance 
@@ -33,11 +35,6 @@ gsshape(m::EmaxStomatalConductance) = m.gsshape
 
 struct JarvisMode <: AbstractJarvisStomatalConductance end
 
-"""
-    stomatal_conductance!(v, f::EmaxStomatalConductance)
-
-Stomatal conductance calculations for the Emax model
-"""
 function stomatal_conductance!(v, m::EmaxStomatalConductance)
     v.gs_div_a = gs_div_a(gs_submodel(m), v)
 
@@ -45,7 +42,7 @@ function stomatal_conductance!(v, m::EmaxStomatalConductance)
     emaxleaf = v.ktot * (v.swp - v.minleafwp)
 
     # Leaf transpiration: ignoring boundary layer effects
-    etest = (v.vpd / v.pressure) * v.gs * GSVGSC
+    etest = (v.vpdleaf / v.pressure) * v.gs * GSVGSC
 
     # Leaf water potential
     v.psil = v.swp - etest / v.ktot
@@ -54,7 +51,7 @@ function stomatal_conductance!(v, m::EmaxStomatalConductance)
         # Just for output
         v.fsoil = emaxleaf / etest
 
-        gsv = emaxleaf / (v.vpd / v.pressure)
+        gsv = emaxleaf / (v.vpdleaf / v.pressure)
         v.gs = gsv / GSVGSC
 
         # Minimum leaf water potential reached, recalculate psil
@@ -90,6 +87,8 @@ end
     EmaxEnergyBalance(energy_balance_model, totsoilres, plantk)
 
 Wrapper to FvCBEnergyBalance model, adding `totsoilres` and `plantk` parameters.
+
+WARNING: Currently not passing tests
 
 $(FIELDDOCTABLE)
 """

@@ -10,7 +10,6 @@ rubisco_regen_model(p::AbstractFvCBPhotosynthesis) = p.rubisco_regen_model
 respiration_model(p::AbstractFvCBPhotosynthesis) = p.respiration_model
 stomatal_conductance_model(p::AbstractFvCBPhotosynthesis) = p.stomatal_conductance_model
 
-
 """
     FvCBPhotosynthesis(flux, compensation, rubisco_regen, respiration, stomatal_conductance)
 
@@ -35,13 +34,13 @@ $(FIELDDOCTABLE)
     stomatal_conductance_model::GS | BallBerryStomatalConductance()
 end
 
-check_extremes!(v, p::AbstractFvCBPhotosynthesis) = begin
+check_extremes!(v, p::AbstractFvCBPhotosynthesis) =
     if v.jmax <= zero(v.jmax) || v.vcmax <= zero(v.vcmax)
         update_extremes!(stomatal_conductance_model(p), v)
-        return true
+        true
+    else
+        false
     end
-    false
-end
 
 update_extremes!(v, m::AbstractStomatalConductance) = begin
     v.aleaf = -v.rd
@@ -56,13 +55,16 @@ function photosynthesis!(v, m::AbstractFvCBPhotosynthesis)
     v.vj = rubisco_regeneration(rubisco_regen_model(m), v)
 
     # Zero values and exit in extreme cases.
-    check_extremes!(v, m) && return nothing
+    check_extremes!(v, m) && return
 
     v.aleaf, v.gs = stomatal_conductance!(v, stomatal_conductance_model(m))
 
-    v.ci = v.gs > zero(v.gs) && v.aleaf > zero(v.aleaf) ? v.cs - v.aleaf / v.gs : v.cs
-
-    v.aleaf
+    v.ci = if v.gs > zero(v.gs) && v.aleaf > zero(v.aleaf) 
+        v.cs - v.aleaf / v.gs
+    else
+        v.cs
+    end
+    return
 end
 
 
@@ -71,21 +73,19 @@ Energy balance models based on genral FvCB photosynthesis, derived from Maespa/M
 """
 abstract type AbstractFvCBEnergyBalance <: AbstractEnergyBalance end
 
-enbal_update!(v, f::AbstractFvCBEnergyBalance, tleaf) = nothing
-
 """
     FvCBEnergyBalance(radiation_conductance, 
                       boundary_conductance, 
                       decoupling, 
                       evapotranspiration, 
                       photosynthesis, 
-                      max_itererations)
+                      max_iterations)
 
 Energy-balance model composed of submodels from radiation conductance, 
 boundary conductance, decoupling, evapotranspiration
 photosynthesis.
 
-`max_itererations` determines the maximum number of iterations to perform to determine 
+`max_iterations` determines the maximum number of iterations to perform to determine 
 flux and temperature.
 
 $(FIELDDOCTABLE)
@@ -99,7 +99,7 @@ $(FIELDDOCTABLE)
     decoupling_model::De            | McNaughtonJarvisDecoupling()       | true
     evapotranspiration_model::Ev    | PenmanMonteithEvapotranspiration() | true
     photosynthesis_model::Ph        | FvCBPhotosynthesis()               | true
-    max_itererations::I             | 100                                | false
+    max_iterations::I               | 100                                | false
     atol::A                         | TOL                                | false
 end
 
@@ -108,7 +108,7 @@ boundary_conductance_model(p::AbstractFvCBEnergyBalance) = p.boundary_conductanc
 decoupling_model(p::AbstractFvCBEnergyBalance) = p.decoupling_model
 evapotranspiration_model(p::AbstractFvCBEnergyBalance) = p.evapotranspiration_model
 photosynthesis_model(p::AbstractFvCBEnergyBalance) = p.photosynthesis_model
-max_itererations(p::AbstractFvCBEnergyBalance) = p.max_itererations
+max_iterations(p::AbstractFvCBEnergyBalance) = p.max_iterations
 atol(p::AbstractFvCBEnergyBalance) = p.atol
 
 """
@@ -142,24 +142,26 @@ function enbal!(v, m::AbstractFvCBEnergyBalance)
     v.gradn = radiation_conductance(radiation_conductance_model(m), v)
     v.gbhu = boundary_conductance_forced(boundary_conductance_model(m), v)
 
+    iter = 1
     # Converge on leaf temperature
-    for iter = 1:max_itererations(m)
-        aleaf = photosynthesis!(v, photosynthesis_model(m))
-        v.gv = vapour_conductance!(v, boundary_conductance_model(m))
-
-        v.et = evapotranspiration(evapotranspiration_model(m), v)
-        v.decoup = decoupling(decoupling_model(m), v) # only for output?
+    while true 
+        photosynthesis!(v, photosynthesis_model(m))
+        conductance!(v, m)
+        # This isn't actually used - it's only for output
+        v.decoup = decoupling(decoupling_model(m), v)
 
         # End of subroutine if no iterations wanted.
-        max_itererations(m) == 0 || v.aleaf <= zero(v.aleaf) && return true
+        (max_iterations(m) == 0 || v.aleaf <= zero(v.aleaf)) && return true
 
         gbc = v.gbh / GBHGBC
         v.cs = v.ca - v.aleaf / gbc
         tleaf = leaftemp(m, v)
-        v.vpdleaf = v.et * v.pressure / v.gv
-        v.rhleaf = 1.0 - v.vpdleaf / saturated_vapour_pressure(tleaf)
 
-        enbal_update!(v, m, tleaf) # Model-specific var updates
+        # Recalculate
+        conductance!(v, m)
+
+        v.vpdleaf = v.et * v.pressure / v.gv
+        v.rhleaf = 1 - v.vpdleaf / saturated_vapour_pressure(tleaf)
 
         # Check to see whether convergence has occurred
         if abs(v.tleaf - tleaf) < atol(m)
@@ -169,12 +171,26 @@ function enbal!(v, m::AbstractFvCBEnergyBalance)
 
         v.tleaf = tleaf # Update temperature for another iteration
 
-        iter == max_itererations(m) && error("leaf temperature convergence failed")
+        iter >= max_iterations(m) && break
+        iter += 1
     end
-    # fheat = v.rnet - v.lhv * v.et
 
-    # Temperature convergence did not occur
+    @warn "leaf temperature convergence failed"
     return false
+end
+
+function conductance!(v, m)
+    # Total boundary layer conductance for heat
+    # See Leuning et al (1995) PCE 18:1183-1200 Eqn E5
+    v.gbhf = boundary_conductance_free(boundary_conductance_model(m), v)
+    v.gbh = v.gbhu + v.gbhf
+    # Total conductance for heat: two-sided
+    v.gh = 2.0(v.gbh + v.gradn)
+    # Total conductance for water vapour
+    gbv = GBVGBH * v.gbh
+    gsv = GSVGSC * v.gs
+    v.gv = (gbv * gsv) / (gbv + gsv)
+    v.et = evapotranspiration(evapotranspiration_model(m), v)
 end
 
 """
@@ -182,38 +198,38 @@ end
 
 Mixin variables for [`FvCBEnergyBalance`](@ref) variables objects.
 """
-@MixinEnviroVars @mix struct MixinFvCBVars{μMoMo,kPa,F,WM2,MMoPaJS,μMoM2S,JMo,PaK,MoM2S,MoμMo,μMoMo}
+@MixinEnviroVars @mix struct MixinFvCBVars{μMoMo,kPa,F,WM2,μMoM2S,JMo,PaK,MoM2S,MoμMo,μMoMo}
     # shared
-    cs::μMoMo        | 400.0       | μmol*mol^-1           | _
-    vpdleaf::kPa     | 0.8         | kPa                   | _
-    rhleaf::F        | 0.99        | _                     | "Only in Ball-Berry Stomatal Conductance"
+    cs::μMoMo        | 400.0  | μmol*mol^-1    | _
+    vpdleaf::kPa     | 0.8    | kPa            | _
+    rhleaf::F        | 0.99   | _              | "Only in Ball-Berry Stomatal Conductance"
     # energy balance
-    fheat::WM2       | 0.0         | W*m^-2                | _
-    gbhu::MMoPaJS    | 0.0         | m*mol*Pa*J^-1*s^-1    | _
-    gbhf::MMoPaJS    | 0.0         | m*mol*Pa*J^-1*s^-1    | _
-    gh::MMoPaJS      | 0.0         | m*mol*Pa*J^-1*s^-1    | _
-    gbh::MMoPaJS     | 0.0         | m*mol*Pa*J^-1*s^-1    | _
-    gv::MMoPaJS      | 0.0         | m*mol*Pa*J^-1*s^-1    | _
-    gradn::MoM2S     | 0.0         | mol*m^-2*s^-1         | _
-    lhv::JMo         | 0.0         | J*mol^-1              | _
-    et::MoM2S        | 0.0         | mol*m^-2*s^-1         | _
-    slope::PaK       | 0.0         | Pa*K^-1               | _
-    decoup::F        | 0.0         | _                     | _
+    fheat::WM2       | 0.0    | W*m^-2         | _
+    gbhu::MoM2S      | 0.0    | mol*m^-2*s^-1  | _
+    gbhf::MoM2S      | 0.0    | mol*m^-2*s^-1  | _
+    gh::MoM2S        | 0.0    | mol*m^-2*s^-1  | _
+    gbh::MoM2S       | 0.0    | mol*m^-2*s^-1  | _
+    gv::MoM2S        | 0.0    | mol*m^-2*s^-1  | _
+    gradn::MoM2S     | 0.0    | mol*m^-2*s^-1  | _
+    lhv::JMo         | 0.0    | J*mol^-1       | _
+    et::MoM2S        | 0.0    | mol*m^-2*s^-1  | _
+    slope::PaK       | 0.0    | Pa*K^-1        | _
+    decoup::F        | 0.0    | _              | _
     # photosynthesis
-    gs_div_a::MoμMo  | 0.0         | mol*μmol^-1           | _
-    km::μMoMo        | 0.0         | μmol*mol^-1           | _
-    ci::μMoMo        | 0.0         | μmol*mol^-1           | _
-    gammastar::μMoMo | 0.0         | μmol*mol^-1           | _
-    gs::MoM2S        | 0.0         | mol*m^-2*s^-1         | _
-    gsv::MoM2S       | 0.0         | mol*m^-2*s^-1         | _
-    gbv::MoM2S       | 0.0         | mol*m^-2*s^-1         | _
-    jmax::μMoM2S     | 0.0         | μmol*m^-2*s^-1        | _
-    vcmax::μMoM2S    | 0.0         | μmol*m^-2*s^-1        | _
-    rd::μMoM2S       | 0.0         | μmol*m^-2*s^-1        | _
-    ac::μMoM2S       | 0.0         | μmol*m^-2*s^-1        | _
-    aleaf::μMoM2S    | 0.0         | μmol*m^-2*s^-1        | _
-    vj::μMoM2S       | 0.0         | μmol*m^-2*s^-1        | _
-    aj::μMoM2S       | 0.0         | μmol*m^-2*s^-1        | _
+    gs_div_a::MoμMo  | 0.0    | mol*μmol^-1    | _
+    km::μMoMo        | 0.0    | μmol*mol^-1    | _
+    ci::μMoMo        | 0.0    | μmol*mol^-1    | _
+    gammastar::μMoMo | 0.0    | μmol*mol^-1    | _
+    gs::MoM2S        | 0.0    | mol*m^-2*s^-1  | _
+    gsv::MoM2S       | 0.0    | mol*m^-2*s^-1  | _
+    gbv::MoM2S       | 0.0    | mol*m^-2*s^-1  | _
+    jmax::μMoM2S     | 0.0    | μmol*m^-2*s^-1 | _
+    vcmax::μMoM2S    | 0.0    | μmol*m^-2*s^-1 | _
+    rd::μMoM2S       | 0.0    | μmol*m^-2*s^-1 | _
+    ac::μMoM2S       | 0.0    | μmol*m^-2*s^-1 | _
+    aleaf::μMoM2S    | 0.0    | μmol*m^-2*s^-1 | _
+    vj::μMoM2S       | 0.0    | μmol*m^-2*s^-1 | _
+    aj::μMoM2S       | 0.0    | μmol*m^-2*s^-1 | _
     # soil
-    fsoil::F         | 0.0         | _                     | _
+    fsoil::F         | 1.0    | _              | _
 end

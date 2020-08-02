@@ -6,7 +6,7 @@ Calculate the leaf temperature given variables `v`.
 
 Returns a value in u"K".
 """
-@inline leaftemp(p, v) = v.tair + (v.rnet - v.et * v.lhv) / (CPAIR * AIRMA * v.gh)
+@inline leaftemp(p, v) = v.tair + (v.rnet - v.et * v.lhv) / (4CPAIR * AIRMA * v.gh)
 
 """
     latent_heat_water_vapour(tair)
@@ -15,8 +15,10 @@ Caculates the late hear of water vapour from the air temperature.
 
 Returns a value in u"K".
 """
-@inline latent_heat_water_vapour(tair) = 
-    (H2OLV0 - 2.365e3J*kg^-1*K^-1 * tair) * H2OMW
+@inline latent_heat_water_vapour(tair) = begin
+    T = ustrip(°C, tair)
+    (H2OLV0 - 2.365e3J*kg^-1 * T) * H2OMW
+end
 
 
 """
@@ -28,9 +30,12 @@ at air temperature `tair` in `u"K"`.
 From Jones 1992 p 110 (note error in a - wrong units)
 
 TODO: name the magic numbers
+      explain the °C multiplication: this is an empirical hack
 """
-@inline saturated_vapour_pressure(tair) = 
-    613.75Pa * exp(17.502 * tair / (K(240.97°C) + tair))
+@inline saturated_vapour_pressure(tair) = begin
+    T = ustrip(°C, tair)
+    613.75Pa * exp(17.502 * T / (240.97 + T))
+end
 
 
 """

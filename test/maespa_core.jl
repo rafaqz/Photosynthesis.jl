@@ -11,145 +11,125 @@ emax = FvCBEnergyBalance(
 ph = emax.photosynthesis_model
 v = EmaxVars()
 v.tleaf = 15°C
+tleaf = ustrip(°C, v.tleaf)
 
-# Rubisco compensation
-# kmfn: rubisco_compensation_point
-kmfn_fortran = Libdl.dlsym(photosynlib, :kmfn_)
-tleaf = ustrip(v.tleaf |> °C)
+@testset "rubisco_compensation_point/kmfn" begin
+    kmfn_fortran = Libdl.dlsym(photosynlib, :kmfn_)
+    ieco = BERNACCI
+    km_ref = ccall(kmfn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf, ieco)
+    km = rubisco_compensation_point(BernacchiCompensation(), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
+    @test ustrip(u"μmol/mol", km) ≈ km_ref
 
-ieco = 0 # Bernacci
-km_ref = ccall(kmfn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf, ieco)
-km = rubisco_compensation_point(BernacchiCompensation(), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
-@test km.val ≈ km_ref rtol=1e-4
-
-ieco = 1 # Badger-Collatz
-km_ref = ccall(kmfn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf,ieco)
-km = rubisco_compensation_point(BadgerCollatzCompensation(), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
-@test km.val ≈ km_ref rtol=1e-4
-
-
-# CO2 compensation
-# gammafn: co2_compensation_point
-gammafn_fortran = Libdl.dlsym(photosynlib, :gammafn_)
-gammastar_ref = ccall(gammafn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf, BERNACCI)
-gammastar = co2_compensation_point(BernacchiCompensation(), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
-@test gammastar.val ≈ gammastar_ref rtol=1e-4 
-
-gammastar_ref = ccall(gammafn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf, BADGERCOLLATZ)
-gammastar = co2_compensation_point(BadgerCollatzCompensation(), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
-@test gammastar.val ≈ gammastar_ref rtol=1e-4
+    ieco = BADGERCOLLATZ
+    km_ref = ccall(kmfn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf,ieco)
+    km = rubisco_compensation_point(BadgerCollatzCompensation(), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
+    @test ustrip(u"μmol/mol", km) ≈ km_ref
+end
 
 
-# Vcmax
-# vcmaxtfn: max_rubisco_activity
-vcmaxtfn_fortran = Libdl.dlsym(photosynlib, :vcmaxtfn_)
-v = EmaxVars()
-v.tleaf = 15.0°C |> K
-tleaf = ustrip(v.tleaf |> °C)
-vc = NoOptimumVcmax()
-vcmax25 = vc.vcmax25.val
-eavc = vc.eavc.val
-edvc = 0.0
-delsc = 0.0
-tvjup = -100.0
-tvjdn = -100.0
-vcmax_ref = ccall(vcmaxtfn_fortran, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
-                 ), vcmax25, tleaf, eavc, edvc, delsc, tvjup, tvjdn)
-@test ustrip(max_rubisco_activity(vc, v.tleaf)) ≈ vcmax_ref rtol=1e-4
+@testset "co2_compensation_point/GAMMAFN" begin
+    gammafn_fortran = Libdl.dlsym(photosynlib, :gammafn_)
+    gammastar_ref = ccall(gammafn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf, BERNACCI)
+    gammastar = co2_compensation_point(BernacchiCompensation(), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
+    @test ustrip(u"μmol/mol", gammastar) ≈ gammastar_ref
 
-vcmax_ref = ccall(vcmaxtfn_fortran, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
-                         ), vcmax25, tleaf, eavc, edvc, delsc, tvjup, tvjdn)
-@test ustrip(max_rubisco_activity(vc, v.tleaf)) ≈ vcmax_ref
-
-v = EmaxVars()
-v.tleaf = 15.0°C
-tleaf = ustrip(v.tleaf |> °C)
-vc = OptimumVcmax()
-eavc = vc.eavc.val
-edvc = vc.edvc.val
-delsc = vc.delsc.val
-tvjup = -100.0
-tvjdn = -100.0
-vcmax_ref = ccall(vcmaxtfn_fortran, Float32,
-                  (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
-                  ), vcmax25, tleaf, eavc, edvc, delsc, tvjup, tvjdn)
-@test ustrip(max_rubisco_activity(vc, v.tleaf)) ≈ vcmax_ref rtol=1e-4
+    gammastar_ref = ccall(gammafn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf, BADGERCOLLATZ)
+    gammastar = co2_compensation_point(BadgerCollatzCompensation(), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
+    @test ustrip(u"μmol/mol", gammastar) ≈ gammastar_ref
+end
 
 
-# Maximum electron transport
-# jmaxtfn: max_electron_transport_rate
-jmaxtfn_fortran = Libdl.dlsym(photosynlib, :jmaxtfn_)
-f = Jmax()
-v.tleaf = 15.0°C
-tleaf = ustrip(v.tleaf |> °C)
-jmax25 = f.jmax25.val
-eavj = f.eavj.val
-edvj = f.edvj.val
-delsj = f.delsj.val
-tvjup = -100.0
-tvjdn = -100.0
-jmax_ref = ccall(jmaxtfn_fortran, Float32, 
-                 (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}), 
-                 jmax25, tleaf, eavj, edvj, delsj, tvjup, tvjdn)
-@test ustrip(max_electron_transport_rate(f, v.tleaf)) ≈ jmax_ref rtol=1e-4
+@testset "max_rubisco_activity/VCMAXTFN" begin
+    vcmaxtfn_fortran = Libdl.dlsym(photosynlib, :vcmaxtfn_)
+    vc = NoOptimumVcmax()
+    vcmax25 = ustrip(u"μmol*m^-2*s^-1", vc.vcmax25)
+    eavc = ustrip(u"J*mol^-1", vc.eavc)
+    edvc = 0.0
+    delsc = 0.0
+    tvjup = -100.0
+    tvjdn = -100.0
+    vcmax_ref = ccall(vcmaxtfn_fortran, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
+                     ), vcmax25, tleaf, eavc, edvc, delsc, tvjup, tvjdn)
+    @test ustrip(max_rubisco_activity(vc, v.tleaf)) ≈ vcmax_ref rtol=1e-4
+
+    vcmax_ref = ccall(vcmaxtfn_fortran, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
+                             ), vcmax25, tleaf, eavc, edvc, delsc, tvjup, tvjdn)
+    @test ustrip(max_rubisco_activity(vc, v.tleaf)) ≈ vcmax_ref
+
+    vc = OptimumVcmax()
+    eavc = ustrip(u"J*mol^-1", vc.eavc)
+    edvc = ustrip(u"J*mol^-1", vc.edvc)
+    delsc = ustrip(u"J*K^-1*mol^-1", vc.delsc)
+    tvjup = -100.0
+    tvjdn = -100.0
+    vcmax_ref = ccall(vcmaxtfn_fortran, Float32,
+                      (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}
+                      ), vcmax25, tleaf, eavc, edvc, delsc, tvjup, tvjdn)
+    @test ustrip(max_rubisco_activity(vc, v.tleaf)) ≈ vcmax_ref
+
+    vc = OptimumVcmax()
+    f = DukeFlux()
+    vcmax25 = ustrip(u"μmol*m^-2*s^-1", vc.vcmax25)
+    eavc = ustrip(u"J*mol^-1", vc.eavc)
+    edvc = ustrip(u"J*mol^-1", vc.edvc)
+    delsc = ustrip(u"J*K^-1*mol^-1", vc.delsc)
+    tvjup = ustrip(°C, f.tvjup)
+    tvjdn = ustrip(°C, f.tvjdn)
+    vcmax_ref = ccall(vcmaxtfn_fortran, Float32, 
+                      (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}), 
+                      vcmax25, tleaf, eavc, edvc, delsc, tvjup, tvjdn)
+    @test ustrip(max_rubisco_activity(vc, v.tleaf)) ≈ vcmax_ref
+end
 
 
-# Maximum rubisco activity
-# vcmaxtfn: max_rubisco_activity
-v = EmaxVars()
-v.tleaf = 15.0°C
-tleaf = ustrip(v.tleaf |> °C)
-vc = OptimumVcmax()
-f = DukeFlux()
-vcmax25 = vc.vcmax25.val
-eavc = vc.eavc.val
-edvc = vc.edvc.val
-delsc = vc.delsc.val
-tvjup = ustrip(f.tvjup |> °C)
-tvjdn = ustrip(f.tvjdn |> °C)
-vcmax_ref = ccall(vcmaxtfn_fortran, Float32, 
-                  (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}), 
-                  vcmax25, tleaf, eavc, edvc, delsc, tvjup, tvjdn)
-@test ustrip(max_rubisco_activity(vc, v.tleaf)) ≈ vcmax_ref rtol=1e-4
+@testset "max_electron_transport_rate/JMAXTFN" begin
+    jmaxtfn_fortran = Libdl.dlsym(photosynlib, :jmaxtfn_)
+    f = Jmax()
+    jmax25 = ustrip(u"μmol*m^-2*s^-1", f.jmax25)
+    eavj = ustrip(u"J*mol^-1", f.eavj)
+    edvj = ustrip(u"J*mol^-1", f.edvj)
+    delsj = ustrip(u"J*K^-1*mol^-1", f.delsj)
+    tvjup = -100.0
+    tvjdn = -100.0
+    jmax_ref = ccall(jmaxtfn_fortran, Float32, 
+                     (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}), 
+                     jmax25, tleaf, eavj, edvj, delsj, tvjup, tvjdn)
+    @test ustrip(max_electron_transport_rate(f, v.tleaf)) ≈ jmax_ref
+end
 
 
-# Respriation
-# resp: respiration
-resp_fortran = Libdl.dlsym(photosynlib, :resp_)
-f = Respiration()
-rd0 = ustrip(f.rd0)
-rdacc = 1.0
-tleaf = ustrip(v.tleaf |> °C)
-q10f = f.q10f.val
-tref = ustrip(f.tref |> °C)
-dayresp = f.dayresp
-tbelow = ustrip(f.tbelow |> °C)
-k10f = 0.0 # No acclimation 
-tmove = 0.0 # No acclimation 
-resp_ref = ccall(resp_fortran, Float32,
-                 (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}),
-                 rd0, rdacc, tleaf, tmove, q10f, k10f, tref, dayresp, tbelow)
-v.rd = respiration(f, v.tleaf)
-@test v.rd.val ≈ resp_ref
 
+@testset "respiration/RESP" begin
+    resp_fortran = Libdl.dlsym(photosynlib, :resp_)
+    f = Respiration()
+    rd0 = ustrip(u"μmol*m^-2*s^-1", f.rd0)
+    rdacc = 1.0
+    q10f = ustrip(u"K^-1", f.q10f)
+    tref = ustrip(°C, f.tref)
+    dayresp = f.dayresp
+    tbelow = ustrip(°C, f.tbelow)
+    k10f = 0.0 # No acclimation 
+    tmove = 0.0 # No acclimation 
+    resp_ref = ccall(resp_fortran, Float32,
+                     (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}),
+                     rd0, rdacc, tleaf, tmove, q10f, k10f, tref, dayresp, tbelow)
+    v.rd = respiration(f, v.tleaf)
+    @test ustrip(u"μmol*m^-2*s^-1", v.rd) ≈ resp_ref
 
-# Acclimatised Respriation
-# resp: respiration
-resp_fortran = Libdl.dlsym(photosynlib, :resp_)
-f = AcclimatizedRespiration()
-rd0 = ustrip(f.rd0)
-rdacc = 1.0 # this isn't actually a parameter
-tleaf = ustrip(v.tleaf |> °C)
-q10f = f.q10f.val
-tref = ustrip(f.tref |> °C)
-dayresp = f.dayresp
-tbelow = ustrip(f.tbelow |> °C)
-k10f = f.k10f.val
-tmove = f.tmove.val
-resp_ref = ccall(resp_fortran, Float32,
-                 (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}),
-                 rd0, rdacc, tleaf, tmove, q10f, k10f, tref, dayresp, tbelow)
-v.rd = respiration(f, v.tleaf)
+    f = AcclimatizedRespiration()
+    rd0 = ustrip(u"μmol*m^-2*s^-1", f.rd0)
+    rdacc = 1.0 # this isn't actually a parameter
+    q10f = ustrip(u"K^-1", f.q10f)
+    tref = ustrip(°C, f.tref)
+    dayresp = f.dayresp
+    tbelow = ustrip(°C, f.tbelow)
+    k10f = ustrip(u"K^-1", f.k10f)
+    tmove = ustrip(u"K", f.tmove)
+    resp_ref = ccall(resp_fortran, Float32,
+                     (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}),
+                     rd0, rdacc, tleaf, tmove, q10f, k10f, tref, dayresp, tbelow)
+    v.rd = respiration(f, v.tleaf)
 
-# This is actually commented out in the maespa FORTRAN
-# @test v.rd.val ≈ resp_ref
+    # This is actually commented out in the maespa FORTRAN
+    # @test v.rd.val ≈ resp_ref
+end

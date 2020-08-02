@@ -1,4 +1,4 @@
-const TOL = 0.02K          # Tolerance for leaf temp iteration
+const TOL = 0.02K         # Tolerance for leaf temp iteration
 const GBHGBC = 1.32       # Ratio of Gbh:Gbc
 const GSVGSC = 1.57       # Ratio of Gsw:Gsc
 const GBVGBH = 1.075      # Ratio of Gbw:Gbh

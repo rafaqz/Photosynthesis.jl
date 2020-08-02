@@ -35,10 +35,12 @@ $(FIELDDOCTABLE)
 """
 @MixinResp struct Respiration{} <: AbstractRespiration end
 
-respiration(f::Respiration, tleaf) = begin
-    tleaf < f.tbelow && return zero(f.rd0)
-    f.rd0 * exp(f.q10f * (tleaf - f.tref)) * f.dayresp
-end
+respiration(f::Respiration, tleaf) =
+    if tleaf >= f.tbelow 
+        f.rd0 * exp(f.q10f * (tleaf - f.tref)) * f.dayresp
+    else
+        zero(f.rd0)
+    end
 
 """
     AcclimatizedRespiration(k10f, tmove, q10f, dayresp, rd0, tbelow, tref)
@@ -53,7 +55,7 @@ $(FIELDDOCTABLE)
 @MixinResp struct AcclimatizedRespiration{pK,K} <: AbstractRespiration
 #   Field    | Default | Unit | Bonds       | Description
     k10f::pK | 10.0    | K^-1 | (0.0, 10.0) | _
-    tmove::K | 10.0    | K    | (0.0, 10.0) | _
+    tmove::K | 0.0     | K    | (0.0, 10.0) | _
 end
 
 respiration(f::AcclimatizedRespiration, tleaf) = begin

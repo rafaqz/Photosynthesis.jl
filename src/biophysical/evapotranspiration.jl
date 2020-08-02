@@ -15,17 +15,17 @@ function evapotranspiration end
 """
     PenmanMonteithEvapotranspiration()
 
-Penman-Monteith evapotranspiration model
+Calculates leaf evapotranspiration using the Penman-Monteith equation.
 """
 struct PenmanMonteithEvapotranspiration <: AbstractEvapotranspiration end
 
 evapotranspiration(f::PenmanMonteithEvapotranspiration, v) =
-    penman_monteith(v.pressure, v.slope, v.lhv, v.rnet, v.vpd, v.gh, v.gv)
+    penman_monteith_evapotranspiration(v.pressure, v.slope, v.lhv, v.rnet, v.vpd, v.gh, v.gv)
 
 """
-    penman_monteith(pressure, slope, lhv, rnet, vpd, gh, gv)
+    penman_monteith_evapotranspiration(pressure, slope, lhv, rnet, vpd, gh, gv)
 
-This subroutine calculates evapotranspiration by leaves using the Penman - Monteith equation.
+Calculates leaf evapotranspiration using the Penman-Monteith equation.
 
 Inputs:
 
@@ -39,15 +39,13 @@ gv conductance to water vapour (stomatalbdry layer components), mol*m^-2*s^-1
 
 Result in mol*m^-2*s^-1
 """
-penman_monteith(ρa, Δ, lhv, Rn, Da, gh, gv) = begin
-    #FIXME gv <= zero(gv) && return zero(Rn / lhv)
-
-    γ = CPAIR * ρa * AIRMA / lhv
-    ET = (Δ * Rn + CPAIR * gh * Da * AIRMA) / (Δ + γ * gh * (1/gv))
-
-    return ET / lhv
-    # if (penmon < 0.0) penmon = 0.0 end # BM 12 / 05 Should not be negative
-end
+penman_monteith_evapotranspiration(ρa, Δ, lhv, Rn, Da, gh, gv) =
+    if gv > zero(gv) 
+        γ = CPAIR * ρa * AIRMA / lhv
+        (Δ * Rn + CPAIR * gh * Da * AIRMA) / (Δ + γ * gh / gv) / lhv
+    else
+        zero(Rn / lhv)
+    end
 
 
 """ 

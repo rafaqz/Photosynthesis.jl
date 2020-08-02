@@ -30,7 +30,8 @@ $(FIELDDOCTABLE)
 """
 @MixinBallBerryStomatalConductanceSubModel struct BallBerryStomatalConductanceSubModel{} <: AbstractStomatalConductanceSubModel end
 
-gs_div_a(m::BallBerryStomatalConductanceSubModel, v) = g1(m) * v.rh / (v.cs - gamma(m))
+gs_div_a(m::BallBerryStomatalConductanceSubModel, v) = 
+    g1(m) * v.rhleaf / (v.cs - gamma(m))
 
 
 """

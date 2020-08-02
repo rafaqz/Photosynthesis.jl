@@ -14,4 +14,4 @@ $(FIELDDOCTABLE)
 end
 
 gs_div_a(f::MedlynStomatalConductanceSubModel, v) =
-    (oneunit(f.g1) + f.g1) / (max(f.vpdmin, v.vpdleaf)/kPa)^(1 - f.gk) / v.cs
+    (oneunit(f.g1) + f.g1 / (max(f.vpdmin, v.vpdleaf)/MPa)^(1 - f.gk)) / v.cs
