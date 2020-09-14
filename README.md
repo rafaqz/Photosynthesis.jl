@@ -6,18 +6,27 @@
 
 A Farquhar-von-Cammerer-Berry (FvCB) photosynthesis modelling framework.
 
-This module at its core is a rewrite of the Maespa/Maestra/ models in Julia. It
-has been written to have a modular structure that can be easily modified or
-added to at any level. It is also designed to itself be a component of larger
-model.
+This module at its core is a rewrite of the Maespa/Maestra photosynthesis models in Julia. 
+It has been written to have a modular structure that can be easily modified or
+added to at any level. It is also designed to itself be a component of larger model.
 
 It aims to provide a comprehensive yet minimalist set of photosynthesis and leaf
 energy balance models, eventually including as many as possible published
-photosynthesis formulations: but nothing else. Growth models, 3D canopy models,
-nutrient uptake etc. should be supplied from another package.
+photosynthesis formulations. But nothing else. Growth models, 3D canopy models,
+nutrient uptake etc. can be supplied from another package.
 
 Included formulations of the basic FvCB model include Ball-Berry (and multiple
-sub-variants), EMAX, Tuzet, and Jarvis.
+sub-variants), EMAX, Tuzet, and Jarvis formulations.
+
+These are written out in interchangeable components: you can write you own
+components in a script and swap them into the model - for _any_ part of this
+package. You Just need to define the `struct` for parameters, and define the
+corresponding method for the formulation you with to write.
+
+This means the old problem of multiple forks with minor formulation
+changes is essentially solved. Never edit the source code of this package,
+just define new alternate components with your desired changes.
+
 
 ## Example
 
@@ -51,8 +60,7 @@ components could generally be structured in better ways to traditional models -
 to reduce the overheads of making small changes to any part of the model and
 improve the potential for collaboration. This method also facilitates composing
 formulations from multiple packages into new models without having to change the
-codebases. Some of the structural ideas seem promising, others may need
-rethinking.
+codebases.
 
 ##  Units
 
@@ -60,14 +68,14 @@ This implementation takes advantage of
 [Unitful.jl](https://github.com/PainterQubits/Unitful.jl) to provide unit
 checking and conversion. This removes the possibility of a large class of
 errors, especially when adding your own custom formulations, and has little or
-no runtime cost in most cases
+no runtime cost in most cases.
 
 ## Nested parameters
 
 Parameters are composed of nested `struct`s, so that components can be modified
 and new components can be added without altering the original. This structure
 should be liberating for those wanting to make modifications to existing
-formulations.
+formulations, and to share them.
 
 Formulations all follow the pattern of defining an abstract type and a
 function at the top of the file. All formulation variants inherit from the
@@ -87,7 +95,7 @@ code.
 
 Other tools like the (unpublished)
 [Codify.jl](https://github.com/rafaqz/Codify.jl) turns a nested model struct
-into the code for kwarg constructors that would build it. 
+into the code for keyword argument constructors that would build it. 
 
 
 # Issues
@@ -96,16 +104,15 @@ into the code for kwarg constructors that would build it.
 
 Currently this package has _no real tests_, as there were none for the original
 Fortran. Instead it tests against the original formulations. Many of these test
-pass, but some still don't.
+pass. But Tuzet, Jarvis, and EMAX models are as yet untested.
 
-Obviously this situation needs to change. Unit tests and comprehensive
-integration tests are required. But is a significant amount of work
-and it would need a more specific application and larger user base to be
-justifiable.
+While very few photosynthesis models actually have tests, we should work towards
+Photosynthesis.jl being properly tested so that we know that formulations
+do what we intend them to.
 
-## Non-functional variable struct 
+## Non-functional variables struct 
 
-Temp variables are written directly to a variables struct. This should be
+Temp variables are written directly to a variables struct. This could be
 replaced with a functional style where variables are rebuilt and explicitly
 updated. This would mean that the package can be used on GPUs, and so the
 updating of state flow is easier to follow.

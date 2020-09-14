@@ -23,7 +23,7 @@ end
 
 g0(f::JarvisStomatalConductance) = f.g0
 
-@MixinFvCBVars mutable struct JarvisVars{mMoMo}
+@MixinEnviroVars @MixinMaespaVars @MixinFvCBVars mutable struct JarvisVars{mMoMo}
     vmleaf::mMoMo  | 1.0 | mmol*mol^-1 | _
 end
 
@@ -108,7 +108,7 @@ Run in [`co2_factor`](@ref) methods.
 abstract type AbstractJarvisCO2 end
 
 """
-    co2_factor(m::AbstractJarvisLight, v)
+    co2_factor(m::AbstractJarvisCO2, v)
 
 Calculates the CO2 related conductance factor.
 
@@ -168,7 +168,7 @@ abstract type AbstractJarvisTemp end
 end
 
 """
-    temp_factor(m::AbstractJarvisLight, v)
+    temp_factor(m::AbstractJarvisTemp, v)
 
 Calculates the temperature related conductance factor.
 
@@ -217,7 +217,7 @@ Run in [`vpd_factor`](@ref) methods.
 abstract type AbstractJarvisVPD end
 
 """
-    vpd_factor(m::AbstractJarvisLight, v)
+    vpd_factor(m::AbstractJarvisVPD, v)
 
 Calculates the vapour-pressure-deficit related conductance factor.
 
@@ -274,7 +274,7 @@ vpd_factor(m::JarvisFractionDeficitVPD, v) =
 """
     JarvisLinearDeclineVPD(d0)
 
-Linear decline with VPD (VPD1, VPD2 in Pa) * GROMIT (TIM RANDLE)
+Linear decline with vpd (Tim Randle)
 
 $(FIELDDOCTABLE)
 """

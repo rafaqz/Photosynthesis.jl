@@ -5,7 +5,7 @@ include(joinpath(dirname(pathof(Photosynthesis)), "../test/shared.jl"))
 
 # Quadratic solvers
 # quadm: quad
-quadm_fortran = Libdl.dlsym(photosynlib, :quadm_)
+quadm_fortran = Libdl.dlsym(maespa_photosynlib, :quadm_)
 a = 0.5
 b = -0.5
 c = 0.05
@@ -14,7 +14,7 @@ quad_test = quad(Lower(), a,b,c)/4
 @test quad_ref ≈ quad_test atol=1e-5
 
 # quadm: quap
-quadp_fortran = Libdl.dlsym(photosynlib, :quadp_)
+quadp_fortran = Libdl.dlsym(maespa_photosynlib, :quadp_)
 a = 0.5
 b = -0.5
 c = 0.05
@@ -25,7 +25,7 @@ quad_test = quad(Upper(), a,b,c)/4
 
 # Arrenius equations
 # arrhfn: arrhenius
-arrhfn_fortran = Libdl.dlsym(photosynlib, :arrh_)
+arrhfn_fortran = Libdl.dlsym(maespa_photosynlib, :arrh_)
 arrh_ref = ccall(arrhfn_fortran, Float32, (Ref{Float32}, Ref{Float32}, Ref{Float32}, Ref{Float32}), 42.75, 37830.0, 30.0, 25.0)
 arrh = arrhenius(42.75u"μmol*mol^-1", 37830.0u"J*mol^-1", 30.0u"°C", 25.0u"°C")
 @test arrh.val ≈ arrh_ref

@@ -3,7 +3,7 @@ using Photosynthesis
 include(joinpath(dirname(pathof(Photosynthesis)), "../test/shared.jl"))
 
 # Setup
-emax = FvCBEnergyBalance(
+emax = MaespaEnergyBalance(
     photosynthesis_model=FvCBPhotosynthesis(
         stomatal_conductance_model=EmaxStomatalConductance()
     )
@@ -14,7 +14,7 @@ v.tleaf = 15°C
 tleaf = ustrip(°C, v.tleaf)
 
 @testset "rubisco_compensation_point/kmfn" begin
-    kmfn_fortran = Libdl.dlsym(photosynlib, :kmfn_)
+    kmfn_fortran = Libdl.dlsym(maespa_photosynlib, :kmfn_)
     ieco = BERNACCI
     km_ref = ccall(kmfn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf, ieco)
     km = rubisco_compensation_point(BernacchiCompensation(), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
@@ -28,7 +28,7 @@ end
 
 
 @testset "co2_compensation_point/GAMMAFN" begin
-    gammafn_fortran = Libdl.dlsym(photosynlib, :gammafn_)
+    gammafn_fortran = Libdl.dlsym(maespa_photosynlib, :gammafn_)
     gammastar_ref = ccall(gammafn_fortran, Float32, (Ref{Float32}, Ref{Int32}), tleaf, BERNACCI)
     gammastar = co2_compensation_point(BernacchiCompensation(), v.tleaf) # Michaelis-Menten for Rubisco, umol mol-1
     @test ustrip(u"μmol/mol", gammastar) ≈ gammastar_ref
@@ -40,7 +40,7 @@ end
 
 
 @testset "max_rubisco_activity/VCMAXTFN" begin
-    vcmaxtfn_fortran = Libdl.dlsym(photosynlib, :vcmaxtfn_)
+    vcmaxtfn_fortran = Libdl.dlsym(maespa_photosynlib, :vcmaxtfn_)
     vc = NoOptimumVcmax()
     vcmax25 = ustrip(u"μmol*m^-2*s^-1", vc.vcmax25)
     eavc = ustrip(u"J*mol^-1", vc.eavc)
@@ -83,7 +83,7 @@ end
 
 
 @testset "max_electron_transport_rate/JMAXTFN" begin
-    jmaxtfn_fortran = Libdl.dlsym(photosynlib, :jmaxtfn_)
+    jmaxtfn_fortran = Libdl.dlsym(maespa_photosynlib, :jmaxtfn_)
     f = Jmax()
     jmax25 = ustrip(u"μmol*m^-2*s^-1", f.jmax25)
     eavj = ustrip(u"J*mol^-1", f.eavj)
@@ -100,7 +100,7 @@ end
 
 
 @testset "respiration/RESP" begin
-    resp_fortran = Libdl.dlsym(photosynlib, :resp_)
+    resp_fortran = Libdl.dlsym(maespa_photosynlib, :resp_)
     f = Respiration()
     rd0 = ustrip(u"μmol*m^-2*s^-1", f.rd0)
     rdacc = 1.0

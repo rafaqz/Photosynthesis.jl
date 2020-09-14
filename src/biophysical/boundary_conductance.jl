@@ -1,7 +1,7 @@
 """
 Boundary conductance models.
 
-Provide parameters for [`vapour_conductance!`](@ref), [`boundary_conductance_free`](@ref), 
+Provide parameters for [`boundary_conductance_free`](@ref), 
 and [`boundary_conductance_forced`](@ref).
 """
 abstract type AbstractBoundaryConductance end

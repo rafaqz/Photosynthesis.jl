@@ -1,4 +1,4 @@
-using Documenter, Photosynthesis
+using Documenter, Photosynthesis, Unitful
 
 makedocs(
     modules = [Photosynthesis],

@@ -48,11 +48,11 @@ using Photosynthesis, Unitful, Test
     TuzetVars()
     JarvisVars()
     FvCBPhotosynthesis()
-    FvCBEnergyBalance()
+    MaespaEnergyBalance()
 end
 
 @testset "it all actuall runs" begin
-    p = FvCBEnergyBalance()
+    p = MaespaEnergyBalance()
     v = EmaxVars()
 
 
@@ -79,7 +79,6 @@ end
     decoupling(NoDecoupling(), v)
 
     # Evapotranspiration
-    penman_monteith(v.pressure, v.slope, v.lhv, v.rnet, v.vpd, 1.0u"mol*m^-2*s^-1", 1.0u"mol*m^-2*s^-1") # TODO this seems weird
     evapotranspiration(PenmanMonteithEvapotranspiration(), v)
 
 
@@ -124,7 +123,7 @@ end
 
     v = BallBerryVars()
     ph = FvCBPhotosynthesis(stomatal_conductance=BallBerryStomatalConductance())
-    p = FvCBEnergyBalance(photosynthesis=ph)
+    p = MaespaEnergyBalance(photosynthesis=ph)
     enbal!(v, p)
     photosynthesis!(v, p.photosynthesis_model)
     v.aleaf
@@ -135,7 +134,7 @@ end
     
     v = JarvisVars()
     ph = FvCBPhotosynthesis(stomatal_conductance_model=JarvisStomatalConductance())
-    p = FvCBEnergyBalance(photosynthesis_model=ph)
+    p = MaespaEnergyBalance(photosynthesis_model=ph)
     factor_conductance(ph.stomatal_conductance_model, v)
     enbal!(v, p)
     photosynthesis!(v, p.photosynthesis_model)
@@ -145,15 +144,15 @@ end
     v.cs
     enbal!(v, p)
 
-    # ph = FvCBPhotosynthesis(stomatal_conductance=TuzetStomatalConductance()) # p = TuzetEnergyBalance(photosynthesis=ph)
-    # v = TuzetVars()
-    # enbal!(p, v)
-    # photosynthesis!(p.photosynthesis, v)
-    # v.aleaf
-    # v.tleaf
-    # v.gs
-    # v.cs
-    # enbal!(p, v)
+    ph = FvCBPhotosynthesis(stomatal_conductance=TuzetStomatalConductance()) # p = TuzetEnergyBalance(photosynthesis=ph)
+    v = TuzetVars()
+    enbal!(v, p)
+    photosynthesis!(v, p.photosynthesis_model)
+    v.aleaf
+    v.tleaf
+    v.gs
+    v.cs
+    enbal!(v, p)
 
     v = BallBerryVars()
     ph = FvCBPhotosynthesis(stomatal_conductance_model=EmaxStomatalConductance())

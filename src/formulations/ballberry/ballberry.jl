@@ -62,15 +62,13 @@ $(FIELDDOCTABLE)
 @MixinBallBerryStomatalConductance struct BallBerryStomatalConductance{} <: AbstractBallBerryStomatalConductance end
 
 """
-    BallBerryVars(tair, windspeed, par, rnet, soilmoist, pressure, tleaf, swp, swpshade, vpd, ca, rh,
-                  cs, vpdleaf, rhleaf, fheat, gbhu, gbhf, gh, gbh, gv, gradn, lhv, et, slope, decoup,
-                  gs_div_a, km, ci, gammastar, gs, gsv, gbv, jmax, vcmax, rd, ac, aleaf, vj, aj, fsoil)
+    BallBerryVars(; kwargs...)
 
 Variables for Ball-Berry stomatal conductance models.
 
 $(FIELDDOCTABLE)
 """
-@MixinFvCBVars mutable struct BallBerryVars{} end
+@MixinEnviroVars @MixinMaespaVars @MixinFvCBVars mutable struct BallBerryVars{} end
 
 
 """

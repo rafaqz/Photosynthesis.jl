@@ -1,22 +1,19 @@
 
 """
-Energy balance models
+Energy balance models calculate leaf temperature, usually also running 
+photosynthesis and all other model components along with environmental models
+like radiation and boundary layer conductance.
+
+They are run in [`enbal!`](@ref) methods.
 """
 abstract type AbstractEnergyBalance end
 
 """
-    model_init!(v, f)
+    enbal!(v, m::AbstractEnergyBalance)
 
-Runs any model initialisation that needs to happen at the start of energy balance
-"""
-function enbal_init! end
+Calculates leaf photosynthesis and transpiration for an 
+[`AbstractEnergyBalance`](@ref) model `m` and variables `v`.
 
-"""
-    enbal!(v, m)
-
-Calculates leaf photosynthesis and transpiration for an `AbstractEnergyBalance`
-model `m` and variables `v`.
-
-Results are written to v.
+Results are written to `v`.
 """
 function enbal! end

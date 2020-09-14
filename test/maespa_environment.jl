@@ -5,7 +5,7 @@ include(joinpath(dirname(pathof(Photosynthesis)), "../test/shared.jl"))
 @testset "boundary_conductance_forced/GBHFORCED" begin
     v = BallBerryVars()
 
-    gbhforced_fortran = Libdl.dlsym(photosynlib, :gbhforced_)
+    gbhforced_fortran = Libdl.dlsym(maespa_photosynlib, :gbhforced_)
 
     bc_model = BoundaryConductance()
 
@@ -27,7 +27,7 @@ end
     v = BallBerryVars()
     v.tleaf = 28.0°C
     bc_model = BoundaryConductance()
-    gbhfree_fortran = Libdl.dlsym(photosynlib, :gbhfree_)
+    gbhfree_fortran = Libdl.dlsym(maespa_photosynlib, :gbhfree_)
 
     tair = ustrip(u"°C", v.tair)
     tleaf = ustrip(u"°C", v.tleaf)
@@ -45,7 +45,7 @@ end
 @testset "radiation_conductance/GRADIATION" begin
     v = BallBerryVars()
     rc_model = WangRadiationConductance()
-    gradiation_fortran = Libdl.dlsym(photosynlib, :gradiation_)
+    gradiation_fortran = Libdl.dlsym(maespa_photosynlib, :gradiation_)
 
     tair = ustrip(°C, v.tair)
     rdfipt = rc_model.rdfipt
@@ -62,7 +62,7 @@ end
 
 @testset "saturated_vapour_pressure/SATUR" begin
     v = BallBerryVars()
-    satur_fortran = Libdl.dlsym(photosynlib, :satur_)
+    satur_fortran = Libdl.dlsym(maespa_photosynlib, :satur_)
     svp_ref = ccall(satur_fortran, Float32, (Ref{Float32},), 15.0)
     svp = saturated_vapour_pressure(15°C)
     @test ustrip(u"Pa", svp) ≈ svp_ref
@@ -77,8 +77,8 @@ end
 
 @testset "PenmanMonteithEvapotranspiration/PENMON" begin
     v = BallBerryVars()
-    penmon_fortran = Libdl.dlsym(photosynlib, :penmon_)
-    p = FvCBEnergyBalance(
+    penmon_fortran = Libdl.dlsym(maespa_photosynlib, :penmon_)
+    p = MaespaEnergyBalance(
         photosynthesis_model=FvCBPhotosynthesis(
             stomatal_conductance_model=BallBerryStomatalConductance(
                 gs_submodel=MedlynStomatalConductanceSubModel(),

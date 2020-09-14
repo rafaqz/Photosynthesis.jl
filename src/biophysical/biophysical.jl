@@ -22,23 +22,6 @@ end
 
 
 """
-    saturated_vapour_pressure(tair)
-
-Calculate saturated water vapour pressure in `u"Pa"` 
-at air temperature `tair` in `u"K"`.
-
-From Jones 1992 p 110 (note error in a - wrong units)
-
-TODO: name the magic numbers
-      explain the °C multiplication: this is an empirical hack
-"""
-@inline saturated_vapour_pressure(tair) = begin
-    T = ustrip(°C, tair)
-    613.75Pa * exp(17.502 * T / (240.97 + T))
-end
-
-
-"""
     vapour_pressure_deficit(tair, rh)
 
 Calculate vapour pressure deficit given air temperature

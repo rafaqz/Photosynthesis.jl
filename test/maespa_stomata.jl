@@ -3,14 +3,14 @@ using Photosynthesis
 include(joinpath(dirname(pathof(Photosynthesis)), "../test/shared.jl"))
 
 # Setup
-emax = FvCBEnergyBalance(photosynthesis_model=FvCBPhotosynthesis())
+emax = MaespaEnergyBalance(photosynthesis_model=FvCBPhotosynthesis())
 ph = emax.photosynthesis_model
 v = EmaxVars()
 v.tleaf = 15°C |> K
 
 # Rubisco compensation
 # kmfn: rubisco_compensation_point
-kmfn_fortran = Libdl.dlsym(photosynlib, :kmfn_)
+kmfn_fortran = Libdl.dlsym(maespa_photosynlib, :kmfn_)
 tleaf = ustrip(v.tleaf |> °C)
 
 ieco = 0 # Bernacci

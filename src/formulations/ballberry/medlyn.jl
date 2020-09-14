@@ -1,4 +1,3 @@
-
 """
     MedlynStomatalConductanceSubModel(vpdmin, gk, gamma, g1)
 

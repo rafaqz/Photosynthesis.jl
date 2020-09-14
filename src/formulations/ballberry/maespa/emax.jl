@@ -1,11 +1,11 @@
 """
     EmaxSoilMethod(soilmethod, non_stomatal)
 
-Emax implementation of soil method. 
+Emax implementation of soil method.
 
 $(FIELDDOCTABLE)
 """
-@default_kw struct EmaxSoilMethod{T,NS} <: AbstractSoilMethod 
+@default_kw struct EmaxSoilMethod{T,NS} <: AbstractSoilMethod
     soilmethod::T    | ConstantSoilMethod()
     non_stomatal::NS | ZhouPotentialDependence()
 end
@@ -27,7 +27,7 @@ WARNING: Currently not passing tests
 
 $(FIELDDOCTABLE)
 """
-@MixinBallBerryStomatalConductance struct EmaxStomatalConductance{SH} <: AbstractBallBerryStomatalConductance 
+@MixinBallBerryStomatalConductance struct EmaxStomatalConductance{SH} <: AbstractBallBerryStomatalConductance
     gsshape::SH    | HardMinimum() | _  | _ | _
 end
 
@@ -59,12 +59,12 @@ function stomatal_conductance!(v, m::EmaxStomatalConductance)
 
         v.ac = rubisco_limited_rate(JarvisMode(), v)
         v.aj = transport_limited_rate(JarvisMode(), v)
-        aleaf = min(v.ac, v.aj) - v.rd
+        v.aleaf = min(v.ac, v.aj) - v.rd
 
-        gs = shape_gs(gsshape(m), v, m)
+        v.gs = shape_gs(gsshape(m), v, m)
     end
 
-    aleaf, gs 
+    v.aleaf, v.gs
 end
 
 
@@ -75,7 +75,7 @@ Varbles for Emax models
 
 $(FIELDDOCTABLE)
 """
-@MixinFvCBVars mutable struct EmaxVars{M,EL,KT,P}
+@MixinEnviroVars @MixinMaespaVars @MixinFvCBVars mutable struct EmaxVars{M,EL,KT,P}
     minleafwp::M   | 0.1         | kPa                   | _
     emaxleaf::EL   | 400.0       | mmol*m^-2*s^-1        | _
     ktot::KT       | 2.0         | mmol*m^-2*s^-1*MPa^-1 | _
@@ -86,16 +86,14 @@ end
 """
     EmaxEnergyBalance(energy_balance_model, totsoilres, plantk)
 
-Wrapper to FvCBEnergyBalance model, adding `totsoilres` and `plantk` parameters.
-
-WARNING: Currently not passing tests
+Wrapper to MaespaEnergyBalance model, adding `totsoilres` and `plantk` parameters.
 
 $(FIELDDOCTABLE)
 """
-@columns struct EmaxEnergyBalance{EB,SR,PK} <: AbstractFvCBEnergyBalance 
-    energy_balance_model::EB | FvCBEnergyBalance(photosynthesis=FvCBPhotosynthesis(
-                                               stomatal_conductance=EmaxStomatalConductance(
-                                                   soilmethod=EmaxSoilMethod()))) | _ | _ | _
+@columns struct EmaxEnergyBalance{EB,SR,PK} <: AbstractMaespaEnergyBalance
+    energy_balance_model::EB | MaespaEnergyBalance(photosynthesis=FvCBPhotosynthesis(
+                                                   stomatal_conductance=EmaxStomatalConductance(
+                                                     soilmethod=EmaxSoilMethod()))) | _ | _ | _
     totsoilres::SR           | 0.5  | m^2*s^1*MPa^1*mmol^-1 | (0.0, 10.0) | _
     plantk::PK               | 3.0  | mmol*m^-2*s^-1*MPa^-1 | (0.0, 10.0) | _
 end
@@ -107,4 +105,14 @@ plantk(m::EmaxEnergyBalance) = m.plantk
 enbal!(v, m::EmaxEnergyBalance) = begin
     v.ktot = 10 / (totsoilres(m) + 1.0 / plantk(m))
     enbal!(v, energy_balance_model(m))
+
+    #= MAESPA comments:
+    Return re-calculated leaf water potential (using ET without boundary layer conductance).
+    We use etest otherwise psil < psilmin quite frequently when soil is dry.
+    This is difficult to interpret, especially because PHOTOSYN does not account
+    for boundary layer conductance.
+    =#
+    etest = (v.vpd / v.pressure) * v.gsv
+    v.psil = v.swp - etest / v.ktot
+    return
 end

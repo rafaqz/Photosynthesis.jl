@@ -8,17 +8,10 @@ Photosynthesis
 
 ```@docs
 Photosynthesis.AbstractEnergyBalance
-Photosynthesis.AbstractLeuningEnergyBalance
-LeuningEnergyBalance
+Photosynthesis.AbstractMaespaEnergyBalance
+MaespaEnergyBalance
 enbal!
 Photosynthesis.enbal_init!
-Photosynthesis.enbal_update!
-```
-
-### Model variables
-
-```@docs
-BallBerryVars
 ```
 
 ## Biophysical components
@@ -27,7 +20,6 @@ BallBerryVars
 Photosynthesis.saturated_vapour_pressure
 Photosynthesis.vapour_pressure_deficit
 Photosynthesis.latent_heat_water_vapour
-Photosynthesis.penman_monteith
 Photosynthesis.arrhenius
 Photosynthesis.leaftemp
 ```
@@ -39,11 +31,8 @@ AbstractBoundaryConductance
 BoundaryConductance
 Photosynthesis.boundary_conductance_free
 Photosynthesis.boundary_conductance_forced
-Photosynthesis.vapour_conductance! 
 Photosynthesis.grashof_number
 Photosynthesis.cmolar
-Photosynthesis.free_boundary_conductance
-Photosynthesis.forced_boundary_conductance
 ```
 
 ### Canopy-atmosphere decoupling
@@ -61,8 +50,8 @@ Photosynthesis.decoupling
 AbstractEvapotranspiration 
 PenmanMonteithEvapotranspiration
 Photosynthesis.evapotranspiration
-Photosynthesis.penman_monteith(ρa, Δ, lhv, Rn, Da, gh, gv)
-Photosynthesis.slope
+Photosynthesis.vapour_pressure_slope
+Photosynthesis.penman_monteith_evapotranspiration
 ```
 
 ### Radiation conductance
@@ -153,6 +142,7 @@ Photosynthesis.non_stomatal_potential_dependence
 AbstractStomatalConductance
 AbstractBallBerryStomatalConductance
 BallBerryStomatalConductance
+BallBerryVars
 Photosynthesis.stomatal_conductance!
 Photosynthesis.rubisco_limited_rate
 Photosynthesis.transport_limited_rate
@@ -225,8 +215,7 @@ TuzetEnergyBalance
 TuzetStomatalConductance
 TuzetStomatalConductanceSubModel
 TuzetVars
-Photosynthesis.leaf_water_potential_finder
-Photosynthesis.fpsil
+Photosynthesis.leaf_water_potential_finder!
 ```
 
 ## Jarvis Model
