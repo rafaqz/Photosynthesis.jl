@@ -63,7 +63,7 @@ $(FIELDDOCTABLE)
 @Vcmax struct NoOptimumVcmax{} <: AbstractVcmax end
 
 max_rubisco_activity(f::NoOptimumVcmax, tleaf) = begin
-    tleafK = tleaf |> K
+    tleafK = K(tleaf)
     K25 = K(25°C)
     f.vcmax25 * exp((f.eavc * (tleaf - K25)) / (K25 * R * tleafK))
 end
@@ -81,7 +81,7 @@ $(FIELDDOCTABLE)
 end
 
 max_rubisco_activity(f::OptimumVcmax, tleaf) = begin
-    tleafK = tleaf |> K
+    tleafK = K(tleaf)
     K25 = K(25°C)
     f.vcmax25 * exp((tleaf - K25) * f.eavc / (R * tleafK * K25)) *
     (1.0 + exp((f.delsc * K25 - f.edvc) / (R * K25))) /

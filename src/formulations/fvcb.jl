@@ -72,20 +72,22 @@ end
 
 Mixin variables for [`AbstractMaespaEnergyBalance`](@ref) variables objects.
 """
-@mix @vars struct MixinFvCBVars{μMoMo,kPa,F,WM2,μMoM2S,JMo,PaK,MoM2S,MoμMo,μMoMo}
+@mix @vars struct MixinFvCBVars{GSDA,KM,CI,GAM,GS,JMX,VCMX,RD,AC,AL,VJ,AJ,FS}
     # photosynthesis
-    gs_div_a::MoμMo  | 0.0    | mol*μmol^-1    | _
-    km::μMoMo        | 0.0    | μmol*mol^-1    | _
-    ci::μMoMo        | 0.0    | μmol*mol^-1    | _
-    gammastar::μMoMo | 0.0    | μmol*mol^-1    | _
-    gs::MoM2S        | 0.0    | mol*m^-2*s^-1  | _
-    jmax::μMoM2S     | 0.0    | μmol*m^-2*s^-1 | _
-    vcmax::μMoM2S    | 0.0    | μmol*m^-2*s^-1 | _
-    rd::μMoM2S       | 0.0    | μmol*m^-2*s^-1 | _
-    ac::μMoM2S       | 0.0    | μmol*m^-2*s^-1 | _
-    aleaf::μMoM2S    | 0.0    | μmol*m^-2*s^-1 | _
-    vj::μMoM2S       | 0.0    | μmol*m^-2*s^-1 | _
-    aj::μMoM2S       | 0.0    | μmol*m^-2*s^-1 | _
+    gs_div_a::GSDA   | 0.0    | mol*μmol^-1    | _
+    km::KM           | 0.0    | μmol*mol^-1    | _
+    ci::CI           | 0.0    | μmol*mol^-1    | _
+    gammastar::GAM   | 0.0    | μmol*mol^-1    | _
+    gs::GS           | 0.0    | mol*m^-2*s^-1  | _
+    jmax::JMX        | 0.0    | μmol*m^-2*s^-1 | _
+    vcmax::VCMX      | 0.0    | μmol*m^-2*s^-1 | _
+    rd::RD           | 0.0    | μmol*m^-2*s^-1 | _
+    ac::AC           | 0.0    | μmol*m^-2*s^-1 | _
+    aleaf::AL        | 0.0    | μmol*m^-2*s^-1 | _
+    vj::VJ           | 0.0    | μmol*m^-2*s^-1 | _
+    aj::AJ           | 0.0    | μmol*m^-2*s^-1 | _
     # soil
-    fsoil::F         | 0.0    | _              | _
+    fsoil::FS        | 0.0    | _              | _
 end
+
+

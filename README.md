@@ -48,6 +48,23 @@ vars = BallBerryVars()
 enbal!(vars, params)
 ```
 
+
+Formulations using the MAESPA energy balance and FvCB photosynthesis, 
+all tested against MAESPA:
+
+- BallBerry stomatal conducance types:
+  - `BallBerry`
+  - `Medlyn`
+  - `Leuning`
+- `Emax`
+
+
+Other formulations, working but not tested
+- `Tuzet` : PSILFIND is not yet tested against MAESPA. Use with caution.
+- `Jarvis` : Not tested against Maestra, also use with caution.
+
+
+
 Notice we run `enbal!` not `photosynthesis!`, as `enbal!` runs
 `photosynthesis!` in a loop to calculate both the temperature
 and the assimilated C.

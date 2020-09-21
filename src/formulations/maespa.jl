@@ -132,24 +132,24 @@ end
 
 Mixin variables for [`AbstractMaespaEnergyBalance`](@ref) variables objects.
 """
-@mix @vars struct MixinMaespaVars{μMoMo,kPa,F,WM2,μMoM2S,JMo,PaK,MoM2S,MoμMo,μMoMo}
+@mix @vars struct MixinMaespaVars{TL,VPDL,RHL,CD,FHi,GBHU,GBHF,GH,GSV,GBV,GBH,GV,GR,LHV,ET,LS,DC}
     # shared
-    tleaf::K         | 298.15 | K              | _
-    vpdleaf::kPa     | 0.0    | kPa            | _
-    rhleaf::F        | 0.0    | _              | _
-    cs::μMoMo        | 0.0    | μmol*mol^-1    | _
+    tleaf::TL        | 298.15 | K              | _
+    vpdleaf::VPDL    | 0.0    | Pa             | _
+    rhleaf::RHL      | 0.0    | _              | _
+    cs::CD           | 0.0    | μmol*mol^-1    | _
     # energy balance
-    fheat::WM2       | 0.0    | W*m^-2         | _
-    gbhu::MoM2S      | 0.0    | mol*m^-2*s^-1  | _
-    gbhf::MoM2S      | 0.0    | mol*m^-2*s^-1  | _
-    gh::MoM2S        | 0.0    | mol*m^-2*s^-1  | _
-    gsv::MoM2S       | 0.0    | mol*m^-2*s^-1  | _
-    gbv::MoM2S       | 0.0    | mol*m^-2*s^-1  | _
-    gbh::MoM2S       | 0.0    | mol*m^-2*s^-1  | _
-    gv::MoM2S        | 0.0    | mol*m^-2*s^-1  | _
-    gradn::MoM2S     | 0.0    | mol*m^-2*s^-1  | _
-    lhv::JMo         | 0.0    | J*mol^-1       | _
-    et::MoM2S        | 0.0    | mol*m^-2*s^-1  | _
-    slope::PaK       | 0.0    | Pa*K^-1        | _
-    decoup::F        | 0.0    | _              | _
+    fheat::FHi       | 0.0    | W*m^-2         | _
+    gbhu::GBHU       | 0.0    | mol*m^-2*s^-1  | _
+    gbhf::GBHF       | 0.0    | mol*m^-2*s^-1  | _
+    gh::GH           | 0.0    | mol*m^-2*s^-1  | _
+    gsv::GSV         | 0.0    | mol*m^-2*s^-1  | _
+    gbv::GBV         | 0.0    | mol*m^-2*s^-1  | _
+    gbh::GBH         | 0.0    | mol*m^-2*s^-1  | _
+    gv::GV           | 0.0    | mol*m^-2*s^-1  | _
+    gradn::GR        | 0.0    | mol*m^-2*s^-1  | _
+    lhv::LHV         | 0.0    | J*mol^-1       | _
+    et::ET           | 0.0    | mol*m^-2*s^-1  | _
+    slope::LS        | 0.0    | Pa*K^-1        | _
+    decoup::DC       | 0.0    | _              | _
 end

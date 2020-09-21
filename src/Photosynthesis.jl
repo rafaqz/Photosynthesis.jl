@@ -140,11 +140,11 @@ include("interfaces/stomatal_conductance.jl")
 
 include("formulations/fvcb.jl")
 include("formulations/maespa.jl")
-include("formulations/jarvis/jarvis.jl")
-include("formulations/ballberry/ballberry.jl")
-include("formulations/ballberry/medlyn.jl")
-include("formulations/ballberry/leuning.jl")
-include("formulations/ballberry/maespa/emax.jl")
-include("formulations/ballberry/maespa/tuzet.jl")
+include("formulations/jarvis.jl")
+include("formulations/ballberry.jl")
+include("formulations/medlyn.jl")
+include("formulations/leuning.jl")
+include("formulations/emax.jl")
+include("formulations/tuzet.jl")
 
 end # module

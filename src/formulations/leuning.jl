@@ -9,7 +9,7 @@ model for C3 plants. Plant, Celt and Environment (1995) 18, 339-355
 $(FIELDDOCTABLE)
 """
 @MixinBallBerryStomatalConductanceSubModel struct LeuningStomatalConductanceSubModel{D0} <: AbstractBallBerryStomatalConductanceSubModel
-    D0::D0    | 1500.0 | kPa | (0.0, 2000.0) | _
+    D0::D0    | 1.5e6 | Pa | (0.0, 2e6) | _
 end
 
 gs_div_a(f::LeuningStomatalConductanceSubModel, v) = 

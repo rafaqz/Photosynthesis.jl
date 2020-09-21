@@ -75,11 +75,11 @@ Varbles for Emax models
 
 $(FIELDDOCTABLE)
 """
-@MixinEnviroVars @MixinMaespaVars @MixinFvCBVars mutable struct EmaxVars{M,EL,KT,P}
-    minleafwp::M   | 0.1         | kPa                   | _
-    emaxleaf::EL   | 400.0       | mmol*m^-2*s^-1        | _
-    ktot::KT       | 2.0         | mmol*m^-2*s^-1*MPa^-1 | _
-    psil::P        | -111.0      | kPa                   | _
+@MixinEnviroVars @MixinMaespaVars @MixinFvCBVars mutable struct EmaxVars{MLWP,EML,KT,PSIL}
+    minleafwp::MLWP | 1e-4        | MPa                   | _
+    emaxleaf::EML   | 400.0       | mmol*m^-2*s^-1        | _
+    ktot::KT        | 2.0         | mmol*m^-2*s^-1*MPa^-1 | _
+    psil::PSIL      | -0.111      | MPa                   | _
 end
 
 
@@ -103,7 +103,7 @@ totsoilres(m::EmaxEnergyBalance) = m.totsoilres
 plantk(m::EmaxEnergyBalance) = m.plantk
 
 enbal!(v, m::EmaxEnergyBalance) = begin
-    v.ktot = 10 / (totsoilres(m) + 1.0 / plantk(m))
+    v.ktot = 1 / (totsoilres(m) + 1.0 / plantk(m))
     enbal!(v, energy_balance_model(m))
 
     #= MAESPA comments:
@@ -113,6 +113,13 @@ enbal!(v, m::EmaxEnergyBalance) = begin
     for boundary layer conductance.
     =#
     etest = (v.vpd / v.pressure) * v.gsv
-    v.psil = v.swp - etest / v.ktot
+    v.psil = v.swp - (etest / v.ktot)
+
+    @show etest
+    @show v.swp
+    @show v.pressure
+    @show v.vpd
+    @show v.gsv
+    @show v.psil
     return
 end

@@ -33,9 +33,9 @@ jmax are set to zero, while at `vparb` fluxes are at their maximum rate.
 
 $(FIELDDOCTABLE)
 """
-@columns struct LinearPotentialDependence{Pa} <: AbstractPotentialDependence
-    vpara::Pa | -300.0 | kPa | (0.0, -2000.0) | _
-    vparb::Pa | -100.0 | kPa | (0.0, -2000.0) | _
+@columns struct LinearPotentialDependence{MPa} <: AbstractPotentialDependence
+    vpara::MPa | -0.3 | MPa | (0.0, -2.0) | _
+    vparb::MPa | -0.1 | MPa | (0.0, -2.0) | _
 end
 
 non_stomatal_potential_dependence(f::LinearPotentialDependence, swp) =

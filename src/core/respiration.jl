@@ -59,7 +59,7 @@ $(FIELDDOCTABLE)
 end
 
 respiration(f::AcclimatizedRespiration, tleaf) = begin
-    tleaf < f.tbelow && return zero(v.rd)
+    tleaf < f.tbelow && return zero(f.rd0)
     rd0acc = f.rd0 * exp(f.k10f * (f.tmove - f.tref))
     rd0acc * exp(f.q10f * (tleaf - f.tref)) * f.dayresp 
 end 

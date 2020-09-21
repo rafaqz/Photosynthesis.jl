@@ -20,7 +20,6 @@ Tuzet et al. 2003 leaf water potential function
 """
 fpsil(psil, sf, psiv) = (1 + exp(sf * psiv)) / (1 + exp(sf * (psiv - psil)))
 
-
 # Tuzet mplementation of soil method
 
 @default_kw struct TuzetSoilMethod{T,NS} <: AbstractSoilMethod
@@ -29,10 +28,9 @@ fpsil(psil, sf, psiv) = (1 + exp(sf * psiv)) / (1 + exp(sf * (psiv - psil)))
 end
 
 # TODO: Fix this
-# soilmoisture_conductance!(v, f::TuzetSoilMethod) = begin
-    # What is this from? v.psif = (1 + exp(v.sf * v.psiv)) / (1 + exp(v.sf * (v.psiv - v.psil)))
-    # non_stomatal_potential_dependence(f.potentialdependence_model, v.weightedswp)
-# end
+soilmoisture_conductance!(v, f::TuzetSoilMethod) = begin
+    non_stomatal_potential_dependence(f.potentialdependence_model, v.weightedswp)
+end
 
 """
     TuzetStomatalConductance(gs_submodel, soilmethod)
@@ -40,6 +38,9 @@ end
 Tuzet stomatal conductance model.
 
 This model is limited to using `TuzetStomatalConductance` and `TuzetSoilMethods`.
+
+The internal methods are tested, but the zero-finding loop is not. 
+Assume this is broken.
 
 $(FIELDDOCTABLE)
 """
@@ -61,10 +62,10 @@ $(FIELDDOCTABLE)
 @MixinEnviroVars @MixinMaespaVars @MixinFvCBVars mutable struct TuzetVars{KT,PS,PSi,PV,SF}
 #   Field       | Default | Units                 | Description
     ktot::KT    | 2.0     | mmol*m^-2*s^-1*MPa^-1 | _
-    psil::PS    | -111.0  | kPa                   | _
-    psilin::PSi | -999.0  | kPa                   | _
-    psiv::PV    | -1.9    | kPa                   | _
-    sf::SF      | 3.2     | kPa^-1                | _
+    psil::PS    | -0.0    | MPa                   | _
+    psilin::PSi |  0.0    | MPa                   | _
+    psiv::PV    | -0.0019 | MPa                   | _
+    sf::SF      | 0.0032  | MPa^-1                | _
 end
 
 
@@ -110,7 +111,7 @@ PSIL finder. A wrapper function for the energy balance that returns the squared
 difference in PSILIN and PSIL, for use in a root finder.
 """
 function leaf_water_potential_finder!(m, v, psilin)
-    println("Finding lwp...")
+    v.ktot = 1 / (totsoilres(m) + 1.0 / plantk(m))
     v.psilin = psilin
     v.ci = zero(v.ci)
     enbal!(v, energy_balance_model(m))
