@@ -115,24 +115,20 @@ Other tools like the (unpublished)
 into the code for keyword argument constructors that would build it. 
 
 
-# Issues
+# Tests
 
-## Tests
+Currently this package has extensive tests against the original formaultions in the 
+MAESPA package. The diffrences between 32bit and 64bit usually breaks parity in anwsers
+when some value get to the extreme end of ranges, such as above 50 degrees C.
 
-Currently this package has _no real tests_, as there were none for the original
-Fortran. Instead it tests against the original formulations. Many of these test
-pass. But Tuzet, Jarvis, and EMAX models are as yet untested.
+The Jarvis model is not tested, as it is not included in Maespa. The outer loops of the 
+Tuzet model are also not yet tested. Please put in an issue if you would like to use
+the Tuzet model.
 
-While very few photosynthesis models actually have tests, we should work towards
-Photosynthesis.jl being properly tested so that we know that formulations
-do what we intend them to.
+There are, however _no real unit tests_, as there were none for the original Fortran. 
+It would, of course be good to write them, but beyond the current scope of writing 
+this package.
 
-## Non-functional variables struct 
-
-Temp variables are written directly to a variables struct. This could be
-replaced with a functional style where variables are rebuilt and explicitly
-updated. This would mean that the package can be used on GPUs, and so the
-updating of state flow is easier to follow.
 
 # Credits
 
