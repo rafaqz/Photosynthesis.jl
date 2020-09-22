@@ -1,4 +1,4 @@
-using Photosynthesis, Unitful, Test, Libdl
+using Photosynthesis, Unitful, Test, Libdl, Flatten, Combinatorics
 
 using Unitful: °C, K
 

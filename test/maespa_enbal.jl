@@ -1,4 +1,4 @@
-using Photosynthesis, Flatten, Plots, Setfield, FieldMetadata
+using Photosynthesis, Flatten, FieldMetadata
 using Photosynthesis: flux_model
 
 using FieldMetadata: units

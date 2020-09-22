@@ -1,7 +1,5 @@
 using Photosynthesis
 
-using Combinatorics: combinations
-
 include(joinpath(dirname(pathof(Photosynthesis)), "../test/shared.jl"))
 
 # Setup
@@ -51,7 +49,7 @@ end
 @testset "max_rubisco_activity/VCMAXTFN" begin
     vcmaxtfn_fortran = Libdl.dlsym(maespa_photosynlib, :vcmaxtfn_)
 
-    for parmult in (0.001, 0.01, 0.5, 1.0, 1.08)
+    for parmult in (0.001, 0.01, 0.5, 1.0, 1.03)
         # Breaks below 0.0, but only by small amounts
         for tleaf in (0.0, 10.0, 15.0, 25.0, 50.0)
             v = EmaxVars()
