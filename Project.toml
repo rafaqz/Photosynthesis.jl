@@ -4,7 +4,6 @@ authors = ["Rafael Schouten <rafaelschouten@gmail.com>"]
 version = "0.1.0"
 
 [deps]
-Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 FieldDefaults = "49426c49-986f-5969-8844-d5cc96441cfc"
 FieldDocTables = "a5d692f0-33f0-11e9-293e-eb83c8d6177d"
@@ -12,6 +11,16 @@ FieldMetadata = "bf96fef3-21d2-5d20-8afa-0e7d4c32a885"
 Mixers = "2a8e4939-dab8-5edc-8f64-72a8776f13de"
 SimpleRoots = "6accb78c-d340-5052-9dc3-a835939e19d0"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+
+[compat]
+DocStringExtensions = "0.8"
+FieldDefaults = "0.3.1"
+FieldDocTables = "0.1"
+FieldMetadata = "0.3"
+Flatten = "0.3"
+SimpleRoots = "0.1"
+Unitful = "1.0"
+julia = "1"
 
 [extras]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
