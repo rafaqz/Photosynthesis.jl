@@ -1,7 +1,7 @@
 # Photosynthesis
 
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://rafaqz.github.io/Photosynthesis.jl/dev)
-[![Build Status](https://travis-ci.org/rafaqz/Photosynthesis.jl.svg?branch=master)](https://travis-ci.org/rafaqz/Photosynthesis.jl)
+[![Build Status](https://travis-ci.com/rafaqz/Photosynthesis.jl.svg?branch=master)](https://travis-ci.com/rafaqz/Photosynthesis.jl)
 [![codecov.io](http://codecov.io/github/rafaqz/Photosynthesis.jl/coverage.svg?branch=master)](http://codecov.io/github/rafaqz/Photosynthesis.jl?branch=master)
 
 A Farquhar-von-Cammerer-Berry (FvCB) photosynthesis modelling framework.
