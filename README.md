@@ -1,8 +1,23 @@
 # Photosynthesis
 
+
+## *This package is not registered and is not currently maintained*
+
+I don't work on photosynthesis currently and have no personal need to use this. I also currently work on a lot of other packages and have very little time to spare to update this. 
+
+There is a lot of useful code here, if you need it you will need to do some work for it a little. Likely a fraction of what I put into writing it. It's fast, well structured and mostly verified to be correct. But its not a polished experience - this was a proof of concept from a masters project. 
+
+If you want examples of everything that currently works, *Read the tests in the test folder*. You can work through the functions in there and see how it all works.
+
+Just ignore the code required to run the original fortran binaries I tested againsts.
+
+
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://rafaqz.github.io/Photosynthesis.jl/dev)
 [![Build Status](https://travis-ci.com/rafaqz/Photosynthesis.jl.svg?branch=master)](https://travis-ci.com/rafaqz/Photosynthesis.jl)
 [![codecov.io](http://codecov.io/github/rafaqz/Photosynthesis.jl/coverage.svg?branch=master)](http://codecov.io/github/rafaqz/Photosynthesis.jl?branch=master)
+
+
+
 
 A Farquhar-von-Cammerer-Berry (FvCB) photosynthesis modelling framework.
 
