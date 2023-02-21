@@ -33,19 +33,20 @@ just define new alternate components with your desired changes.
 Here we will define a basic Ball-Berry model, and run it:
 
 ```julia
-params = FvCBEnergyBalance(
-    photosynthesis_model=FvCBPhotosynthesis(
-        stomatal_conductance=BallBerryStomatalConductance(
-            gs_submodel=BallBerryStomatalConductance(),
-            soil_model=NoSoilMethod()
+v = BallBerryVars()
+p1 = MaespaEnergyBalance(
+    photosynthesis=FvCBPhotosynthesis(
+        stomatal_conductance=EmaxStomatalConductance(
+            gs_submodel=BallBerryStomatalConductanceSubModel(),
+            soilmethod=EmaxSoilMethod(),
         ),
-        flux_model=DukeFlux(),
-        compensation_model=BadgerCollatzCompensation()
-    )
+        flux=DukeFlux(),
+        compensation=BadgerCollatzCompensation(),
+        respiration_model=Respiration(),
+    ),
+    atol=0.005K,
 )
-vars = BallBerryVars()
-
-enbal!(vars, params)
+enbal!(v, p)
 ```
 
 
